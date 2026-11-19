@@ -1,6 +1,6 @@
 ---
 id: ADR-0009
-title: AMC OS is an orchestration layer with a per-tenant system-of-record registry
+title: Positioning of AMC OS and system-of-record ownership (options A/B/C)
 status: Draft
 date: 2026-11-20
 deciders: ARB (interim: project owner)
@@ -8,7 +8,7 @@ domains: D01 + all (D01–D17)
 related: EA-100, EA-101; PS-001, PS-002; master prompt §2
 ---
 
-# ADR-0009 — AMC OS is an orchestration layer with a per-tenant system-of-record registry
+# ADR-0009 — Positioning of AMC OS and system-of-record ownership (options A/B/C)
 
 > **PROPOSED ADR.** Written ahead of GOV-006 Steps 10–14 at the owner's request (EA-100). Depends on WP2. Not approved; may be changed or rejected when WP3 runs.
 

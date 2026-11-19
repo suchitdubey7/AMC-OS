@@ -24,7 +24,7 @@ Work package ownership (GOV-005): EA and INT → WP3 (Steps 10–14); DA → WP4
 | 3 | Agent registry | [AIML-101](../09_ai_and_ml/AIML-101_agent_registry_specification.md) | WP6 Step 26 | BA-005 (roles for approval) | OD-10 | Proposal |
 | 4 | Tool registry | [AIML-102](../09_ai_and_ml/AIML-102_tool_registry_specification.md) | WP6 Step 26 | BA-004, PRD-001…017 (operations to wrap) | — | Proposal |
 | 5 | MCP and integrations | [INT-100](../07_api_and_integrations/INT-100_mcp_and_integration_architecture.md) | WP3 Step 14 (INT-001) | BA-004 (which flows need which provider) | OD-8 | Proposal |
-| 6 | AI security | [SEC-100](../10_security_and_regulatory/SEC-100_ai_security_and_permission_model.md) | WP6 Step 25 (SEC-001/002) | BA-005 | OD-4 | Proposal |
+| 6 | AI security | [SEC-100](../10_security_and_regulatory/SEC-100_ai_security_and_permission_model.md) | WP6 Step 25 (SEC-001/002) | BA-005 | OD-4, OD-12 | Proposal |
 | 7 | Human-in-the-loop | [SEC-101](../10_security_and_regulatory/SEC-101_human_in_the_loop_execution.md) | WP6 Step 25 | BA-004, BA-005 | — | Proposal |
 | 8 | Transaction orchestration | [EA-102](../04_enterprise_architecture/EA-102_transaction_orchestration.md) | WP3 Step 13 (EA-007) | BA-004 dealing and settlement workflows | — | Proposal |
 | 9 | System-of-record registry | [EA-101](../04_enterprise_architecture/EA-101_system_of_record_registry.md) | WP3 Step 11 (EA-003) | BA-001, BA-002 (operating model) | OD-1, OD-2 | Proposal |
@@ -37,7 +37,7 @@ Work package ownership (GOV-005): EA and INT → WP3 (Steps 10–14); DA → WP4
 | 16 | AI observability and audit | [AIML-103](../09_ai_and_ml/AIML-103_ai_observability_and_audit.md) | WP6 Step 26 | BA-005 (who reads audit) | — | Proposal |
 | 17 | Failure handling | [EA-105](../04_enterprise_architecture/EA-105_failure_handling_and_recovery.md) | WP3 Steps 10 and 13 | BA-004 | — | Proposal |
 | 18 | Diagrams and workflows | Mermaid in EA-100 (layers, two sequences), EA-102 (order state machine), EA-103 (planes), AIML-100 (hierarchy), INT-100 (adapters), SEC-101 (approval flow) | WP3 Step 10 | BA-004 | — | Proposal |
-| 19 | ADRs | ADR-0009 – ADR-0015 (all Draft) | WP3 Step 10 | BA-001 | OD-1 … OD-11 | Proposal |
+| 19 | ADRs | ADR-0009 – ADR-0015 (all Draft) | WP3 Step 10 | BA-001 | OD-1 … OD-12 | Proposal |
 | 20 | Traceability | This document | WP7 (TRACE-002) | All WP2 outputs | — | Proposal |
 
 ## 2. ADRs to documents

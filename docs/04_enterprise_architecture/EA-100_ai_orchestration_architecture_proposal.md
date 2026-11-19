@@ -2,7 +2,7 @@
 id: EA-100
 title: AI Orchestration Architecture — Proposal (input to WP3)
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Enterprise Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal ahead of sequence)
@@ -25,7 +25,7 @@ AMC OS is proposed as an **AI-native orchestration layer**: one governed interfa
 | Agent | An AI assistant with a defined job, a fixed list of tools and limited permissions |
 | Tool | A controlled function an agent may call, e.g. "read positions"; it wraps a normal, tested API |
 | RBAC / ABAC | Permissions by role (RBAC) and by attributes such as scheme, desk or data sensitivity (ABAC) |
-| Policy engine (e.g. OPA) | One central service that answers "is this allowed?" using written, versioned rules |
+| Policy engine (e.g. Open Policy Agent, OPA) | One central service that answers "is this allowed?" using written, versioned rules |
 | Control plane / data plane | The operator's management layer vs the place where each AMC's data and processing live |
 | Maker-checker | One person prepares, a different person approves |
 
@@ -52,7 +52,7 @@ AMC OS is proposed as an **AI-native orchestration layer**: one governed interfa
 | C3 | **Customer scale** | GOV-006 Q1: design capacity 50 AMCs; commercial target 1 pilot → 3–5 | "20–50 AMC customers initially" | Treated as design capacity (consistent with Q1); commercial target unchanged unless owner revisits Q1. **Owner decision OD-3** |
 | C4 | **Agent list** | PRD-000 §9.3: 11 agents; master prompt §4 D17: 11 copilots/assistants plus a RAG knowledge system | 1 supervisor + 13 specialists + 7 utility agents | Mapping in AIML-100 §5; PRD-000 "Product Intelligence Agent" has no counterpart (OD-9) |
 | C5 | **Layers** | Master prompt §5: 7 layers | 8 layers (adds AI orchestration and policy/execution control as separate layers; AI platform folds into them) | Mapping in §3 below; no capability lost |
-| C6 | **New technology** | No ADR for API gateway, policy engine, LangGraph or MCP | Kong-or-equivalent, OPA-or-equivalent, LangGraph, official MCP SDKs | Proposed ADR-0014, ADR-0015 (Draft); EA-106 evaluation |
+| C6 | **New technology** | No ADR for API gateway, policy engine, LangGraph or MCP | Kong-or-equivalent, OPA-or-equivalent, LangGraph, official MCP SDKs | Proposed ADR-0010 (LangGraph), ADR-0011 (MCP), ADR-0012 (policy engine), ADR-0015 (product choices) — all Draft; EA-106 evaluation |
 | C7 | **Sequencing** | WP3 starts after WP2 | Architecture written now | Marked PROPOSAL; branch `proposal/…` excluded from the build loop |
 | C8 | **Commercial claim** "20–50 AMCs initially" vs ~51 AMCs in India (PS-003) | — | Kept as capacity, not a sales forecast | OD-3 |
 | C9 | **Agent registry shape** | DDL-000 `ai.agent`: per-tenant table, key `(tenant_id, agent_code)`, codes like `RESEARCH_AGENT`, risk tier LOW/MEDIUM/HIGH | Global agent definitions (control plane) + per-tenant enablement; IDs `AG-*` | Proposed for WP4: a global, versioned `ai.agent_definition` + `ai.agent` kept as per-tenant enablement with its own service identity; one ID format chosen in WP4; risk tier mapped to R0–R2. **Decision OD-10** |
@@ -196,6 +196,7 @@ sequenceDiagram
 | OD-9 | Agent for D02 Product and Scheme (missing in the 13) | AIML-100 §4 | Project owner |
 | OD-10 | Agent registry: global definitions + per-tenant enablement (C9) | AIML-101 | ARB |
 | OD-11 | Workspaces: owner's 12 or the master prompt's 12 experiences (C10) | EA-104 | Project owner |
+| OD-12 | Emergency disable of AI by one person (exception to maker-checker) | SEC-100 §7 | Project owner + CISO |
 
 ## 8. Dependencies
 

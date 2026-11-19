@@ -2,7 +2,7 @@
 id: AIML-101
 title: Agent Registry Specification — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Head of AI
 approver: Project owner (interim ARB); AI Governance Committee once formed
 work_package: WP6 (proposal; final owner GOV-006 Step 26, AIML-001)

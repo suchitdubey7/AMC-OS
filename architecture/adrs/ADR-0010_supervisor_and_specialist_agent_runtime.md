@@ -36,7 +36,7 @@ The owner's architecture names a supervisor, 13 specialist and 7 utility agents.
 Positive: cheap to add agents; uniform audit. Negative: dependency on LangGraph's release pace; mitigated by internal interface.
 
 ## Validation
-Prototype in WP5 with two agents; evaluation suites; load test per cell.
+Prototype in WP6 (Step 26) with two agents; evaluation suites; load test per cell.
 
 ## Change log
 | Date | Status | By | Note |

@@ -20,8 +20,8 @@ Agents need governed access to internal services and external vendors. FactSet o
 
 ## Decision
 **Proposed:**
-1. Agents can only call tools registered in the tool registry (categories TC1–T4) with strict JSON schemas, risk class and owner.
-2. Vendor MCP servers are consumed through an MCP client gateway; vendor tools are reviewed, pinned and registered as TC4 before use.
+1. Agents can only call tools registered in the tool registry (categories TLC1–TLC4) with strict JSON schemas, risk class and owner.
+2. Vendor MCP servers are consumed through an MCP client gateway; vendor tools are reviewed, pinned and registered as TLC4 before use.
 3. AMC OS may expose an MCP server of its own Approved R0/R1 tools to tenant-approved AI clients (optional, owner decision OD-8).
 4. Use the official MCP SDKs; pin the supported specification version per release.
 

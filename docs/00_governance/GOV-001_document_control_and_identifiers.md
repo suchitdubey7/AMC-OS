@@ -107,7 +107,7 @@ A domain is never silently omitted: if a domain has no content yet, its PRD sect
 | Agent (proposal, EA-100 set) | `AG-<CODE>` / `AG-U-<CODE>` | AG-NAV | Specialist / utility agents (AIML-100); format to be settled with DDL-000 `agent_code` in WP4 |
 | Metric | `MET-<NAME>` | MET-AUM-CLOSING | Metric registry (DA-100) |
 | Workspace / suite (proposal) | `WS-nn` / `SU-n` | WS-04 | EA-104; not the same as workflows `WF-nnn` |
-| Tool category (proposal) | `TC1`–`TC4` | TC4 | AIML-102; not the risk tiers T1–T3 (GOV-004) |
+| Tool category (proposal) | `TLC1`–`TLC4` | TLC4 | AIML-102; not the risk tiers T1–T3 (GOV-004) nor test cases `TC-…` |
 | Failure case (proposal) | `FH-nn` | FH-08 | EA-105 |
 | Control-plane / integration rule (proposal) | `CPR-n` / `INR-n` | CPR-1 | EA-103 / INT-100 |
 | Open owner decision (proposal) | `OD-n` | OD-1 | EA-100 §7 |

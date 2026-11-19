@@ -2,7 +2,7 @@
 id: EA-101
 title: System-of-Record Registry — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Enterprise Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal; depends on WP2)

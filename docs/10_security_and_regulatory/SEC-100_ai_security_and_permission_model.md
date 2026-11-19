@@ -2,7 +2,7 @@
 id: SEC-100
 title: AI Security and Permission Model — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: CISO
 approver: Project owner (interim ARB)
 work_package: WP6 (proposal; final owner GOV-006 Step 25, SEC-001)
@@ -35,7 +35,7 @@ A central policy engine (ADR-0012, ADR-0015) evaluates versioned policies; polic
 | **R0** | Public information | Any authenticated user/agent | Logging |
 | **R1** | Authorised read of tenant data | Users and agents with permission | Four-dimension check; masking; audit |
 | **R2** | Controlled write: drafts and proposals inside AMC OS where AMC OS is SoR | Agents may create; a human must act on them | Policy check; idempotency; human queue; audit |
-| **R3** | Critical financial or control action | **Humans only** with their own identity | Explicit human authorisation; maker ≠ checker; deterministic validation before effect; step-up MFA **[DES]**; audit |
+| **R3** | Critical financial or control action | **Humans only** with their own identity | Explicit human authorisation; maker ≠ checker (one exception: emergency disable, §7); deterministic validation before effect; step-up MFA **[DES]**; audit |
 
 R3 examples: submit/approve/release orders; post journals; approve or publish NAV; approve payments; change compliance rules or limits; change SoR modes, roles or agent enablement; close breaches; send regulatory filings.
 
@@ -81,7 +81,7 @@ Enforcement layers: (a) no such tools exist (AIML-102 §3); (b) agent service id
 
 ## 7. Revocation
 
-Disabling a user, role, agent, tool or tenant takes effect on the next call (tokens are per call; policy cache short). Running agent sessions are stopped. Kill switches: EA-105 §4. **Exception to maker-checker:** an emergency *disable* is an R3 human action that one authorised person may do alone, because it can only reduce what AI can do; *re-enabling* needs maker-checker.
+Disabling a user, role, agent, tool or tenant takes effect on the next call (tokens are per call; policy cache short). Running agent sessions are stopped. Kill switches: EA-105 §4. **Exception to maker-checker [DES — owner decision OD-12]:** an emergency *disable* of an agent, a tool, or all AI for a tenant is an R3 human action that one authorised person may do alone, because it can only reduce what AI can do; *re-enabling* needs maker-checker.
 
 ## 8. Tests required before any agent is enabled
 

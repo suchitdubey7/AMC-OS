@@ -2,7 +2,7 @@
 id: DA-100
 title: Data and Decision Intelligence — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Data Officer
 approver: Project owner (interim ARB)
 work_package: WP3/WP4 (proposal)

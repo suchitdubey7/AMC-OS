@@ -2,7 +2,7 @@
 id: EA-105
 title: Failure Handling and Recovery for AI Orchestration — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Enterprise Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal)
@@ -52,4 +52,4 @@ Core rule: **AI failure must never stop or corrupt financial processing** (ADR-0
 
 ## 4. Kill switches
 
-Per tenant and per agent, an authorised human admin can disable an agent, a tool or all AI within one minute **[DES target]**. **Emergency disable is an R3 human action that needs only one person** (an explicit exception to maker-checker, because it can only reduce what AI can do). Re-enabling is a normal R3 action with maker-checker. Same rule in SEC-100 §7 and SEC-101 §3.
+Per tenant and per agent, an authorised human admin can disable an agent, a tool or all AI within one minute **[DES target]**. **Emergency disable is an R3 human action that needs only one person** (an explicit exception to maker-checker, because it can only reduce what AI can do) **[DES — OD-12]**. Re-enabling is a normal R3 action with maker-checker. Same rule in SEC-100 §7 and SEC-101 §3.

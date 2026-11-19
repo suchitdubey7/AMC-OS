@@ -2,7 +2,7 @@
 id: EA-103
 title: Hybrid Deployment, Control Plane and Data Plane — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Enterprise Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal; input to GOV-006 Step 12)

@@ -2,7 +2,7 @@
 id: AIML-100
 title: Agent Hierarchy, Supervisor and Domain-to-Agent Matrix — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Head of AI
 approver: Project owner (interim ARB)
 work_package: WP6 (proposal; final owner GOV-006 Step 26, AIML-001; depends on WP2)
@@ -88,7 +88,7 @@ P = primary agent, S = supporting agent.
 | Domain (GOV-001) | Primary | Supporting |
 | --- | --- | --- |
 | D01 Platform Administration | AG-U-IH | AG-U-WF |
-| D02 Product and Scheme Management | **none (gap G-4 / OD-9)** | AG-U-DOC, AG-U-REG |
+| D02 Product and Scheme Management | **none (OD-9)** | AG-U-DOC, AG-U-REG |
 | D03 Investment Management | AG-CIO | AG-RES |
 | D04 Portfolio Management | AG-PM | AG-RSK, AG-CMP |
 | D05 Order Management System | AG-PM | AG-TRD, AG-CMP |
@@ -121,7 +121,7 @@ P = primary agent, S = supporting agent.
 | CFO Copilot | AG-CFO |
 | CEO Copilot | AG-CEO |
 
-Master prompt §4 D17 lists 11 copilots/assistants (Research, CIO, Dealing, Compliance, Risk, NAV operations, Reconciliation, Investor service, Distribution intelligence, CFO, CEO) plus a RAG knowledge system. They map to AG-RES, AG-CIO, AG-TRD, AG-CMP, AG-RSK, AG-NAV, AG-REC, AG-INV, AG-DIST, AG-CFO and AG-CEO; the RAG knowledge system is platform plumbing used by AG-U-DOC and AG-U-REG, not an agent.
+Master prompt §4 D17 lists 11 copilots/assistants (Research, CIO, Dealing, Compliance, Risk, NAV operations, Reconciliation, Investor service, Distribution intelligence, CFO, CEO) plus a RAG knowledge system. They map to AG-RES, AG-CIO, AG-TRD, AG-CMP, AG-RSK, AG-NAV, AG-REC, AG-INV, AG-DIST, AG-CFO and AG-CEO; the RAG knowledge system is platform plumbing used by AG-U-DOC and AG-U-REG, not an agent. The other D17 items are also not agents: the **AI gateway** → ADR-0014; **predictive models, anomaly detection and forecasting** → advisory ML signals (DA-100 §4), to be specified in AIML-002 (GOV-006 Step 26).
 
 New in this proposal (not in PRD-000 §9.3): AG-SUP, AG-TRD (master prompt adds a dealing assistant), AG-RSK (master prompt adds a risk assistant), AG-FA, and the seven utility agents. PRD-000 §9.3 evaluation criteria (for example citation accuracy ≥ 98%, CEO Copilot groundedness 100%) carry over to the matching agents unless WP6 changes them.
 

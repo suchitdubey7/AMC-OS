@@ -2,7 +2,7 @@
 id: INT-100
 title: MCP and Integration Architecture — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Head of Integration
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal; input to GOV-006 Step 14)
@@ -39,7 +39,7 @@ flowchart LR
 
 ## 2. AMC OS as MCP client (consuming vendor MCP servers)
 
-- Vendor MCP servers are reached only through the **MCP client gateway**, which registers each vendor tool in the tool registry as category TC4 (AIML-102) after review: description wording, schema, data class, licence terms.
+- Vendor MCP servers are reached only through the **MCP client gateway**, which registers each vendor tool in the tool registry as category TLC4 (AIML-102) after review: description wording, schema, data class, licence terms.
 - Tool descriptions from vendor servers are **untrusted input** (SEC-100 §5): they are pinned at review time; changes require re-review.
 - Authorisation follows the MCP specification's OAuth-based model; tokens are per tenant **[VAL — per vendor]**.
 
@@ -52,7 +52,7 @@ flowchart LR
 
 | Provider | MCP server? | Evidence | Constraint |
 | --- | --- | --- | --- |
-| FactSet | **Yes** — a production MCP server announced 16 Dec 2025, which the release says covers nine datasets (fundamentals, consensus estimates, ownership, M&A, pricing, people, events, supply chain, geographic revenue exposure); and a Portfolio Analytics MCP announced 26 Jun 2026 | [1] "FactSet Meets Demand for AI-Ready Data, First to Announce MCP Sans Intermediary", 16 Dec 2025: [investor.factset.com](https://investor.factset.com/news-releases/news-release-details/factset-meets-demand-ai-ready-data-first-announce-mcp-sans), [GlobeNewswire copy](https://www.globenewswire.com/fr/news-release/2025/12/16/3206057/7768/en/FactSet-Meets-Demand-for-AI-Ready-Data-First-to-Announce-MCP-Sans-Intermediary.html). [2] "FactSet Expands Model Context Protocol Suite to Portfolio Analytics", 26 Jun 2026: [investor.factset.com](https://investor.factset.com/news-releases/news-release-details/factset-expands-model-context-protocol-suite-portfolio-analytics), [Nasdaq copy](https://www.nasdaq.com/press-release/factset-expands-model-context-protocol-suite-portfolio-analytics-2026-06-26). Read via web search by the author on 20 Nov 2026; the reviewer could not open the FactSet site (HTTP 403) | **Licence-dependent.** Access requires the AMC's own FactSet licence. An individual's or employer's licence or MCP access must **not** be assumed to be usable or redistributable through AMC OS. Display and AI-use rights to be confirmed in each AMC's contract **[VAL]** |
+| FactSet | **Yes** — a production MCP server announced 16 Dec 2025, which the release says covers nine datasets (fundamentals, consensus estimates, ownership, M&A, pricing, people, events, supply chain, geographic revenue exposure); and a Portfolio Analytics MCP announced 26 Jun 2026 as a **limited release** (confirm availability with FactSet) | [1] "FactSet Meets Demand for AI-Ready Data, First to Announce MCP Sans Intermediary", 16 Dec 2025: [investor.factset.com](https://investor.factset.com/news-releases/news-release-details/factset-meets-demand-ai-ready-data-first-announce-mcp-sans), [GlobeNewswire copy](https://www.globenewswire.com/fr/news-release/2025/12/16/3206057/7768/en/FactSet-Meets-Demand-for-AI-Ready-Data-First-to-Announce-MCP-Sans-Intermediary.html). [2] "FactSet Expands Model Context Protocol Suite to Portfolio Analytics", 26 Jun 2026: [investor.factset.com](https://investor.factset.com/news-releases/news-release-details/factset-expands-model-context-protocol-suite-portfolio-analytics), [Nasdaq copy](https://www.nasdaq.com/press-release/factset-expands-model-context-protocol-suite-portfolio-analytics-2026-06-26). Read via web search by the author on 20 Nov 2026; the reviewer could not open the FactSet site (HTTP 403) | **Licence-dependent.** Access requires the AMC's own FactSet licence. An individual's or employer's licence or MCP access must **not** be assumed to be usable or redistributable through AMC OS. Display and AI-use rights to be confirmed in each AMC's contract **[VAL]** |
 | All other providers below | **Not verified** | — | Assume no MCP server; integrate via documented file/API interfaces. Confirm with provider. |
 
 Official MCP SDKs exist for Python and TypeScript (among others), and SDK releases track dated specification revisions (latest announced: 2026-07-28) — [MCP blog, SDK posts](https://blog.modelcontextprotocol.io/tags/sdk/). ADR-0011 proposes pinning the spec version per release.

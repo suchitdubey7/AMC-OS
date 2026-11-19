@@ -2,7 +2,7 @@
 id: EA-102
 title: Transaction Orchestration — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Enterprise Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal; depends on WP2 and FE specs)

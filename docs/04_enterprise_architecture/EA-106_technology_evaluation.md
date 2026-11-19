@@ -2,7 +2,7 @@
 id: EA-106
 title: Technology Evaluation for AI Orchestration — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Enterprise Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal; input to GOV-006 Step 10 ADRs)
@@ -24,7 +24,7 @@ Scoring: **Fit** = how well it meets AMC OS needs; **Risk** = adoption/operation
 | Workflows | Temporal | ADR-0006 | H | M | Durable, auditable workflows; fits EA-102 | Camunda, custom state tables | — |
 | Events | Kafka | ADR-0006 | M | M | Needed at multi-cell scale; heavy for pilot | Outbox + PostgreSQL queue first | — (OD-7) |
 | Agent runtime | LangGraph | none | H | M | Explicit graph/state, checkpoints, human-interrupt nodes, model-agnostic | Custom orchestrator, other frameworks | **ADR-0010** |
-| MCP | Official MCP SDKs (Python, TypeScript) | none | H | M | Open protocol; official Python and TypeScript SDKs with OAuth-based authorization support; new specification revision dated 2026-07-28 ([MCP blog, SDK tag](https://blog.modelcontextprotocol.io/tags/sdk/); [Python SDK authorization docs](https://py.sdk.modelcontextprotocol.io/authorization/)) | Plain REST tools only | **ADR-0011** |
+| MCP | Official MCP SDKs (Python, TypeScript) | none | H | M | Open protocol; official Python and TypeScript SDKs with OAuth-based authorization support; new specification revision dated 2026-07-28 ([MCP blog, SDK tag](https://blog.modelcontextprotocol.io/tags/sdk/)) | Plain REST tools only | **ADR-0011** |
 | Dataframes | Polars | ADR-0007 | H | L | Fast, deterministic; not for money rounding (Decimal in engines) | pandas | — |
 | Vectors | pgvector | ADR-0007 | H | L | PostgreSQL extension on a separate PostgreSQL cluster (ADR-0007); RLS applies to embeddings | Dedicated vector DB | — |
 | API gateway | Kong (or equivalent) | none | M | M | Rate limits, auth plugins; licence edition matters | Envoy-based, cloud gateway | **ADR-0015** |

@@ -2,7 +2,7 @@
 id: SEC-101
 title: Human-in-the-Loop Execution Model — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Risk Officer
 approver: Project owner (interim ARB)
 work_package: WP6 (proposal; final owner GOV-006 Step 25, SEC-001; depends on WP2 workflows and roles)
@@ -49,7 +49,7 @@ All maker and checker roles below are **[ASSUMPTION — confirm in BA-005 with t
 | NAV approval / publication (only if SoR mode O) | NAV ops | Fund accountant head | All validations green or waived with reason |
 | Payment approval | Ops | Finance (two signatories per bank mandate) | Bank mandate limits **[VAL — Finance to confirm per bank mandate]** |
 | Compliance rule/limit change | Compliance officer | Head of compliance | Effective-dated version; no retroactive change |
-| SoR mode, role, agent enablement change | Tenant admin | Second admin | Step-up MFA. Exception: emergency **disable** of an agent or tool needs one person only (SEC-100 §7) |
+| SoR mode, role, agent enablement change | Tenant admin | Second admin | Step-up MFA. Exception: emergency **disable** of an agent, a tool, or all AI for a tenant needs one person only (SEC-100 §7) **[DES — OD-12]** |
 
 ## 4. Prohibited shortcuts
 

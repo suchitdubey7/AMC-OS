@@ -2,7 +2,7 @@
 id: EA-104
 title: Product Suites and Role Workspaces — Proposal
 status: Draft
-version: 0.1
+version: 0.2
 owner: Chief Product Architect
 approver: Project owner (interim ARB)
 work_package: WP3 (proposal; depends on WP2 roles BA-005)
