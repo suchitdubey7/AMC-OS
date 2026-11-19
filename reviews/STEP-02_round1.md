@@ -1,0 +1,40 @@
+## AMC OS Review Agent — advisory review
+
+**PR:** branch `wp2-step02-capability-map` (base `gov-cr0001-merge-protocol` b531bc5) · **Step / WP:** GOV-006 §3 Step 2 / WP2 (BA-001) · **Reviewed at:** e84b1f434b9bbdcc268b339d6767aee156e1b019
+
+**Verdict (advisory):** RECOMMEND CHANGES
+The map covers all 17 domains, every L2 name matches the brief and the counts are correct, but one regulatory requirement is labelled as new design work, and one must-have AI requirement in PRD-000 has no capability in the map.
+
+### Findings
+| # | Severity | File:line | Finding | Suggested fix |
+| --- | --- | --- | --- | --- |
+| 1 | Major | docs/02_business_architecture/BA-001_business_capability_map.md:204 | CAP-D06-04 says "(.2) allocation fairness checks … (.2) is new **[DES]**". The requirement it cites, PRD-000 FR-04-10, already asks for this: pro-rata allocation to intent, with deviations approved by Head of Dealing and Compliance, labelled `[REG — fair allocation among schemes; VAL exact clause]`. So a regulatory requirement is presented as an optional new design item, which goes against BA-001's own rule at line 19. | Remove "(.2) is new [DES]". Add "FR-04-10 carries [REG] / [VAL] (fair allocation among schemes)". |
+| 2 | Major | BA-001:417 (D17 table) | PRD-000 FR-15-07 Evaluation (a must-have, marked M) and §9.4 "Evaluation and release gates" are not linked to any capability. These cover golden test sets, red-team prompts, cross-tenant leakage tests and release gates. Every other Module 15 requirement is mapped. §7 says later PRDs name their CAP ID, so this control could drop out of the traceability chain. | Add a level-3 item, for example CAP-D17-01 "(.5) agent evaluation and release gates (golden sets, red-team, cross-tenant leakage tests)", and add FR-15-07 to its v0.9 source. |
+| 3 | Minor | BA-001:19 (and many rows) | Line 19 says that where a capability touches regulation "the label from PRD-000 is carried over". In practice only 12 of the 31 PRD-000 requirements labelled [REG] that are cited carry a label in their BA-001 rows. Examples without one: CAP-D05-12 (FR-04-14), CAP-D08-04/-05 (FR-06-04/-05/-06), CAP-D08-13 (FR-06-12), CAP-D11-13 (FR-09-11 publication deadlines), CAP-D13-01 (FR-11-04 FATCA/CRS), CAP-D13-03 (FR-11-03 KYC), CAP-D13-04 (FR-11-13 stamp duty), CAP-D13-05 (FR-11-08 payout deadline), CAP-D14-01/-02 (FR-12-01/-02). | Carry the label in Notes for every row that cites a [REG] requirement, or reword line 19 to say the cited requirement holds the label. |
+| 4 | Minor | BA-001 §3 D07/D12 tables | PRD-000 FR-10-06 "Settlement tracking" (M, an operations view across Module 05) is not cited by any capability. It is the only requirement in Modules 01–15 left unmapped, apart from FR-15-07 (finding 2) and FR-01-11/-12, which line 139 explains. | Cite FR-10-06 under CAP-D07-06 or CAP-D12-02. |
+| 5 | Minor | BA-001:31, :114, :464; commit message item 12 | Q12 and Q13 are referenced as entries "in LOOP_STATE.md", but LOOP_STATE.md on this branch lists only Q5, Q6 and Q8–Q11. GOV-008 §2 rule 6 requires owner questions to be added to that list. LOOP_STATE.md is always allowed by the merge gate, so the branch could have included it. | Add Q12 (CAP-Dxx-nn in GOV-001 §4) and Q13 (meaning of "Subscription management") to "Questions for owner" in LOOP_STATE.md. |
+| 6 | Minor | BA-001:443 | The §4 row says "PRD-000 FR-05-07 covered both" (trade-by-trade matching and broker statements/bills). FR-05-07 only says "daily trade-level match vs broker files". Brokerage bills are in FR-10-02. | Change to "PRD-000 FR-05-07 (trade level) and FR-10-02 (brokerage bills)". |
+| 7 | Minor | BA-001:293 | CAP-D11-03 Price-source management is marked **new**. PRD-000 already has partial source material: the Module 09 exceptions (line 688, "fallback hierarchy then Valuation Committee approval") and the Module 02 exceptions (line 294, "source precedence rules"). GOV-001 §3 lists it as a gap, so "new" is defensible, but the partial source is lost. | Keep it as new, and add "partial: PRD-000 Module 09 exceptions (fallback hierarchy)" in Notes. |
+| 8 | Minor | tests/governance/__pycache__/test_merge_gate.cpython-313-pytest-9.1.1.pyc | The change includes a modified compiled Python file that has nothing to do with Step 2. Only bytes 9–10, the timestamp header, differ. The repo has no `.gitignore`. | Drop this file from the change. Ask the owner to untrack `__pycache__/` and add a `.gitignore`. |
+| 9 | Minor | BA-001:19 | Brief §22 Deliverable 2 also covers "roles, responsibilities, systems and business processes". The "What this document is not" paragraph says where departments, workflows and roles go, but not where "systems" (which current systems each capability replaces) and "responsibilities" will be covered. | Add one sentence naming the step that covers these, or record it as a gap in GOV-006. |
+| 10 | Nit | BA-001:26, :31 | The proposed `CAP-Dxx-nn` uses 2 digits. The other domain-scoped IDs in GOV-001 §4 (FR-Dxx-nnn, US-Dxx-nnn, BRL-Dxx-nnn) use 3. | Consider this as part of Q12. |
+
+### Checks run
+| Check | Result |
+| --- | --- |
+| scripts/check_docs.py | Run on e84b1f4: "28 spec documents checked; 0 problem(s)." |
+| pytest tests/governance | Run: 14 passed. Running it left the working tree clean. |
+| Arithmetic re-computed | Recomputed with a Python script that parses BA-001 and brief §4. Every L2 name matches the brief, in order, for all 17 domains (209/209), with no gaps in the ID sequence. Each overview row's L2 / with-source / new counts match the tables. The totals 209 = 183 + 26 are correct. Role count "18 + 2" matches PRD-000 §2.3. "~25 capabilities missing" matches GOV-006 §2 row 4. No money figures. |
+| Sources | All internal. Every cited FR/BR ID exists in PRD-000 v0.9 (checked by script). The FR titles agree with the capabilities they support (checked against the PRD-000 FR title list). Labels quoted in BA-001 were checked against PRD-000 and are accurate where given (see findings 1 and 3). DA-000 claims hold: `master` schema contents, `settlement` holding corporate actions/SSIs, `platform` "plans". The GOV-001 §3 gap claims and schema ownership match. The PS-001 §3 boundaries and GOV-006 Q2 match. The GOV-006 §2 point 5 agent mismatch is described correctly. No external facts are introduced. |
+| Scope vs GOV-006 step | Delivered: L1–L3 for all 17 domains; no domain dropped (D01, which has no PRD-000 module, is covered). Nothing outside Step 2 scope: Step 3+ items are only pointed to. GOV-001 §7 register row added (BA-001 Draft, WP2/Step 2), and the GOV-006 Step 2 status cell is updated. Both GOV edits are table rows only. Front matter is complete, status is Draft, and the ID matches the file name. The commit message follows the AGENTS.md §5 format. Building on Draft documents is disclosed and allowed by D-3 / GOV-008 §2 rule 3. |
+| Architecture (GOV-002 §4) | No binding decisions. Proposals are labelled [DES] and sent to EA-003 for confirmation. §4 gives one owner per shared capability, and other domains use it via API or events (no cross-domain writes). The deterministic-engine and AI read/propose-only boundary is stated (line 35, D17 intro). No ADR conflict found. |
+| Instruction injection | None found in the changed files or the commit message. |
+
+### Not checked
+- CI status: the branch is not on `origin` (`git ls-remote` returns nothing), so GitHub CI could not be read.
+- The author's own L2-matching script mentioned in the commit message is not in the repo. Its claim was re-checked with my own script instead.
+- I did not judge whether each L3 breakdown is complete from the point of view of an Indian AMC domain expert, beyond the PRD-000 cross-check. The L3 items are [DES] proposals and need the owner's or an expert's review.
+- GOV-002…GOV-005, GOV-007, STD-001, QA-001 and the ADRs were not re-read line by line. The change is documentation only and touches no ADR, code, database or migrations, so checks D (code) and F did not apply.
+- Mermaid diagram rendering was not checked visually.
+
+_This review is advisory. Only the project owner can merge (GOV-003, GOV-007)._
