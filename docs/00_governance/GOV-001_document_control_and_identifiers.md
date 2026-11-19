@@ -146,6 +146,9 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | GOV-006 | Gap analysis and step-by-step delivery plan | Draft | WP1 |
 | TRACE-001 | Traceability matrix (structure + seed) | Draft | WP1 |
 | PS-001 | Project charter | Draft | WP1 |
+| PS-002 | Product vision | Draft | WP2 / Step 1 |
+| PS-003 | Market and customer analysis | Draft | WP2 / Step 1 |
+| PS-004 | Benchmark capability comparison | Draft | WP2 / Step 1 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |

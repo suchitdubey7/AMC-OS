@@ -86,9 +86,9 @@ flowchart LR
 
 | Step | Content | Brief § | Depends on |
 | --- | --- | --- | --- |
-| **0** | You merge WP1; switch on branch protection; add CI: DDL + DBT tests on PostgreSQL, Markdown link check, ID-uniqueness check, front-matter check | 15–17 | — |
+| **0** ✅ done 19 Nov 2026 (branch protection pending, owner action) | You merge WP1; switch on branch protection; add CI: DDL + DBT tests on PostgreSQL, Markdown link check, ID-uniqueness check, front-matter check | 15–17 | — |
 | **Stage A — business** | | | |
-| 1 | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
+| 1 🔄 in review | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
 | 2 | BA-001 business capability map (all 17 domains, level 1–3 capabilities) | 4, 22-D2 | 0 |
 | 3 | BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs) | 14-A | 2 |
 | 4 | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
