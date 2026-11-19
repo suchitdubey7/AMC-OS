@@ -26,10 +26,10 @@ Network failures can leave AMC OS unsure whether a broker, bank or custodian rec
 4. Every outbound instruction carries an idempotency key and client reference.
 
 ## Alternatives considered
-| Option | Why not chosen |
-| --- | --- |
-| Single status field | Mixes facts owned by different systems |
-| Automatic retry on timeout | Duplicate trades/payments risk |
+| Option | Pros | Cons | Why not chosen |
+| --- | --- | --- | --- |
+| Single status field for the whole trade | Simple screens | Mixes facts owned by different systems | Breaks EA-101 ownership |
+| Automatic retry on timeout | Less manual work | Risk of duplicate trades or payments | Financial risk too high |
 
 ## Consequences
 Positive: no duplicate instructions; clear accountability. Negative: more states; providers without status queries need manual procedures.
@@ -38,6 +38,6 @@ Positive: no duplicate instructions; clear accountability. Negative: more states
 State-machine tests in DDL (WP4); integration tests with simulated timeouts; per-provider confirmation of status-query support.
 
 ## Change log
-| Date | Change |
-| --- | --- |
-| 2026-11-20 | Created as proposal (EA-100 set) |
+| Date | Status | By | Note |
+| --- | --- | --- | --- |
+| 2026-11-20 | Draft | Claude (AI author) for project owner | Created as proposal (EA-100 set) |

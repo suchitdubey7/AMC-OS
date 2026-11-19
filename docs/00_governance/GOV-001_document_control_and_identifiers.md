@@ -6,7 +6,7 @@ version: 0.1
 owner: Technical Documentation Lead
 approver: Architecture Review Board (ARB)
 work_package: WP1
-last_updated: 2026-11-19
+last_updated: 2026-11-20
 ---
 
 # GOV-001 — Document Control and Identifier Standard
@@ -104,6 +104,14 @@ A domain is never silently omitted: if a domain has no content yet, its PRD sect
 | Test case | `TC-<area>-nnn` | TC-NAV-021 | Automated test names include the ID |
 | Release | `REL-<yyyy>.<n>` | REL-2027.1 | |
 | Change request | `CR-nnnn` | CR-0003 | Changes to Approved documents |
+| Agent (proposal, EA-100 set) | `AG-<CODE>` / `AG-U-<CODE>` | AG-NAV | Specialist / utility agents (AIML-100); format to be settled with DDL-000 `agent_code` in WP4 |
+| Metric | `MET-<NAME>` | MET-AUM-CLOSING | Metric registry (DA-100) |
+| Workspace / suite (proposal) | `WS-nn` / `SU-n` | WS-04 | EA-104; not the same as workflows `WF-nnn` |
+| Tool category (proposal) | `TC1`–`TC4` | TC4 | AIML-102; not the risk tiers T1–T3 (GOV-004) |
+| Failure case (proposal) | `FH-nn` | FH-08 | EA-105 |
+| Control-plane / integration rule (proposal) | `CPR-n` / `INR-n` | CPR-1 | EA-103 / INT-100 |
+| Open owner decision (proposal) | `OD-n` | OD-1 | EA-100 §7 |
+| Conflict (proposal) | `Cn` | C1 | EA-100 §2 |
 
 IDs are never reused, even after deletion.
 
@@ -159,9 +167,9 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | DDL-000 | Core schema v0.9 (tested on PostgreSQL 16.15) | Draft | WP4 |
 | DBT-000 | Integrity and isolation tests v0.9 (24 checks, passing) | Draft | WP4 |
 | EA-100 – EA-106 | AI orchestration architecture proposal set (overview, SoR registry, transactions, deployment, workspaces, failures, technology) | Draft — proposal | WP3 (ahead of sequence) |
-| AIML-100 – AIML-103 | Agent hierarchy, agent registry, tool registry, AI observability (proposal) | Draft — proposal | WP3/WP5 |
+| AIML-100 – AIML-103 | Agent hierarchy, agent registry, tool registry, AI observability (proposal) | Draft — proposal | WP6 (Step 26) |
 | INT-100 | MCP and integration architecture (proposal) | Draft — proposal | WP3 |
-| SEC-100, SEC-101 | AI security and permission model; human-in-the-loop (proposal) | Draft — proposal | WP3 |
+| SEC-100, SEC-101 | AI security and permission model; human-in-the-loop (proposal) | Draft — proposal | WP6 (Step 25) |
 | DA-100 | Data and decision intelligence (proposal) | Draft — proposal | WP3/WP4 |
 | TRACE-003 | Traceability for the AI orchestration proposal | Draft — proposal | WP3 |
 | ADR-0009 – ADR-0015 | Proposed AI orchestration decisions | Draft — proposal | WP3 |

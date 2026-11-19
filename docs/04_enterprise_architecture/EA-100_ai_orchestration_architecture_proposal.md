@@ -15,6 +15,20 @@ last_updated: 2026-11-20
 
 AMC OS is proposed as an **AI-native orchestration layer**: one governed interface that coordinates an AMC's existing systems, vendors and people, with deterministic services and human approval in front of every financial action. Where an AMC has no suitable system, AMC OS's own deterministic engines can be the system of record for that domain.
 
+**Plain-language terms used in this set**
+
+| Term | Meaning |
+| --- | --- |
+| System of record (SoR) | The one system whose copy of a piece of data is the official truth |
+| Projection | A read-only copy of data taken from another system, stamped with where and when it came from |
+| MCP (Model Context Protocol) | An open standard that lets AI assistants call tools and data sources in a uniform way |
+| Agent | An AI assistant with a defined job, a fixed list of tools and limited permissions |
+| Tool | A controlled function an agent may call, e.g. "read positions"; it wraps a normal, tested API |
+| RBAC / ABAC | Permissions by role (RBAC) and by attributes such as scheme, desk or data sensitivity (ABAC) |
+| Policy engine (e.g. OPA) | One central service that answers "is this allowed?" using written, versioned rules |
+| Control plane / data plane | The operator's management layer vs the place where each AMC's data and processing live |
+| Maker-checker | One person prepares, a different person approves |
+
 ## 1. Repository inspection (20 Nov 2026, 00:10 IST)
 
 | Item | Finding |
@@ -33,14 +47,19 @@ AMC OS is proposed as an **AI-native orchestration layer**: one governed interfa
 
 | # | Conflict | Existing position | This proposal | Resolution route |
 | --- | --- | --- | --- | --- |
-| C1 | **Positioning** | PS-001/PS-002 and master prompt §2 objective 2: a complete platform that *replaces* fragmented systems | Orchestration layer that *integrates* existing systems; own engines where useful | ADR-0009 (Draft) proposes both, per tenant and per domain, through the system-of-record registry (EA-101). **Owner decision O-1** |
-| C2 | **System of record for accounting and NAV** | PRD-000 Modules 08/09 and DDL-000 make AMC OS the scheme ledger and NAV publisher | External accounting platform and NAV authority are system of record by default; AMC OS keeps projections, shadow calculations and reconciliation | EA-101 modes; ADR-0009. **Owner decision O-2** |
-| C3 | **Customer scale** | GOV-006 Q1: design capacity 50 AMCs; commercial target 1 pilot → 3–5 | "20–50 AMC customers initially" | Treated as design capacity (consistent with Q1); commercial target unchanged unless owner revisits Q1. **Owner decision O-3** |
-| C4 | **Agent list** | PRD-000 Ch 9: 11 agents; master prompt §4 D17: 12 assistants | 1 supervisor + 13 specialists + 7 utility agents | Mapping in AIML-100 §4; PRD-000 "Product Intelligence Agent" has no counterpart (gap G-4) |
+| C1 | **Positioning** | PS-001/PS-002 and master prompt §2 objective 2: a complete platform that *replaces* fragmented systems | Orchestration layer that *integrates* existing systems; own engines where useful | ADR-0009 (Draft) sets out options A (replace), B (orchestrate only) and C (orchestrate first, own engines per tenant and per domain via EA-101) and recommends C. **Owner decision OD-1** |
+| C2 | **System of record for accounting and NAV** | PRD-000 Modules 08/09 and DDL-000 make AMC OS the scheme ledger and NAV publisher | External accounting platform and NAV authority are system of record by default; AMC OS keeps projections, shadow calculations and reconciliation | EA-101 modes; ADR-0009. **Owner decision OD-2** |
+| C3 | **Customer scale** | GOV-006 Q1: design capacity 50 AMCs; commercial target 1 pilot → 3–5 | "20–50 AMC customers initially" | Treated as design capacity (consistent with Q1); commercial target unchanged unless owner revisits Q1. **Owner decision OD-3** |
+| C4 | **Agent list** | PRD-000 §9.3: 11 agents; master prompt §4 D17: 11 copilots/assistants plus a RAG knowledge system | 1 supervisor + 13 specialists + 7 utility agents | Mapping in AIML-100 §5; PRD-000 "Product Intelligence Agent" has no counterpart (OD-9) |
 | C5 | **Layers** | Master prompt §5: 7 layers | 8 layers (adds AI orchestration and policy/execution control as separate layers; AI platform folds into them) | Mapping in §3 below; no capability lost |
 | C6 | **New technology** | No ADR for API gateway, policy engine, LangGraph or MCP | Kong-or-equivalent, OPA-or-equivalent, LangGraph, official MCP SDKs | Proposed ADR-0014, ADR-0015 (Draft); EA-106 evaluation |
 | C7 | **Sequencing** | WP3 starts after WP2 | Architecture written now | Marked PROPOSAL; branch `proposal/…` excluded from the build loop |
-| C8 | **Commercial claim** "20–50 AMCs initially" vs ~51 AMCs in India (PS-003) | — | Kept as capacity, not a sales forecast | O-3 |
+| C8 | **Commercial claim** "20–50 AMCs initially" vs ~51 AMCs in India (PS-003) | — | Kept as capacity, not a sales forecast | OD-3 |
+| C9 | **Agent registry shape** | DDL-000 `ai.agent`: per-tenant table, key `(tenant_id, agent_code)`, codes like `RESEARCH_AGENT`, risk tier LOW/MEDIUM/HIGH | Global agent definitions (control plane) + per-tenant enablement; IDs `AG-*` | Proposed for WP4: a global, versioned `ai.agent_definition` + `ai.agent` kept as per-tenant enablement with its own service identity; one ID format chosen in WP4; risk tier mapped to R0–R2. **Decision OD-10** |
+| C10 | **Workspaces** | Master prompt §5 L1: 12 separate experiences incl. **Fund accounting** and **NAV operations** separately | Owner brief: 12 workspaces with one "NAV and Accounting Desk" and an "Enterprise AI Assistant" | EA-104 shows both options. **Owner decision OD-11** |
+| C11 | **Order state machine** | DDL-000 `trading.order_state_transition` (30 transitions) | All kept; adds UNKNOWN_SUBMISSION, UNKNOWN_CANCEL, MANUAL_INVESTIGATION | EA-102 §2.1; WP4 migration |
+| C12 | **Model fallback** | PRD-000 §9.2: each agent pinned to a model version | Optional fallback model | Allowed only as a separately evaluated, pinned version (AIML-101) |
+| C13 | **Data stores** | ADR-0007: pgvector on a separate PostgreSQL cluster; ClickHouse in the store set | Same; EA-106 only *suggests* re-opening ClickHouse timing | Any change only through a new ADR in Step 10 |
 
 No Approved decision is overridden, because none exists. Where this proposal departs from a Draft, the departure is named here and in the ADR concerned.
 
@@ -104,12 +123,12 @@ sequenceDiagram
   participant G as Gateway (L2)
   participant S as Supervisor (L4)
   participant P as Policy engine (L5)
-  participant T as Tool: portfolio.positions.read
-  participant D as Portfolio service (L3)
+  participant T as Tool: nav.run.read
+  participant D as NAV service (L3)
   U->>G: "Why did Fund X's NAV fall 1.2% today?"
   G->>S: request + user token (tenant resolved)
   S->>S: classify intent -> NAV Ops + Portfolio agents
-  S->>P: authorise(user, agent=nav_ops, tenant, tool=nav.run.read, R1)
+  S->>P: authorise(user, agent=AG-NAV, tenant, tool=nav.run.read, R1)
   P-->>S: allow (short-lived scoped token)
   S->>T: call with scoped token
   T->>D: typed read
@@ -166,15 +185,17 @@ sequenceDiagram
 
 | # | Decision needed | Options | Owner |
 | --- | --- | --- | --- |
-| O-1 | Positioning: orchestration-first, platform-first, or both per tenant | ADR-0009 | Project owner |
-| O-2 | Default system of record for accounting and NAV per deployment | EA-101 modes O / S / E | Project owner + pilot AMC |
-| O-3 | "20–50 AMCs initially": capacity target or commercial target | GOV-006 Q1 | Project owner |
-| O-4 | Model providers and India data residency for prompts | AI gateway configuration | CTO + compliance **[VAL]** |
-| O-5 | API gateway product | ADR-0015 | ARB |
-| O-6 | Policy engine product | ADR-0015 | ARB |
-| O-7 | Kafka from day one or in-process events first | ADR-0006 (already "where justified") | ARB |
-| O-8 | Whether AMC OS exposes an MCP server to external AI clients in v1 | INT-100 §3 | Project owner |
-| O-9 | Agent for D02 Product and Scheme (missing in the 13) | AIML-100 §4 | Project owner |
+| OD-1 | Positioning: orchestration-first, platform-first, or both per tenant | ADR-0009 | Project owner |
+| OD-2 | Default system of record for accounting and NAV per deployment | EA-101 modes O / S / E | Project owner + pilot AMC |
+| OD-3 | "20–50 AMCs initially": capacity target or commercial target | GOV-006 Q1 | Project owner |
+| OD-4 | Model providers and India data residency for prompts | AI gateway configuration | CTO + compliance **[VAL]** |
+| OD-5 | API gateway product | ADR-0015 | ARB |
+| OD-6 | Policy engine product | ADR-0015 | ARB |
+| OD-7 | Kafka from day one or in-process events first | ADR-0006 (already "where justified") | ARB |
+| OD-8 | Whether AMC OS exposes an MCP server to external AI clients in v1 | INT-100 §3 | Project owner |
+| OD-9 | Agent for D02 Product and Scheme (missing in the 13) | AIML-100 §4 | Project owner |
+| OD-10 | Agent registry: global definitions + per-tenant enablement (C9) | AIML-101 | ARB |
+| OD-11 | Workspaces: owner's 12 or the master prompt's 12 experiences (C10) | EA-104 | Project owner |
 
 ## 8. Dependencies
 

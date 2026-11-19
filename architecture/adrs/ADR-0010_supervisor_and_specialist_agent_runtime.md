@@ -26,11 +26,11 @@ The owner's architecture names a supervisor, 13 specialist and 7 utility agents.
 4. All agent permissions follow ADR-0008 and SEC-100.
 
 ## Alternatives considered
-| Option | Why not chosen |
-| --- | --- |
-| One microservice per agent | High cost and ops load; no isolation benefit since tools are the boundary |
-| Custom orchestrator | More code to own; LangGraph covers checkpoints and interrupts |
-| Single general agent | Weak separation of permissions and evaluation |
+| Option | Pros | Cons | Why not chosen |
+| --- | --- | --- | --- |
+| One microservice per agent | Strong process isolation | High cost and operations load for 21 agents × cells | Tools and policy are the real security boundary, so isolation adds little |
+| Custom orchestrator | No framework dependency | More code to build and maintain | LangGraph already provides checkpoints and human-interrupt points |
+| Single general agent | Simplest | Weak separation of permissions; hard to evaluate | Fails least-privilege |
 
 ## Consequences
 Positive: cheap to add agents; uniform audit. Negative: dependency on LangGraph's release pace; mitigated by internal interface.
@@ -39,6 +39,6 @@ Positive: cheap to add agents; uniform audit. Negative: dependency on LangGraph'
 Prototype in WP5 with two agents; evaluation suites; load test per cell.
 
 ## Change log
-| Date | Change |
-| --- | --- |
-| 2026-11-20 | Created as proposal (EA-100 set) |
+| Date | Status | By | Note |
+| --- | --- | --- | --- |
+| 2026-11-20 | Draft | Claude (AI author) for project owner | Created as proposal (EA-100 set) |

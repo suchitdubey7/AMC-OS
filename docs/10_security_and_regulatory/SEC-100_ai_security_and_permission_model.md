@@ -5,7 +5,7 @@ status: Draft
 version: 0.1
 owner: CISO
 approver: Project owner (interim ARB)
-work_package: WP3/WP5 (proposal; input to GOV-006 security steps)
+work_package: WP6 (proposal; final owner GOV-006 Step 25, SEC-001)
 last_updated: 2026-11-20
 ---
 
@@ -26,7 +26,7 @@ Every agent tool call is allowed only if **all four** allow it:
 
 Effective permission = **user ∩ agent ∩ tenant ∩ tool**. Delegation to a sub-agent never adds permissions.
 
-A central policy engine (ADR-0012, ADR-0015) evaluates versioned policies; policy bundles are signed and distributed from the control plane (EA-103 CP-2). The engine **fails closed** (EA-105 F12).
+A central policy engine (ADR-0012, ADR-0015) evaluates versioned policies; policy bundles are signed and distributed from the control plane (EA-103 CPR-2). The engine **fails closed**: if it is unavailable, every agent tool call is denied, including R0 (EA-105 FH-12).
 
 ## 2. Risk classes
 
@@ -52,12 +52,12 @@ AI agents must never:
 7. Rewrite or delete history (audit, ledgers, approvals).
 8. Bypass maker-checker.
 
-Enforcement layers: (a) no such tools exist (AIML-102 §3); (b) agent service identities lack the permissions; (c) database triggers already block AI identities from approvals (DDL-000, DBT-000 T5b); (d) red-team tests (§8).
+Enforcement layers: (a) no such tools exist (AIML-102 §3); (b) agent service identities lack the permissions; (c) in the database today, a trigger blocks AI service identities from recording approvals — this is the **only** restriction already tested (DBT-000 T5b); the other seven are **not yet tested**; (d) red-team and forbidden-action tests (§8) must cover all eight before any agent is enabled.
 
 ## 4. Tenant isolation for AI
 
 - Tenant ID comes from the user token, never from the prompt or model output.
-- Retrieval, vector search, caches, conversation memory and tool calls are all tenant-filtered by the platform (RLS + namespace), then re-checked on every retrieved item (EA-105 F14).
+- Retrieval, vector search, caches, conversation memory and tool calls are all tenant-filtered by the platform (RLS + namespace), then re-checked on every retrieved item (EA-105 FH-14).
 - No cross-tenant learning: no tenant data in prompts for another tenant, no shared fine-tuning **[DES]**.
 
 ## 5. Prompt-injection protection
@@ -76,12 +76,12 @@ Enforcement layers: (a) no such tools exist (AIML-102 §3); (b) agent service id
 - **Masking:** Restricted fields masked in prompts and logs unless the user has unmask permission and the task needs it.
 - **Model provider egress:** only through the AI gateway; data class checked against the provider's approval; redaction applied; provider contract must forbid training on tenant data and set retention **[VAL]**.
 - **Secrets:** in a secrets manager per cell; never in prompts, logs, code or repository; agents never see credentials.
-- **Short-lived credentials:** per-call tokens for tools; minutes, not days **[DES]**.
+- **Short-lived credentials:** per-call tokens for tools; lifetime in minutes, not days **[DES]**.
 - **Allow-lists:** for tools per agent, for network egress per adapter, for external MCP servers.
 
 ## 7. Revocation
 
-Disabling a user, role, agent, tool or tenant takes effect on the next call (tokens are per call; policy cache short). Running agent sessions are stopped. Kill switches: EA-105 §4.
+Disabling a user, role, agent, tool or tenant takes effect on the next call (tokens are per call; policy cache short). Running agent sessions are stopped. Kill switches: EA-105 §4. **Exception to maker-checker:** an emergency *disable* is an R3 human action that one authorised person may do alone, because it can only reduce what AI can do; *re-enabling* needs maker-checker.
 
 ## 8. Tests required before any agent is enabled
 

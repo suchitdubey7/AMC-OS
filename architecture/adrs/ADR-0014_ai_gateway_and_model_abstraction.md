@@ -23,13 +23,13 @@ Model providers change quickly, and tenants may restrict where data goes. Agents
 1. All model calls pass through an AI gateway in each cell: provider abstraction, per-data-class routing, redaction, budgets, logging.
 2. Providers and models are allow-listed per tenant and data class; contracts must exclude training on tenant data **[VAL]**.
 3. The gateway is isolated from financial processing; its failure degrades AI only (EA-105).
-4. Provider choice and data residency are owner decision O-4.
+4. Provider choice and data residency are owner decision OD-4.
 
 ## Alternatives considered
-| Option | Why not chosen |
-| --- | --- |
-| Call providers directly from agents | No central redaction, budget or audit |
-| Self-host only | Capability and cost trade-off; may be allowed per tenant later |
+| Option | Pros | Cons | Why not chosen |
+| --- | --- | --- | --- |
+| Agents call model providers directly | Less latency, fewer components | No central redaction, budget or audit | Breaks SEC-100 §6 |
+| Self-hosted models only | Data never leaves the cell | Capability and cost trade-off; ops burden | May be allowed per tenant later (OD-4) |
 
 ## Consequences
 Positive: provider independence. Negative: another component to run.
@@ -38,6 +38,6 @@ Positive: provider independence. Negative: another component to run.
 Redaction tests; failover tests; chaos test with gateway down during NAV run (as ADR-0008).
 
 ## Change log
-| Date | Change |
-| --- | --- |
-| 2026-11-20 | Created as proposal (EA-100 set) |
+| Date | Status | By | Note |
+| --- | --- | --- | --- |
+| 2026-11-20 | Draft | Claude (AI author) for project owner | Created as proposal (EA-100 set) |

@@ -22,9 +22,9 @@ ADR-0012 proposes a central policy engine; EA-100 L2 needs an API gateway. Candi
 **Open — no product selected.** Evaluation criteria: OIDC support, per-tenant rate limits, plugin model, licence terms, operational footprint, decision-log export, latency. Leading candidates for evaluation: Kong (gateway) and OPA (policy). To be decided after Q5 (cloud) and Q6 (IdP).
 
 ## Alternatives considered
-| Option | Why not chosen |
-| --- | --- |
-| Decide now | Depends on unanswered cloud and IdP questions |
+| Option | Pros | Cons | Why not chosen |
+| --- | --- | --- | --- |
+| Decide the products now | Removes uncertainty early | Depends on unanswered cloud (Q5) and IdP (Q6) questions | Premature |
 
 ## Consequences
 Until decided, designs refer to 'API gateway' and 'policy engine' generically.
@@ -33,6 +33,6 @@ Until decided, designs refer to 'API gateway' and 'policy engine' generically.
 Proof of concept against criteria in GOV-006 Step 10.
 
 ## Change log
-| Date | Change |
-| --- | --- |
-| 2026-11-20 | Created as proposal (EA-100 set) |
+| Date | Status | By | Note |
+| --- | --- | --- | --- |
+| 2026-11-20 | Draft | Claude (AI author) for project owner | Created as proposal (EA-100 set) |

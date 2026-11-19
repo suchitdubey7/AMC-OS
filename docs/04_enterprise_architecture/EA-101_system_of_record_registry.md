@@ -43,9 +43,9 @@ The mode is set per tenant by an authorised administrator through an R3 change (
 | Investor / folio master, unit holdings | RTA (CAMS / KFintech) | E | — | Mirror mode chosen by owner (GOV-006 Q2) |
 | Investor transactions (purchase, redemption, switch, SIP) | RTA | E | — | AMC OS stores copies for analytics and servicing |
 | KYC status | KRA / CKYC | E | — | |
-| Scheme ledger (accounting) | AMC's accounting platform | **E or S** (O only where AMC chooses) | — | Conflict C2 in EA-100; owner decision O-2 |
+| Scheme ledger (accounting) | AMC's accounting platform | **E or S** (O only where AMC chooses) | — | Conflict C2 in EA-100; owner decision OD-2 |
 | NAV (official) | AMC's NAV authority / fund accountant | **E or S** (O only where AMC chooses) | — | AMC OS never publishes NAV unless mode O **and** human approval |
-| NAV published to AMFI | AMC (via its authorised process) | E | — | AMC OS may prepare the file; humans submit |
+| NAV published to AMFI | AMC (via its authorised process) **[VAL — confirm submission route with the pilot AMC's NAV team]** | E | — | AMC OS may prepare the file; humans submit |
 | Market prices and reference data | Data vendors / exchanges / AMFI | E | — | Licence terms apply (INT-100 §5) |
 | Distributor master, commissions | AMC OS **or** existing system | O or E | — | Per tenant |
 | AMC corporate finance (P&L, budget) | AMC's ERP | E | — | |
@@ -63,5 +63,5 @@ AMC OS keeps four distinct records and never merges them into one status field: 
 
 ## 5. Open items
 
-- O-2: default mode for accounting and NAV (EA-100 §7).
+- OD-2: default mode for accounting and NAV (EA-100 §7).
 - The existing DDL-000 assumes mode O for accounting and NAV. If the owner picks E/S as default, WP4 must add projection and shadow tables; the current tables remain valid for tenants in mode O.

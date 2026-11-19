@@ -5,7 +5,7 @@ status: Draft
 version: 0.1
 owner: Chief Risk Officer
 approver: Project owner (interim ARB)
-work_package: WP3 (proposal; depends on WP2 workflows and roles)
+work_package: WP6 (proposal; final owner GOV-006 Step 25, SEC-001; depends on WP2 workflows and roles)
 last_updated: 2026-11-20
 ---
 
@@ -40,14 +40,16 @@ flowchart LR
 
 ## 3. Approval rules (proposed defaults, to be set per tenant in WP2)
 
+All maker and checker roles below are **[ASSUMPTION — confirm in BA-005 with the pilot AMC's heads of investment, operations and compliance]**.
+
 | Action | Maker | Checker | Extra |
 | --- | --- | --- | --- |
 | Order submit / approve / release | Fund manager | CIO or delegate; dealer releases | Pre-trade compliance at submit and release |
 | Journal posting | Accountant | Senior accountant | Balanced-journal check |
 | NAV approval / publication (only if SoR mode O) | NAV ops | Fund accountant head | All validations green or waived with reason |
-| Payment approval | Ops | Finance (two signatories per bank mandate) | Bank mandate limits **[VAL]** |
+| Payment approval | Ops | Finance (two signatories per bank mandate) | Bank mandate limits **[VAL — Finance to confirm per bank mandate]** |
 | Compliance rule/limit change | Compliance officer | Head of compliance | Effective-dated version; no retroactive change |
-| SoR mode, role, agent enablement change | Tenant admin | Second admin | Step-up MFA |
+| SoR mode, role, agent enablement change | Tenant admin | Second admin | Step-up MFA. Exception: emergency **disable** of an agent or tool needs one person only (SEC-100 §7) |
 
 ## 4. Prohibited shortcuts
 

@@ -51,17 +51,17 @@ flowchart LR
 
 | Rule | Detail |
 | --- | --- |
-| CP-1 | The control plane **must not have unrestricted access to customer financial data**. It holds tenant metadata, configuration, release state, definitions and aggregate telemetry only. |
-| CP-2 | Data flows CP → DP as **signed, versioned artefacts** (config, policy bundles, registry definitions). The data plane verifies signatures before applying. |
-| CP-3 | DP → CP telemetry is filtered at source: no prompts, no tool payloads, no investor PII, no positions or prices. Traces sent to the fleet view carry IDs and timings only. |
-| CP-4 | Operator access to a data plane (support) is **break-glass**: time-boxed, ticket-linked, approved by the tenant's admin where contract requires, fully audited, read-only by default. |
-| CP-5 | Each data-plane cell holds its own secrets, encryption keys (per tenant in shared cells) and audit chain. |
-| CP-6 | The data plane keeps running if the control plane is unavailable; only upgrades, onboarding and config changes pause. |
+| CPR-1 | The control plane **never stores customer financial data and has no standing access to it** (ADR-0003). It holds tenant metadata, configuration, release state, definitions and aggregate telemetry only. The only exception is time-boxed break-glass support access under CPR-4, which happens inside the data plane. |
+| CPR-2 | Data flows CP → DP as **signed, versioned artefacts** (config, policy bundles, registry definitions). The data plane verifies signatures before applying. |
+| CPR-3 | DP → CP telemetry is filtered at source: no prompts, no tool payloads, no investor PII, no positions or prices. Traces sent to the fleet view carry IDs and timings only. |
+| CPR-4 | Operator access to a data plane (support) is **break-glass**: time-boxed, ticket-linked, approved by the tenant's admin where contract requires, fully audited, read-only by default. |
+| CPR-5 | Each data-plane cell holds its own secrets, encryption keys (per tenant in shared cells) and audit chain. |
+| CPR-6 | The data plane keeps running if the control plane is unavailable; only upgrades, onboarding and config changes pause. |
 
 ## 3. Cells
 
-- A cell = one complete data-plane stack in one region. Proposed shared-cell size: up to ~10 tenants **[ASSUMPTION — capacity test in WP6]**.
-- For 20–50 AMCs (design capacity, EA-100 C3): roughly 3–5 shared cells plus any dedicated cells.
+- A cell = one complete data-plane stack in one region. Proposed shared-cell size: up to ~10 tenants **[ASSUMPTION — confirm by capacity test (QA lead, WP6)]**.
+- For 20–50 AMCs (design capacity, EA-100 C3) at ~10 tenants per cell: 2–5 shared cells, plus one spare cell for headroom and any dedicated cells.
 - Blast radius: an incident or bad release affects one cell; releases roll out cell by cell (canary cell first).
 
 ## 4. Upgrades
@@ -75,15 +75,15 @@ flowchart LR
 
 | Item | Proposal | Status |
 | --- | --- | --- |
-| RPO / RTO targets | Per tier, set with pilot AMC and in line with SEBI cyber-security and resilience requirements **[REG — confirm current SEBI CSCRF provisions applicable to AMCs]** | Open |
+| RPO / RTO targets | Per tier, set with pilot AMC and in line with SEBI cyber-security and resilience requirements **[VAL — Compliance to confirm which SEBI CSCRF provisions apply to AMCs and their targets]** | Open |
 | Database | Continuous WAL archiving + daily snapshots, cross-region copy | Proposal |
 | Per-tenant restore | Supported in dedicated cells; in shared cells via logical export by tenant_id **[DES]** | Proposal; test in WP6 |
 | Audit chain | Backed up with integrity hash verification on restore | Proposal |
-| DR drills | At least twice a year per cell **[ASSUMPTION]** | Open |
-| Data residency | India regions for all tenant data **[VAL — confirm with SEBI requirements and customer contracts]** | Open (Q5) |
+| DR drills | Quarterly per cell, results recorded (GOV-004 §4) | Aligned |
+| Data residency | India regions for all tenant data **[VAL — Compliance and legal to confirm against SEBI requirements and customer contracts]** | Open (Q5) |
 
 ## 6. Open items
 
 - Q5 cloud provider and region; key management service choice.
-- Whether AI model inference must stay in India (O-4).
+- Whether AI model inference must stay in India (OD-4).
 - Contractual terms for operator break-glass access.

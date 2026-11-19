@@ -19,21 +19,21 @@ Core rule: **AI failure must never stop or corrupt financial processing** (ADR-0
 
 | # | Failure | Detection | Behaviour | Recovery |
 | --- | --- | --- | --- | --- |
-| F1 | Model provider down or slow | Timeout, error rate | Agent returns "assistant unavailable"; workspaces keep working without AI panels | Failover to secondary model if configured and approved for that data class; else wait |
-| F2 | Model output malformed (fails schema) | Output schema validation | Retry once with same input; then fail closed | Logged; counted in agent quality metrics |
-| F3 | Ungrounded number in answer | Grounding checker | Answer blocked; user sees "could not verify" | Logged as quality incident |
-| F4 | Prompt injection detected | Input/retrieval scanners, tool-call anomaly | Tool call denied; session flagged | Security review (SEC-100) |
-| F5 | Tool denied by policy | Policy engine | Agent explains what permission is missing; no workaround | User requests access through normal route |
-| F6 | Tool timeout (read) | Timeout | Retry per tool registry policy (idempotent reads only) | Circuit breaker after N failures **[DES]** |
-| F7 | Tool timeout (write, R2) | Timeout | Do not retry blindly; query by idempotency key | Same idempotency key guarantees one effect |
-| F8 | Provider submission outcome unknown | No ACK / connection loss | UNKNOWN state (EA-102 §4) | Query provider; human decides |
-| F9 | Adapter receives invalid data | Canonical schema validation | Record quarantined; nothing downstream consumes it | Data-quality exception queue |
-| F10 | Event consumer fails | Retry exhaustion | Dead-letter queue | Replay after fix (idempotent consumers) |
-| F11 | Workflow worker crash | Temporal | Workflow resumes from last completed activity | Automatic |
-| F12 | Policy engine unavailable | Health check | **Fail closed** for R1–R3 (deny); R0 public content allowed | Restore; no bypass switch |
-| F13 | Agent loops or exceeds budget | Step/token/time limits | Run stopped; partial result clearly labelled | Logged |
-| F14 | Cross-tenant data appears in context | Tenant tag check on every retrieved item | Item dropped; run aborted; security incident | SEC-100 incident process |
-| F15 | Control plane down | Health | Data planes continue; upgrades and config changes pause | EA-103 CP-6 |
+| FH-01 | Model provider down or slow | Timeout, error rate | Agent returns "assistant unavailable"; workspaces keep working without AI panels | Switch to a fallback model **only if** it is a separately evaluated, pinned agent version (AIML-101); else wait |
+| FH-02 | Model output malformed (fails schema) | Output schema validation | Retry once with same input; then fail closed | Logged; counted in agent quality metrics |
+| FH-03 | Ungrounded number in answer | Grounding checker | Answer blocked; user sees "could not verify" | Logged as quality incident |
+| FH-04 | Prompt injection detected | Input/retrieval scanners, tool-call anomaly | Tool call denied; session flagged | Security review (SEC-100) |
+| FH-05 | Tool denied by policy | Policy engine | Agent explains what permission is missing; no workaround | User requests access through normal route |
+| FH-06 | Tool timeout (read) | Timeout | Retry per tool registry policy (idempotent reads only) | Circuit breaker after N failures **[DES]** |
+| FH-07 | Tool timeout (write, R2) | Timeout | Do not retry blindly; query by idempotency key | Same idempotency key guarantees one effect |
+| FH-08 | Provider submission outcome unknown | No ACK / connection loss | UNKNOWN state (EA-102 §4) | Query provider; human decides |
+| FH-09 | Adapter receives invalid data | Canonical schema validation | Record quarantined; nothing downstream consumes it | Data-quality exception queue |
+| FH-10 | Event consumer fails | Retry exhaustion | Dead-letter queue | Replay after fix (idempotent consumers) |
+| FH-11 | Workflow worker crash | Temporal | Workflow resumes from last completed activity | Automatic |
+| FH-12 | Policy engine unavailable | Health check | **Fail closed: all agent tool calls denied** (including R0) | Restore; no bypass switch |
+| FH-13 | Agent loops or exceeds budget | Step/token/time limits | Run stopped; partial result clearly labelled | Logged |
+| FH-14 | Cross-tenant data appears in context | Tenant tag check on every retrieved item | Item dropped; run aborted; security incident | SEC-100 incident process |
+| FH-15 | Control plane down | Health | Data planes continue; upgrades and config changes pause | EA-103 CPR-6 |
 
 ## 2. Retry rules
 
@@ -46,10 +46,10 @@ Core rule: **AI failure must never stop or corrupt financial processing** (ADR-0
 
 | Mode | Trigger | What users see |
 | --- | --- | --- |
-| AI off | F1 / F12 / manual kill switch | Banner; AI panels hidden; all deterministic functions work |
+| AI off | FH-01 / FH-12 / manual kill switch | Banner; AI panels hidden; all deterministic functions work |
 | Read-only integration | Provider outage | Last-good data with "as of" timestamp |
 | Manual dealing | Broker link down | Orders stay APPROVED; dealer uses broker's own channel per desk procedure; trades booked back with reference |
 
 ## 4. Kill switches
 
-Per tenant and per agent, an authorised admin can disable an agent, a tool or all AI within one minute **[DES target]**. Disabling is R2 (fast, single approver); re-enabling is R3 (maker-checker).
+Per tenant and per agent, an authorised human admin can disable an agent, a tool or all AI within one minute **[DES target]**. **Emergency disable is an R3 human action that needs only one person** (an explicit exception to maker-checker, because it can only reduce what AI can do). Re-enabling is a normal R3 action with maker-checker. Same rule in SEC-100 §7 and SEC-101 §3.

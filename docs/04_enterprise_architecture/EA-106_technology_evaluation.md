@@ -22,11 +22,11 @@ Scoring: **Fit** = how well it meets AMC OS needs; **Risk** = adoption/operation
 | Transactional DB | PostgreSQL 16+ | ADR-0004, 0007 | H | L | RLS, NUMERIC, tested in DBT-000 | — | — |
 | Analytics DB | ClickHouse | ADR-0007 | H | M | Fast aggregates for dashboards; needs ops skill | PostgreSQL only at pilot scale | — |
 | Workflows | Temporal | ADR-0006 | H | M | Durable, auditable workflows; fits EA-102 | Camunda, custom state tables | — |
-| Events | Kafka | ADR-0006 | M | M | Needed at multi-cell scale; heavy for pilot | Outbox + PostgreSQL queue first | — (O-7) |
+| Events | Kafka | ADR-0006 | M | M | Needed at multi-cell scale; heavy for pilot | Outbox + PostgreSQL queue first | — (OD-7) |
 | Agent runtime | LangGraph | none | H | M | Explicit graph/state, checkpoints, human-interrupt nodes, model-agnostic | Custom orchestrator, other frameworks | **ADR-0010** |
-| MCP | Official MCP SDKs (Python, TypeScript) | none | H | M | Open protocol; Tier-1 SDKs; spec includes OAuth-based authorization; spec revisions frequent | Plain REST tools only | **ADR-0011** |
+| MCP | Official MCP SDKs (Python, TypeScript) | none | H | M | Open protocol; official Python and TypeScript SDKs with OAuth-based authorization support; new specification revision dated 2026-07-28 ([MCP blog, SDK tag](https://blog.modelcontextprotocol.io/tags/sdk/); [Python SDK authorization docs](https://py.sdk.modelcontextprotocol.io/authorization/)) | Plain REST tools only | **ADR-0011** |
 | Dataframes | Polars | ADR-0007 | H | L | Fast, deterministic; not for money rounding (Decimal in engines) | pandas | — |
-| Vectors | pgvector | ADR-0007 | H | L | Same database, RLS applies to embeddings | Dedicated vector DB | — |
+| Vectors | pgvector | ADR-0007 | H | L | PostgreSQL extension on a separate PostgreSQL cluster (ADR-0007); RLS applies to embeddings | Dedicated vector DB | — |
 | API gateway | Kong (or equivalent) | none | M | M | Rate limits, auth plugins; licence edition matters | Envoy-based, cloud gateway | **ADR-0015** |
 | Policy engine | OPA (or equivalent) | none | H | M | Policy as code, versioned bundles, decision logs | Cedar, in-app rules | **ADR-0012 / 0015** |
 | Object store | S3-compatible | ADR-0007 | H | L | Documents, files, object lock for evidence | — | — |
@@ -37,5 +37,5 @@ Scoring: **Fit** = how well it meets AMC OS needs; **Risk** = adoption/operation
 
 ## Unresolved
 
-- Kafka timing (O-7); gateway and policy engine products (O-5, O-6); IdP (Q6); cloud (Q5); model providers (O-4).
-- Smallest-viable set for the pilot vs full design (master prompt "cost efficiency"): this evaluation recommends deferring Kafka and ClickHouse until volumes need them **[DES]** — to be decided in Step 10.
+- Kafka timing (OD-7); gateway and policy engine products (OD-5, OD-6); IdP (Q6); cloud (Q5); model providers (OD-4).
+- Smallest-viable set for the pilot vs full design (master prompt "cost efficiency"): this evaluation *suggests* re-examining when Kafka and ClickHouse are introduced. Kafka timing is already open under ADR-0006 ("where justified"). ClickHouse is part of ADR-0007; changing its timing would need a new ADR in Step 10 (EA-100 C13). Nothing is re-decided here.

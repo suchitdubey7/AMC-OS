@@ -29,7 +29,7 @@ last_updated: 2026-11-20
 
 | Field | Rule |
 | --- | --- |
-| `metric_id` | e.g. `MET-AUM-CLOSING` |
+| `metric_id` | e.g. `MET-AUM-CLOSING` (prefix MET-, GOV-001 §4) |
 | `name`, `definition` | Plain-language definition |
 | `formula` | Deterministic, in a versioned expression or code reference; no AI-generated formulas in production |
 | `dimensions` | Allowed slices (scheme, plan, distributor, region, date) |
@@ -39,7 +39,7 @@ last_updated: 2026-11-20
 | `owner` | Business owner |
 | `approval` | Approved by owner + data governance (maker ≠ checker) |
 | `certification_status` | Draft / Certified / Deprecated — agents may use **Certified** only |
-| `regulatory_basis` | If defined by regulation, the reference **[REG]** |
+| `regulatory_basis` | If defined by regulation, the reference (labelled [REG] only once confirmed with a source) |
 
 ## 3. Decision intelligence pattern
 
@@ -49,8 +49,8 @@ last_updated: 2026-11-20
 
 ## 4. ML models (forecasts, anomaly scores)
 
-Allowed as **advisory signals** (e.g. redemption forecasts, churn scores), labelled as estimates, never as booked or published figures. Model governance (validation, drift, owner) is required before use and is to be specified in WP5 (GOV-006 gap 11).
+Allowed as **advisory signals** (e.g. redemption forecasts, churn scores), labelled as estimates, never as booked or published figures. Model governance (validation, drift, owner) is required before use and is to be specified in WP6 (GOV-006 Step 26, AIML-002; gap 11).
 
 ## 5. Open items
 
-Metric list per workspace (WP2 Step 2 onward); which metrics are regulatory definitions (e.g. AUM categories) **[REG — confirm]**.
+Metric list per workspace (WP2 Step 2 onward); which metrics are regulatory definitions (e.g. AUM categories) **[VAL — Compliance to confirm]**.

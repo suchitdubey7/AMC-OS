@@ -5,7 +5,7 @@ status: Draft
 version: 0.1
 owner: Head of AI
 approver: Project owner (interim ARB)
-work_package: WP5 (proposal)
+work_package: WP6 (proposal; final owner GOV-006 Step 26, AIML-001)
 last_updated: 2026-11-20
 ---
 
@@ -17,20 +17,20 @@ last_updated: 2026-11-20
 
 | Item | Stored where | Retention |
 | --- | --- | --- |
-| Run ID, correlation ID, tenant, user, agent ID@version, prompt version, model + version | `ai` schema (session/run tables, PRD-000 §9) | Per records policy **[REG — confirm SEBI record-keeping period]** |
+| Run ID, correlation ID, tenant, user, agent ID@version, prompt version, model + version | `ai` schema (session/run tables, PRD-000 §9) | Per records policy **[VAL — Compliance to confirm the applicable SEBI record-keeping period]** |
 | User input (masked per class) | `ai` schema | Same |
 | Plan and delegation tree | `ai` schema | Same |
 | Every tool call: tool@version, policy decision + reason, inputs/outputs (masked), latency, status | Tool-call log (insert-only) | Same |
 | Retrieved documents: ID, version, page, effective date | `ai` schema | Same |
 | Output, grounding-check result, citations | `ai` schema | Same |
 | Proposals created (target module, record ID) | Target module + audit | Same |
-| Tokens, cost, latency | Metrics store | 13 months **[ASSUMPTION]** |
+| Tokens, cost, latency | Metrics store | 13 months **[ASSUMPTION — confirm with CTO and Compliance]** |
 
 All rows carry `tenant_id` and follow RLS. Policy decisions and proposals also go to the hash-chained audit log (DDL-000 `audit` schema).
 
 ## 2. Tracing
 
-OpenTelemetry spans: user request → supervisor → agent → policy decision → tool → domain service → adapter → provider. Span attributes contain IDs and timings only; payloads stay in the data plane (EA-103 CP-3).
+OpenTelemetry spans: user request → supervisor → agent → policy decision → tool → domain service → adapter → provider. Span attributes contain IDs and timings only; payloads stay in the data plane (EA-103 CPR-3).
 
 ## 3. Quality monitoring
 

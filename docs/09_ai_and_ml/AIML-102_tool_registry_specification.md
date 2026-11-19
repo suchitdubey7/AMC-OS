@@ -5,7 +5,7 @@ status: Draft
 version: 0.1
 owner: Head of AI
 approver: Project owner (interim ARB)
-work_package: WP5 (proposal)
+work_package: WP6 (proposal; final owner GOV-006 Step 26, AIML-001)
 last_updated: 2026-11-20
 ---
 
@@ -19,10 +19,10 @@ A *tool* is the only way an agent can touch data or systems. Every tool wraps a 
 
 | Category | Examples | Who builds | Notes |
 | --- | --- | --- | --- |
-| T1 Internal business tools | `oms.order.draft`, `nav.run.read`, `compliance.whatif.run` | Owning domain team | Call domain APIs; writes only where AMC OS is SoR (EA-101) |
-| T2 Internal data / analytics tools | `metrics.get`, `analytics.query_certified` | Data platform | Return only certified metrics (DA-100) |
-| T3 External vendor tools | Market data, regulatory sources, RTA reports | Integration team (adapters) | Behind canonical contracts (INT-100) |
-| T4 Approved MCP tools | Tools from a vendor MCP server that passed review | Integration team | Proxied through the AMC OS MCP gateway; never called directly by agents |
+| TC1 Internal business tools | `oms.order.draft`, `nav.run.read`, `compliance.whatif.run` | Owning domain team | Call domain APIs; writes only where AMC OS is SoR (EA-101) |
+| TC2 Internal data / analytics tools | `metrics.get`, `analytics.query_certified` | Data platform | Return only certified metrics (DA-100) |
+| TC3 External vendor tools | Market data, regulatory sources, RTA reports | Integration team (adapters) | Behind canonical contracts (INT-100) |
+| TC4 Approved MCP tools | Tools from a vendor MCP server that passed review | Integration team | Proxied through the AMC OS MCP gateway; never called directly by agents |
 
 ## 2. Fields
 
@@ -31,7 +31,7 @@ A *tool* is the only way an agent can touch data or systems. Every tool wraps a 
 | `tool_id` (e.g. `oms.order.draft`) | yes | `<domain>.<object>.<verb>` |
 | `name`, `description` | yes | Description is what the model sees; reviewed for injection-safe wording |
 | `owning_domain` | yes | D-code; single owner |
-| `category` | yes | T1–T4 |
+| `category` | yes | TC1–TC4 |
 | `input_schema`, `output_schema` | yes | JSON Schema; strict (no extra properties) |
 | `version` | yes | semver; breaking change = major |
 | `tenant_scope` | yes | `tenant` (always, for customer data) or `global` (public reference only) |
@@ -47,7 +47,7 @@ A *tool* is the only way an agent can touch data or systems. Every tool wraps a 
 | `credential_ref` | if external | Pointer to secrets manager entry per tenant; never the secret |
 | `audit_level` | yes | Inputs/outputs logged (masked per class) |
 | `contract_ref` | yes | OpenAPI operation, event or adapter spec |
-| `licence_constraints` | if T3/T4 | Redistribution, display, AI-use terms (INT-100 §5) |
+| `licence_constraints` | if T3/TC4 | Redistribution, display, AI-use terms (INT-100 §5) |
 | `status` | yes | Draft / Approved / Suspended / Retired |
 
 ## 3. Risk class examples

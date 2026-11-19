@@ -4,7 +4,7 @@ title: Central policy engine with four-dimension authorisation and R0–R3 risk 
 status: Draft
 date: 2026-11-20
 deciders: ARB (interim: project owner)
-domains: D01, D17, all
+domains: D01, D17 + all (D01–D17)
 related: SEC-100, SEC-101; ADR-0008
 ---
 
@@ -27,10 +27,10 @@ Agent actions must be allowed only when the user, the agent, the tenant and the 
 5. Product choice (OPA or equivalent) is left to ADR-0015.
 
 ## Alternatives considered
-| Option | Why not chosen |
-| --- | --- |
-| Permission checks inside each service only | Inconsistent; hard to prove to auditors |
-| Agents with user-equivalent permissions | Violates ADR-0008 |
+| Option | Pros | Cons | Why not chosen |
+| --- | --- | --- | --- |
+| Permission checks inside each service only | No new component | Inconsistent; hard to prove to auditors | Control evidence matters more than one fewer service |
+| Agents get the user's full permissions | Simple | Breaks ADR-0008; an injected prompt could act as the user | Unsafe |
 
 ## Consequences
 Positive: provable control. Negative: policy authoring skill needed; latency budget per call.
@@ -39,6 +39,6 @@ Positive: provable control. Negative: policy authoring skill needed; latency bud
 Policy unit tests; forbidden-action suite (SEC-100 §8); fail-closed test.
 
 ## Change log
-| Date | Change |
-| --- | --- |
-| 2026-11-20 | Created as proposal (EA-100 set) |
+| Date | Status | By | Note |
+| --- | --- | --- | --- |
+| 2026-11-20 | Draft | Claude (AI author) for project owner | Created as proposal (EA-100 set) |
