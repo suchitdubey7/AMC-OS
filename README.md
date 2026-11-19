@@ -1,30 +1,47 @@
 # AMC OS
 
-Product specification and database architecture for **AMC OS**, a multi-tenant, API-first, AI-enabled operating system for Indian mutual fund Asset Management Companies.
+An enterprise operating system for Indian mutual fund Asset Management Companies: multi-tenant, API-first, deterministic financial engines, governed AI.
 
-## Contents
+**Phase:** documentation programme (no production code yet). Work Package 1 — charter and engineering governance — is in review.
 
-| Path | What it is |
+## Start here
+
+| If you want to… | Read |
 | --- | --- |
-| [`docs/PRD.md`](docs/PRD.md) | Product Requirements Document: 15 modules, 17 end-to-end workflows, user stories, role-permission matrix, NFRs, integrations, AI agents, roadmap, regulatory register |
-| [`docs/Database-Architecture.md`](docs/Database-Architecture.md) | Database architecture: storage stack, 23 schema boundaries, 13 ER diagrams, table specs, multi-tenant isolation, transaction model, data engineering, high-volume design |
-| [`db/amc_os_ddl.sql`](db/amc_os_ddl.sql) | Core PostgreSQL 16 DDL (schemas, tables, partitions, RLS, triggers, functions, materialized view) |
-| [`db/amc_os_tests.sql`](db/amc_os_tests.sql) | 24 integrity and negative security checks (cross-tenant access, double entry, immutability, state machine, maker-checker, NAV) |
+| Understand the full brief | [MASTER_BUILD_PROMPT.md](MASTER_BUILD_PROMPT.md) |
+| Work in this repo (people or AI agents) | [AGENTS.md](AGENTS.md) |
+| See scope, customers and success measures | [PS-001 Project charter](docs/01_product_strategy/PS-001_project_charter.md) |
+| See the plan and what is approved | [GOV-005 Work packages](docs/00_governance/GOV-005_work_package_plan.md), [GOV-001 Document register](docs/00_governance/GOV-001_document_control_and_identifiers.md#7-document-register-as-of-19-nov-2026) |
+| Understand IDs and the 17 domains | [GOV-001](docs/00_governance/GOV-001_document_control_and_identifiers.md) |
+| See key architecture decisions | [architecture/adrs/](architecture/adrs/) |
 
-Diagrams are Mermaid and render directly on GitHub.
+## Work package status
 
-## Run the database and tests
+| WP | Deliverable | Status |
+| --- | --- | --- |
+| WP1 | Project charter + engineering governance | In review |
+| WP2 | Business capability map + master PRD (17 domains) | Not started — v0.9 PRD exists as input |
+| WP3 | Enterprise system architecture | Not started |
+| WP4 | Data and database architecture | Not started — v0.9 doc, DDL and tests exist as input |
+| WP5 | Financial engine specifications | Not started |
+| WP6 | API, security, AI, infrastructure specifications | Not started |
+| WP7 | Traceability and baseline approval | Not started |
 
-Requires PostgreSQL 16+ with `pgcrypto` and `btree_gist` (both ship with standard PostgreSQL).
+## Repository layout
 
-```bash
-createdb amcos
-psql -d amcos -v ON_ERROR_STOP=1 -f db/amc_os_ddl.sql
-psql -d amcos -v ON_ERROR_STOP=1 -f db/amc_os_tests.sql   # prints PASS for each check
+```
+docs/            specifications, numbered 00_governance … 14_release_and_operations
+architecture/    ADRs, diagrams, domain models, ERDs, deployment models
+contracts/       OpenAPI, event and data schemas
+database/        reference DDL, migrations, seeds, database tests
+src/             application code by domain (empty until WP7 approval)
+frontend/ infrastructure/ integrations/ tests/ scripts/ deployment/
 ```
 
-Run both as a superuser or migration owner. The tests switch to the `amc_app` role so row-level security applies.
+## Existing v0.9 inputs
 
-## Status
+- [PRD-000 Master PRD v0.9](docs/03_product_requirements/PRD-000_master_prd_v0.9.md)
+- [DA-000 Data & database architecture v0.9](docs/05_data_architecture/DA-000_data_and_database_architecture_v0.9.md)
+- [DDL-000 Core PostgreSQL schema](database/ddl/DDL-000_core_schema_v0.9.sql) and [DBT-000 tests](database/tests/DBT-000_integrity_and_isolation_tests_v0.9.sql) — 24 checks pass on PostgreSQL 16.15
 
-Draft v0.9 (19 Nov 2026). Regulatory items are labelled **[REG]** confirmed, **[IND]** industry practice, **[DES]** design choice, or **[VAL]** needs legal/compliance validation. Thresholds, cut-off times and rates are not hard-coded; they belong in the versioned rule registry once validated. External provider interfaces (RTAs, exchanges, custodians, data vendors) must be confirmed with each provider.
+These are drafts, not approved baselines.
