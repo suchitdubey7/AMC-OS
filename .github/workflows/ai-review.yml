@@ -1,0 +1,59 @@
+name: AI Review (advisory)
+
+# Runs the AMC OS Review Agent (.claude/agents/amc-os-reviewer.md) on every pull request
+# and posts ONE comment with findings and an advisory verdict.
+# It cannot approve or merge: its tools are limited to reading files and posting a comment,
+# and only the project owner can merge (GOV-003, GOV-007).
+# Needs a repository secret ANTHROPIC_API_KEY; without it the job skips with a notice.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write   # needed only to post the review comment
+  id-token: write
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check that the API key is configured
+        id: key
+        env:
+          KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -n "$KEY" ]; then echo "present=true" >> "$GITHUB_OUTPUT";
+          else echo "::notice::ANTHROPIC_API_KEY is not set; AI review skipped."; fi
+
+      - name: Run AMC OS Review Agent
+        if: steps.key.outputs.present == 'true'
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+            BASE: ${{ github.event.pull_request.base.ref }}
+            HEAD SHA: ${{ github.event.pull_request.head.sha }}
+
+            Act as the AMC OS Review Agent. Read .claude/agents/amc-os-reviewer.md and follow it exactly.
+            Get the diff with: gh pr diff ${{ github.event.pull_request.number }}
+            Post your review as a single comment with:
+              gh pr comment ${{ github.event.pull_request.number }} --body-file review.md
+            (write review.md with the Write tool first).
+            Never approve, never request a formal review state, never merge, never push.
+          claude_args: |
+            --max-turns 40
+            --allowedTools "Read,Glob,Grep,Write(review.md),Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*),Bash(git diff:*),Bash(git log:*),Bash(python3 scripts/check_docs.py),Bash(python3 -c:*)"
+            --disallowedTools "Bash(gh pr review:*),Bash(gh pr merge:*),Bash(git push:*),Bash(gh api:*),Edit"
