@@ -10,6 +10,8 @@
 
 After that: Steps 4, 5, … in GOV-006 order.
 
+Housekeeping for the owner: `tests/governance/__pycache__/` is tracked and the repo has no `.gitignore`, so every local pytest run dirties the tree (STEP-02 round 1 finding 8). Owner-only path (`.github/` not involved, but adding `.gitignore` at root is a repo-wide change) — please untrack it.
+
 Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-01 round 3 Nit 2 — commit trailer follows the loop prompt (`Co-Authored-By: Claude`) rather than the older model-named format. STEP-01 round 3 finding 1 (was round 2 finding 6) — State Street pages B5 and B6 block automated fetches for the reviewer (HTTP 403); the writer opened both on 19 Nov 2026 and the cited wording matched.
 
 ## Loop notes
@@ -24,7 +26,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 2 | `gov-07-review-agent` | GOV-007 reviewer, GOV-008 loop, this file | not yet reviewed | pass | yes (23:28, on owner instruction) |
 | 3 | `wp2-step01b-review-fixes` | Step 1 review fixes (PS-001–004, GOV-005, GOV-006, CI trigger) | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor accepted, 3 Nits — 2 fixed) | pending | no |
 | 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pass | no — owner-only files |
-| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pending | no |
+| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pass | no |
 
 ## Owner decisions used by the loop
 
@@ -41,8 +43,9 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | Branch | Why |
 | --- | --- |
-| `wp2-step01b-review-fixes` | Gate G2: changes `.github/workflows/ci.yml` and GOV-005/GOV-006 text (owner-only) |
+| `wp2-step01b-review-fixes` | Gate run 2026-11-20 (Step 2 run): G1, G3, G4, G6 pass; **G2 fail** — owner-only: `.github/workflows/ci.yml`, GOV-005, GOV-006 (text, not just table cells). G5 could not run with this branch checked out because `scripts/merge_gate.py` arrives only in the later branch; run from the tip it reports a checkout mismatch, not a docs failure. Owner merge needed |
 | `gov-cr0001-merge-protocol` | Gate G2: governance, AGENTS.md, scripts, workflows (owner-only) |
+| `wp2-step02-capability-map` | Waits behind the two branches above (G1). Own gates G2–G4 expected to pass: changes only BA-001, README, GOV-001 register row, GOV-006 status cell, reviews/, LOOP_STATE.md; round 2 review RECOMMEND MERGE AFTER FIXES; CI success |
 
 ## Questions for owner (open)
 
