@@ -124,14 +124,21 @@ flowchart LR
 
 Indicative pace (assumption, depends on review time): 2–3 steps a week → Stage A–E in about 10–14 weeks, inside the brief's months 1–3 window.
 
-## 4. Questions for the project owner
+## 4. Decisions and open questions
 
-Answers change scope or order; defaults in brackets are used if no answer is given.
+### Decided by the project owner (19 Nov 2026)
 
-1. **Commercial target:** keep 20–50 AMCs as the commercial goal, or adopt PS-001 §5.3 (design for 50, sell 1 pilot → 3–5)? [§5.3]
-2. **Investor book:** AMC OS mirrors the RTA (CAMS/KFin stay record keepers), or AMC OS processes investor transactions itself? [mirror]
-3. **Reviewers:** project owner alone, or named colleagues / domain experts for compliance, fund accounting and security? [owner alone, interim]
-4. **First build increment after docs:** platform foundation only (brief months 4–6), or a business module early for a design-partner AMC? [platform foundation]
-5. **Cloud and region:** AWS Mumbai/Hyderabad, Azure India, GCP India, or cloud-neutral? [cloud-neutral docs, AWS India for reference]
-6. **Identity provider:** Keycloak bundled, or customer's own IdP (Azure AD / Okta) as default? [both: customer IdP via OIDC, Keycloak for shared SaaS]
-7. **Pace and PR size:** one step per PR as above, or larger batches? [one step per PR]
+| # | Question | Decision | Effect on plan |
+| --- | --- | --- | --- |
+| Q1 | Commercial target | **Pilot first:** design capacity 50 AMCs; commercial target 1 pilot AMC, then 3–5 | PS-001 §5.3 adopted; Step 1 market analysis sized accordingly |
+| Q2 | Investor book | **Mirror the RTA:** CAMS/KFin remain record keepers; AMC OS holds a synced copy for servicing, analytics and reconciliation | PRD-013 (Step 9) and investor tables (Step 16) specified for mode A only; mode B out of scope |
+| Q3 | Reviewers | **Project owner alone** as interim approver | Every approval recorded as `approved_by: project owner (interim)` (GOV-002 §1) |
+| Q4 | First build increment | **Platform foundation** (tenants, identity, roles, audit, master data, CI) | Step 28 plans increment 1 as platform foundation, as in brief months 4–6 |
+
+### Still open (defaults apply until answered)
+
+| # | Question | Default |
+| --- | --- | --- |
+| Q5 | Cloud and region | Cloud-neutral documents; AWS India regions used as the reference design |
+| Q6 | Identity provider | Customer's own IdP via OIDC; Keycloak for shared SaaS tenants without one |
+| Q7 | Pace and PR size | One step per PR |

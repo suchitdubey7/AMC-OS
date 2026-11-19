@@ -78,7 +78,7 @@ All targets are proposals for sponsor approval.
 
 The brief sets an initial target of **20–50 AMC customers**. With about 51 AMCs in India, that equals roughly 40–100% of every AMC in the country. That is a full-market-share target, not an initial one.
 
-Recommendation **[DES — needs sponsor decision]**:
+Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 
 1. Keep **50 tenants** as the *technical* design capacity (cells, isolation, performance).
 2. Set the *commercial* target as 1 pilot AMC, then 3–5 paying AMCs, before scaling.
@@ -111,7 +111,7 @@ Recommendation **[DES — needs sponsor decision]**:
 | Automation | Reconciliation auto-match ≥ 95%; MIS turnaround from days to same day |
 | Audit | 100% of approvals, overrides and financial state changes in the hash-chained audit log |
 | Delivery | Each work package and build increment passes its gates without waivers on T1 items |
-| Commercial | Pilot signed; 3–5 paying AMCs (if §5.3 recommendation approved) |
+| Commercial | Pilot signed; then 3–5 paying AMCs |
 
 ## 9. Roadmap baseline
 
@@ -138,10 +138,11 @@ The master prompt's 24-month programme (months 1–3 documentation … months 22
 
 ## 12. Open decisions for the sponsor
 
-1. Approve the commercial target change in §5.3 (design capacity 50 tenants; commercial 1 pilot → 3–5 AMCs).
-2. Confirm proposed objective targets in §4 and success measures in §8.
-3. Confirm the 24-month roadmap baseline replaces the v0.9 30-month roadmap.
-4. Name a design-partner AMC candidate for the pilot, if any.
+1. ~~Commercial target~~ — decided: design capacity 50 tenants; commercial 1 pilot → 3–5 AMCs (GOV-006 Q1).
+2. Investor book — decided: mirror the RTA (GOV-006 Q2).
+3. Confirm proposed objective targets in §4 and success measures in §8.
+4. Confirm the 24-month roadmap baseline replaces the v0.9 30-month roadmap.
+5. Name a design-partner AMC candidate for the pilot, if any.
 
 ## Sources
 
