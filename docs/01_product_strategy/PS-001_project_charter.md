@@ -2,7 +2,7 @@
 id: PS-001
 title: AMC OS Project Charter
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner / sponsor
 work_package: WP1
@@ -15,7 +15,7 @@ AMC OS will be a single, multi-tenant operating platform that runs an Indian mut
 
 ## 1. Vision
 
-> Every number an AMC reports — NAV, AUM, exposure, revenue, commission — comes from one auditable system, can be reproduced exactly for any past date, and can be explained in plain language on demand.
+The vision statement is kept in one place: [PS-002 §1](PS-002_product_vision.md#1-vision-statement). In short, every number an AMC reports comes from one auditable, reproducible system.
 
 ## 2. Problem
 
@@ -67,16 +67,11 @@ All targets are proposals for sponsor approval.
 
 ### 5.2 Customer profiles
 
-| Segment | Description | What they buy first | Deployment |
-| --- | --- | --- | --- |
-| C1 Large AMCs (top 10) | Very large AUM, heavy legacy, in-house IT | Individual modules: compliance, risk, data platform, AI | Dedicated |
-| C2 Mid-size AMCs | Growing, mixed legacy, cost-sensitive | Front-to-back core (OMS + compliance + accounting/NAV oversight) | Shared SaaS or dedicated |
-| C3 New and small AMCs | Recently licensed, including passive-only entrants **[VAL — current licensing routes]** | Full stack from day one | Shared SaaS |
-| C4 Adjacent (later) | Specialised Investment Fund arms, PMS/AIF managers in AMC groups | Selected modules | Shared SaaS |
+Superseded by [PS-003 §3](PS-003_market_and_customer_analysis.md#3-customer-segments-and-priority), which is now the single source for segments C1–C4, their priority and first purchase.
 
 ### 5.3 Important commercial finding — target scale
 
-The brief sets an initial target of **20–50 AMC customers**. With about 51 AMCs in India, that equals roughly 40–100% of every AMC in the country. That is a full-market-share target, not an initial one.
+The brief sets an initial target of **20–50 AMC customers**. With about 51 AMCs in India, that equals about 39–98% of every AMC in the country. That is a full-market-share target, not an initial one.
 
 Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 
