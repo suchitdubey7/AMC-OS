@@ -18,7 +18,7 @@ One meaning per word. This dictionary fixes the business terms every AMC OS docu
 
 **How to use it**
 
-- Each term has a stable ID `TERM-nnn`, proposed here **[DES]** (not yet in GOV-001 §4; owner question Q15 in [LOOP_STATE.md](../../LOOP_STATE.md)). IDs are never reused; new terms get the next free number, so the list is in ID order, not strictly alphabetical, once it grows.
+- Each term has a stable ID `TERM-nnn`, proposed here **[DES]** (not yet in GOV-001 §4; owner question Q15 in [LOOP_STATE.md](../../LOOP_STATE.md)). IDs are never reused; new terms get the next free number. The list is in ID order: TERM-001 to TERM-088 were numbered roughly alphabetically, and later terms are added at the end.
 - Definitions are plain-language working definitions for the product. Where a term has a legal definition in the SEBI (Mutual Funds) Regulations, 2026 or a SEBI circular, **the legal text prevails**; such terms are labelled **[REG-term]** = "regulatory term; legal definition to be cited clause by clause in REG-001 (Step 25)". This dictionary adds no regulatory numbers: limits, cut-off times and timelines are configuration **[VAL]**.
 - Labels: **[IND]** industry usage · **[DES]** AMC OS design term · **[REG-term]** as above.
 - Capability names are defined by [BA-001](BA-001_business_capability_map.md) (`CAP-` IDs) and departments by [BA-002](BA-002_amc_operating_model.md) (`DEP-` IDs); this dictionary defines the words they use and points to them.
@@ -58,7 +58,7 @@ Domain IDs are fixed by [GOV-001 §3](../00_governance/GOV-001_document_control_
 | TERM-005 | Approved universe | The list of securities a scheme may buy, approved through research and the investment committee | D03, D08 | CAP-D03-007, CAP-D03-009 | [IND] |
 | TERM-006 | ARN | AMFI Registration Number, the registration of a mutual fund distributor | D14 | CAP-D14-002 | [IND] |
 | TERM-007 | Audit event | An append-only record of who did what, when, from where, and to which record; never changed or deleted | D01 | CAP-D01-010 | [DES] |
-| TERM-008 | AUM (assets under management) | Total value of the assets of a scheme (or of all schemes) on a date. "Average AUM" (AAUM) is the average over a period. Always state which one and the date; the formula used for MIS is held in the metric registry | D11, D14, D15, D16 | CAP-D14-008, CAP-D16-012 | [IND] |
+| TERM-008 | AUM (assets under management) | Assets managed in a scheme (or in all schemes) on a date, normally reported on a net-assets basis (TERM-089) **[VAL]**. "Average AUM" (AAUM) is the average over a period. Always state which one and the date; the exact basis and formula for MIS are set once in the metric registry (CAP-D16-012) | D11, D14, D15, D16 | CAP-D14-008, CAP-D16-012 | [IND] |
 | TERM-009 | Benchmark | The index a scheme's performance is compared with; the total-return variant (TRI) includes reinvested income | D02, D04 | CAP-D02-007, CAP-D04-008 | [REG-term] |
 | TERM-010 | Break | A difference found by a reconciliation that has not yet been explained or resolved | D12 | CAP-D12-003 | [IND] |
 | TERM-011 | Breach | A position or action found to be outside a regulatory, mandate or internal limit. Active breach = caused by the AMC's own action; passive breach = caused by market movement or flows **[IND]**; how each must be handled is **[VAL]** | D08 | CAP-D08-009 to CAP-D08-011 | [REG-term] |
@@ -91,7 +91,7 @@ Domain IDs are fixed by [GOV-001 §3](../00_governance/GOV-001_document_control_
 | TERM-038 | Holding | The quantity of a security a scheme owns on a date | D04 | CAP-D04-002 | [IND] |
 | TERM-039 | IDCW | Income Distribution cum Capital Withdrawal: the option under which a scheme pays out distributions (formerly called "dividend" option). Use "IDCW", not "dividend", for scheme payouts | D02, D13 | CAP-D02-003, CAP-D13-010 | [REG-term] |
 | TERM-040 | Idempotent | Sending the same request twice has the same effect as sending it once | All | PRD-000 C7 | [DES] |
-| TERM-041 | Investment Committee | The committee, chaired by the CIO, that approves investment policy, universe and major decisions | D03 | CAP-D03-005; BA-002 §2 | [IND] |
+| TERM-041 | Investment Committee | The committee that approves investment policy, universe and major decisions | D03 | CAP-D03-005; BA-002 §2 | [IND] |
 | TERM-042 | Investor | A person or entity holding units of a scheme (also "unitholder") | D13 | CAP-D13-001 | [IND] |
 | TERM-043 | ISIN | International Securities Identification Number of a security or of a scheme plan and option | D02, D16 | CAP-D02-001 | [IND] |
 | TERM-044 | Issuer | The company or government that issued a security | D03, D08, D16 | CAP-D08-004 | [IND] |
@@ -105,7 +105,7 @@ Domain IDs are fixed by [GOV-001 §3](../00_governance/GOV-001_document_control_
 | TERM-052 | Master data | Shared reference data (securities, issuers, counterparties, benchmarks, calendars) owned once and used everywhere | D16, D01 | CAP-D16-004, CAP-D01-009 | [DES] |
 | TERM-053 | Metric registry | The single, versioned definition of each business metric (for example AUM, net sales, yield) | D16 | CAP-D16-012 | [DES] |
 | TERM-054 | Mirror | A synced copy of another system's records kept for servicing, analytics and reconciliation; the other system stays the record keeper | D13 | GOV-006 Q2; BA-002 §5 | [DES] |
-| TERM-055 | NAV (net asset value) | Value of a scheme's assets minus liabilities, divided by units outstanding, per plan and option on a business date. Calculated only by the NAV engine (FE-01); rounding per the FE-01 spec | D11 | CAP-D11-010 to CAP-D11-015 | [REG-term] |
+| TERM-055 | NAV per unit | Net assets (TERM-089) of a scheme plan and option divided by its units outstanding on a business date. "NAV" alone in AMC OS means NAV per unit; say "net assets" for the total. Calculated only by the NAV engine (FE-01); rounding per the FE-01 spec | D11 | CAP-D11-010 to CAP-D11-015 | [REG-term] |
 | TERM-056 | NAV correction | Changing a NAV after publication because of an error; an exception workflow with its own approvals | D11 | PRD-000 W17 | [IND] |
 | TERM-057 | Net flows (net sales) | Subscriptions minus redemptions (including switches) for a scheme, channel or period; definition held in the metric registry | D13, D14 | CAP-D14-009 | [IND] |
 | TERM-058 | NFO | New Fund Offer: the first offer of a new scheme's units for subscription | D02 | CAP-D02-005 | [REG-term] |
@@ -134,21 +134,30 @@ Domain IDs are fixed by [GOV-001 §3](../00_governance/GOV-001_document_control_
 | TERM-081 | Tenant | One AMC using AMC OS; its data is isolated from every other tenant, and tenant context always comes from the authenticated identity | D01 | CAP-D01-001; master prompt §3.4 | [DES] |
 | TERM-082 | Trade | An executed order allocated to a scheme, with price, quantity, broker and settlement details | D06 | CAP-D06-004, CAP-D06-007 | [IND] |
 | TERM-083 | Trial balance | The list of ledger balances used to check that debits equal credits before closing | D10 | CAP-D10-011 | [IND] |
-| TERM-084 | Trustees | The board of trustees or trustee company that supervises the AMC on behalf of unitholders | D01 | BA-002 §1, §2 | [REG-term] |
+| TERM-084 | Trustees | The board of trustees or trustee company that supervises the AMC on behalf of unitholders; an outside supervisory body with read-only views | — (external party) | BA-002 §1, §2 | [REG-term] |
 | TERM-085 | Unit balance | Number of units held. Two grains: per investor and folio (D13, mirrored from the RTA) and units outstanding per scheme plan and option (D11). They must reconcile | D11, D13 | CAP-D11-009, CAP-D13-011 | [IND] |
 | TERM-086 | Unitholder Protection Committee (UHPC) | The committee whose responsibilities SEBI has set to protect unitholders' interests | D08, D13 | BA-002 §2 | [REG-term] |
 | TERM-087 | Valuation policy | The approved methods and price sources for valuing each type of security | D11 | CAP-D11-004 | [IND] |
 | TERM-088 | Workflow | A documented sequence of steps across departments and systems (`WF-nnn`) | D12 | BA-004 (Step 4); CAP-D12-011 | [DES] |
+| TERM-089 | Net assets | Value of a scheme's (or a plan and option's) assets minus its liabilities on a business date; the numerator of NAV per unit (TERM-055) | D10, D11 | CAP-D11-008, CAP-D11-010 | [REG-term] |
+| TERM-090 | MIS | Management information: the AMC's internal management reports | D15, D16 | CAP-D15-009 | [IND] |
+| TERM-091 | QRTA | Qualified RTA: SEBI's category for large RTAs, which face extra oversight (PS-003 §7) | D13 | BA-002 §6 | [REG-term] |
+| TERM-092 | SIF | Specialised Investment Fund: a SEBI fund category run by eligible AMCs (PS-003 §7); a later segment (C4, PS-003 §3; PS-001 §5.3) | D02 | PS-003 | [REG-term] |
+| TERM-093 | PMS / AIF | Portfolio Management Services / Alternative Investment Fund: other SEBI-regulated products; a later segment (C4, PS-003 §3; PS-001 §5.3) that needs its own regulatory review | — | PS-003 | [REG-term] |
+| TERM-094 | GIFT City funds | Funds set up in India's international financial services centre (GIFT IFSC), regulated by IFSCA (PS-003 §7); a later segment (C4, PS-003 §3) | — | PS-003 | [REG-term] |
+| TERM-095 | Mutual fund (trust) | The trust, set up by the sponsor, that holds the schemes' assets for unitholders; the AMC manages it and the trustees supervise it. Not the same as a scheme (TERM-072) | All | BA-002 §1 | [REG-term] |
+| TERM-096 | Sponsor | The entity that establishes the mutual fund trust | — (external party) | BA-002 §1 | [REG-term] |
 
 ## 3. Words to avoid or use with care
 
 | Avoid | Use instead | Why |
 | --- | --- | --- |
-| "Fund" for a single scheme | Scheme (TERM-072) | "Fund" can mean the mutual fund trust, a scheme or the money; ambiguity causes reporting errors |
+| "Fund" for a single scheme | Scheme (TERM-072); Mutual fund (TERM-095) for the trust | "Fund" can mean the mutual fund trust, a scheme or the money; ambiguity causes reporting errors |
 | "Dividend" for scheme payouts | IDCW (TERM-039) | Dividend is kept for corporate actions on securities the scheme holds (TERM-019) |
 | "Customer" | Tenant (the AMC) or Investor | AMC OS has two kinds of "customer" |
 | "Module" for an AMC OS business area | Domain (TERM-026) | PRD-000 v0.9 used 15 modules; the 17 domains replace them (GOV-001 §3) |
 | "AUM" without a date and type | "AUM as at <date>" or "AAUM for <period>" (TERM-008) | Closing and average AUM differ |
+| "NAV" for the total value of a scheme | Net assets (TERM-089) | NAV means NAV per unit (TERM-055) |
 | "Approved" for AI output | "Proposed" or "recommended" | AI never approves (master prompt §3.1) |
 | "Balance" alone | Ledger balance, cash balance or unit balance (TERM-049, TERM-085) | Different domains, different numbers |
 
@@ -159,6 +168,8 @@ Domain IDs are fixed by [GOV-001 §3](../00_governance/GOV-001_document_control_
 | C1 | PRD-000 v0.9 has its own short glossary ("How to read this PRD"); the six terms there (tenant, maker-checker, deterministic engine, effective-dated, idempotent, modular monolith) are carried here except "modular monolith", which is an architecture term for EA-002 (Step 10) | PRD re-key (Steps 6–9) |
 | C2 | Terms labelled [REG-term] have no clause reference yet | REG-001 (Step 25) adds the clause of the SEBI (Mutual Funds) Regulations, 2026 or circular for each |
 | C3 | `TERM-` IDs are not in GOV-001 §4 | Owner (Q15) |
+| C4 | PS-003 §7 defines SIP as "a fixed monthly investment"; TERM-077 says "regular purchases", because SIP frequencies other than monthly exist **[IND]** and are scheme configuration (CAP-D02-006). PS-003's eight terms are otherwise carried here (TERM-008, TERM-070, TERM-077, TERM-090 to TERM-094) | PS-003 next revision |
+| C5 | Whether AUM is reported on a net-assets basis (TERM-008) is **[VAL]**; confirm against the AMFI and SEBI definitions | REG-001 (Step 25); metric registry (Step 15) |
 
 ## Sources
 
@@ -170,3 +181,4 @@ All sources are inside this repository; no new regulatory facts are introduced. 
 | 2 | [GOV-001](../00_governance/GOV-001_document_control_and_identifiers.md) §3–§5 | Domain, artefact and engine IDs |
 | 3 | [BA-001](BA-001_business_capability_map.md), [BA-002](BA-002_amc_operating_model.md) | Capabilities, departments, ownership |
 | 4 | [PRD-000 v0.9](../03_product_requirements/PRD-000_master_prd_v0.9.md) glossary, Ch 2, 3, 4, 6 | Existing terms, common rules C1–C8, SoD rules, workflows |
+| 5 | [PS-003](../01_product_strategy/PS-003_market_and_customer_analysis.md) §7 | Market terms (MIS, QRTA, SIF, PMS / AIF, GIFT City funds, SIP) |

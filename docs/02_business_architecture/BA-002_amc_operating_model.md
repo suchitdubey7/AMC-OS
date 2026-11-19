@@ -20,7 +20,7 @@ This document describes how an Indian mutual fund AMC is organised and run, so t
 
 ## 1. Legal structure around the AMC
 
-A mutual fund in India is set up as a trust. The sponsor establishes the trust; the trustees hold the scheme assets in trust for unitholders and supervise the AMC; the AMC manages the schemes; a custodian holds the securities; a registrar and transfer agent (RTA) keeps the investor records. **[REG]** The current rulebook is the SEBI (Mutual Funds) Regulations, 2026, which replaced the 1996 regulations [S1][S2] and apply from 1 April 2026 [S3] (secondary). The roles below follow PRD-000 §2.1, which carries the same label; exact duties per clause are **[VAL]** until REG-001 (Step 25).
+A mutual fund in India is set up as a trust. The sponsor establishes the trust; the trustees hold the scheme assets in trust for unitholders and supervise the AMC; the AMC manages the schemes; a custodian holds the securities; a registrar and transfer agent (RTA) keeps the investor records. **[REG]** The current rulebook is the SEBI (Mutual Funds) Regulations, 2026, which replaced the earlier mutual fund regulations [S2] and apply from 1 April 2026 [S3] (secondary). The roles below follow PRD-000 §2.1, which carries the same label. Who appoints the custodian and the RTA (the "appoints" arrows below), and the exact duties per clause, are **[VAL]** until REG-001 (Step 25).
 
 ```mermaid
 flowchart TB
@@ -54,7 +54,7 @@ AMC OS needs to know which bodies approve what, because their decisions are inpu
 | Board of the AMC | Governs the AMC; receives risk, compliance and market-abuse escalations | **[REG]** Risk reviews are placed before the AMC board and trustees [S4]; market-abuse escalations go to the board and trustees [S5] (secondary) | Board packs from CAP-D08-013, CAP-D09-012, CAP-D15-009 |
 | Board of Trustees | Supervises the AMC. Core duties include fair fees and expenses, peer performance review, systems against mis-selling, managing conflicts of interest, and systems against market misconduct by AMC staff | **[REG]** SEBI circular of 7 Jul 2023, effective 1 Jan 2024 [S6] (secondary) | Read-only views; evidence from CAP-D08-012 |
 | Unitholder Protection Committee (UHPC) | Committee whose responsibilities are set by SEBI to protect unitholders' interests | **[REG]** exists "as mandated by the Mutual Fund Regulations" [S6] (secondary); which board it sits under and its membership are **[VAL]** | Reports from CAP-D13-015 (complaints), CAP-D08-013 |
-| Investment Committee | Approves investment policy, universe and major decisions; chaired by the CIO | **[IND]** (PRD-000 Module 02) | CAP-D03-005 Investment committee workflows |
+| Investment Committee | Approves investment policy, universe and major decisions; members vote, Head of Research / CIO acts as checker | **[IND]** (PRD-000 Module 02); who chairs is **[ASSUMPTION]** (CIO; confirm: Product Manager, pilot discovery) | CAP-D03-005 Investment committee workflows |
 | Risk Management Committee | Oversees the risk management framework | **[VAL]** — the 2021 risk framework assigns roles to the AMC board and trustees [S4]; whether a separate committee is required is not confirmed | CAP-D09-012 Risk reporting |
 | Valuation Committee | Approves valuation policies and fair values | **[IND]**; exact mandate **[VAL]** | CAP-D11-004, CAP-D11-005 |
 | Audit Committee | Oversees internal and concurrent audit | **[IND]**; requirement **[VAL]** | Read-only audit access (CAP-D01-010) |
@@ -63,7 +63,7 @@ AMC OS needs to know which bodies approve what, because their decisions are inpu
 **Senior roles with a regulatory basis** (used in §3):
 
 - **Chief Compliance Officer (CCO).** **[REG]** The CEO/MD (or equivalent) and the CCO are responsible for the AMC's institutional mechanism against market abuse, including review of recorded communications and dealing-room access logs (SEBI circular of 5 Aug 2024) [S5] (secondary).
-- **Risk officer.** **[REG]** SEBI's 2021 risk management framework asked mutual funds to appoint a dedicated risk officer [S8] (secondary) and makes a CXO-level officer responsible for the risk of each function [S4] (secondary summary). The title "Chief Risk Officer" and its reporting line are **[VAL]**.
+- **Risk officer.** **[REG]** SEBI's 2021 risk management framework asked mutual funds to appoint a dedicated risk officer [S8] (secondary) and requires at least one CXO-level officer to be responsible for the risk management of specific functions [S4] (secondary summary). The title "Chief Risk Officer" and its reporting line are **[VAL]**.
 - **Chief Information Security Officer (CISO).** **[REG]** SEBI's Cybersecurity and Cyber Resilience Framework (CSCRF) applies to mutual funds / AMCs and requires market infrastructure institutions and **Qualified** regulated entities to designate a CISO [S7]. Whether a given AMC is a Qualified RE is **[VAL]**. This narrows PRD-000 §2.2, which says CSCRF requires a CISO without that condition (§8, C2).
 
 ## 3. Department hierarchy
@@ -103,7 +103,7 @@ flowchart TB
   CEO --> D19[DEP-19 Human resources and administration]
 ```
 
-Reporting lines are the common pattern **[IND]**, not a rule. Common variations a tenant must be able to configure: research sitting inside the equity and fixed income teams; the dealing desk reporting to the COO instead of the CIO; legal reporting to the CEO; fund accounting outsourced to the custodian (§5); data and analytics under strategy instead of technology.
+CBO = Chief Business Officer. Reporting lines are the common pattern **[IND]**, not a rule. Common variations a tenant must be able to configure: research sitting inside the equity and fixed income teams; the dealing desk reporting to the COO instead of the CIO; legal reporting to the CEO; fund accounting outsourced to the custodian (§5); data and analytics under strategy instead of technology.
 
 | ID | Department | Head (reports to) | Main responsibilities | PRD-000 roles (§2.3) |
 | --- | --- | --- | --- | --- |
@@ -112,13 +112,13 @@ Reporting lines are the common pattern **[IND]**, not a rule. Common variations 
 | DEP-03 | Fixed income investments | CIO | Manage debt, money-market and liquid schemes: strategy, credit view, orders | CIO, Fund Manager |
 | DEP-04 | Investment research | CIO | Equity and credit research, recommendations, approved universe proposals | Research Analyst |
 | DEP-05 | Dealing desk | CIO (variation: COO) | Order execution with brokers, allocation, broker panel | Dealer |
-| DEP-06 | Fund operations and settlement | COO | Settlement, corporate actions, reconciliations, operational calendars, exceptions | Operations Analyst |
+| DEP-06 | Fund operations and settlement | COO | Settlement, corporate actions, reconciliations, operational calendars, exceptions | COO (head of DEP-06 to DEP-08), Operations Analyst |
 | DEP-07 | Fund accounting and NAV | COO | Books of each scheme, valuation, daily NAV, period close | Fund Accountant |
 | DEP-08 | Investor services | COO | Investor service, complaints, transaction status, RTA oversight | Investor Service Executive |
 | DEP-09 | Compliance | CCO | Investment-limit monitoring, breaches, regulatory reporting, market-abuse surveillance | Compliance Officer |
 | DEP-10 | Legal and secretarial | CCO (variation: CEO) | Scheme documents, contracts, board and trustee secretarial work | — (new; uses Compliance Officer role until BA-005) |
 | DEP-11 | Risk management | Risk officer | Investment, liquidity, credit, operational and enterprise risk; performance measurement | Risk Manager |
-| DEP-12 | Sales and distribution | CBO / Head of Sales | Channels, distributors, RMs, sales tracking, distribution operations and commission | Distributor Manager, RM |
+| DEP-12 | Sales and distribution | CBO (Chief Business Officer) / Head of Sales | Channels, distributors, RMs, sales tracking, distribution operations and commission | Distributor Manager, RM |
 | DEP-13 | Products and marketing | Head of Products | Scheme design and launch, scheme master, scheme documents, product disclosures | Product Manager |
 | DEP-14 | Finance | CFO | AMC revenue and expenses, budgets, profitability, tax, treasury of AMC's own funds | CFO |
 | DEP-15 | Technology | CTO | AMC OS tenant administration, users, configuration, integrations, workflows | CTO, Technology Administrator, Tenant Administrator |
@@ -233,7 +233,7 @@ The core business processes of PRD-000 §2.4 (P1–P13), with the department and
 | # | Process | Frequency **[IND]** | Accountable department | Main capabilities |
 | --- | --- | --- | --- | --- |
 | P1 | Scheme launch (NFO) | Per scheme | DEP-13 | CAP-D02-005, CAP-D02-004, CAP-D02-008 |
-| P2 | Research → investment committee → approved universe | Continuous / per meeting | DEP-04, DEP-02 / DEP-03 | CAP-D03-001, CAP-D03-005, CAP-D03-007 |
+| P2 | Research → investment committee → approved universe | Continuous / weekly | DEP-04, DEP-02 / DEP-03 | CAP-D03-001, CAP-D03-005, CAP-D03-007 |
 | P3 | Portfolio construction and rebalancing | Daily / event-driven | DEP-02 / DEP-03 | CAP-D04-005, CAP-D04-006 |
 | P4 | Order → pre-trade compliance → execution → allocation | Intraday | DEP-05 | CAP-D05-001, CAP-D08-006, CAP-D06-002, CAP-D06-004 |
 | P5 | Trade settlement and custodian reconciliation | Trade date and following days | DEP-06 | CAP-D07-002, CAP-D07-006, CAP-D12-004 |
@@ -241,7 +241,7 @@ The core business processes of PRD-000 §2.4 (P1–P13), with the department and
 | P7 | Daily and monthly accounting close | Daily / monthly | DEP-07 | CAP-D10-011, CAP-D10-013 |
 | P8 | Corporate actions | Event-driven | DEP-06 | CAP-D12-007, CAP-D10-008 |
 | P9 | Investor purchase, redemption, switch, SIP, STP, SWP | Daily | RTA (outside), DEP-08 oversight | CAP-D13-004 to CAP-D13-009 |
-| P10 | Distributor commission | Monthly **[ASSUMPTION]** | DEP-12 (checker DEP-14) | CAP-D14-010, CAP-D14-011 |
+| P10 | Distributor commission | Monthly **[ASSUMPTION]** (confirm: Product Manager, pilot discovery) | DEP-12 (checker DEP-14) | CAP-D14-010, CAP-D14-011 |
 | P11 | Compliance monitoring and breach resolution | Daily / event | DEP-09 | CAP-D08-007, CAP-D08-009 to CAP-D08-011 |
 | P12 | Regulatory reporting | Daily / monthly / quarterly | DEP-09 | CAP-D08-013 |
 | P13 | Management reporting (MIS) | Daily / monthly | DEP-14, DEP-01 | CAP-D15-009, CAP-D15-011 |
@@ -285,7 +285,7 @@ S2 and S4–S7 were opened on 20 Nov 2026 (IST) and the cited wording matched. S
 
 | # | Source | Used for |
 | --- | --- | --- |
-| S1 | [SEBI — Securities and Exchange Board of India (Mutual Funds) Regulations, 2026](https://www.sebi.gov.in/legal/regulations/apr-2026/securities-and-exchange-board-of-india-mutual-funds-regulations-2026_100744.html) | Current rulebook (primary; not read clause by clause in this step) |
+| S1 | [SEBI — Securities and Exchange Board of India (Mutual Funds) Regulations, 2026](https://www.sebi.gov.in/legal/regulations/apr-2026/securities-and-exchange-board-of-india-mutual-funds-regulations-2026_100744.html) | Name of the current rulebook (primary; not opened in this step, to be read clause by clause in REG-001) |
 | S2 | [Taxscan — Mutual Funds Regulations 2026: SEBI introduces comprehensive framework (16 Jan 2026)](https://www.taxscan.in/top-stories/mutual-funds-regulations-2026-sebi-introduces-comprehensive-framework-governing-amcs-trustees-and-mutual-fund-schemes-1441993) — secondary | Replaces the earlier regulations |
 | S3 | [Business Standard — New MF rules from April 1 (16 Jan 2026)](https://www.business-standard.com/markets/mutual-fund/new-mf-rules-from-april-1-sebi-allows-performance-linked-expense-charging-126011601076_1.html) — press, secondary | Effective from 1 April 2026 |
 | S4 | [SCC Online — SEBI issues risk management framework for mutual funds (29 Sep 2021; circular of 27 Sep 2021)](https://www.scconline.com/blog/post/2021/09/29/sebi-issues-risk-management-framework-for-mutual-funds/) — secondary | Roles of AMC board and trustees; CXO responsibility for risk |
