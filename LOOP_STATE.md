@@ -6,7 +6,7 @@
 
 ## Next action
 
-**Step 3** on a new branch `wp2-step03-operating-model` from the chain tip: BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs), GOV-006 §3. Use the BA-001 capability IDs; consider BA-001 §5 C7 (systems each capability replaces) if the owner agrees.
+**Step 3** on a new branch `wp2-step03-operating-model` from the chain tip: BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs), GOV-006 §3. Use the BA-001 capability IDs; include a short "systems replaced" column (BA-001 §5 C7) as the working default until the owner answers Q14.
 
 After that: Steps 4, 5, … in GOV-006 order.
 
@@ -24,7 +24,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 2 | `gov-07-review-agent` | GOV-007 reviewer, GOV-008 loop, this file | not yet reviewed | pass | yes (23:28, on owner instruction) |
 | 3 | `wp2-step01b-review-fixes` | Step 1 review fixes (PS-001–004, GOV-005, GOV-006, CI trigger) | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor accepted, 3 Nits — 2 fixed) | pending | no |
 | 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pass | no — owner-only files |
-| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | see reviews/STEP-02_round*.md | pending | no |
+| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pending | no |
 
 ## Owner decisions used by the loop
 

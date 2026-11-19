@@ -237,8 +237,8 @@ Owning schema: `compliance`. Engine: FE-04. Source: PRD-000 Module 06. The brief
 | CAP-D08-007 | Post-trade compliance | (.1) evaluation of the actual portfolio; (.2) detection of passive breaches after price or flow changes | FR-06-09 | FE-04 |
 | CAP-D08-008 | Regulatory monitoring | (.1) tracking of new circulars; (.2) impact assessment; (.3) rule change request | Ch 9 (Compliance Copilot) | AI may only propose (PRD-000 Ch 9) |
 | CAP-D08-009 | Breach detection | (.1) breach record created from a failed check; (.2) severity and notification | FR-06-10 | |
-| CAP-D08-010 | Breach investigation | (.1) root-cause analysis; (.2) active vs passive classification | FR-06-10 | (.2) detail new |
-| CAP-D08-011 | Corrective actions | (.1) corrective action plan and owner; (.2) deadline tracking | FR-06-11 | Deadlines are regulatory → [VAL] until REG-001 |
+| CAP-D08-010 | Breach investigation | (.1) root-cause analysis; (.2) active vs passive classification | FR-06-10 | |
+| CAP-D08-011 | Corrective actions | (.1) corrective action plan and owner; (.2) cure-deadline tracking; (.3) temporary exemptions with expiry and overrides with reasons | FR-06-10; FR-06-11 | Deadlines are regulatory → [VAL] until REG-001 |
 | CAP-D08-012 | Evidence management | (.1) evidence attached to checks, breaches and approvals; (.2) evidence pack for auditors and Trustees | FR-06-14 | |
 | CAP-D08-013 | Compliance reporting | (.1) regulatory reports; (.2) internal compliance dashboards | FR-06-12 | |
 
