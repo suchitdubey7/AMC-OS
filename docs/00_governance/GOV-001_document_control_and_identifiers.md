@@ -146,6 +146,7 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | GOV-006 | Gap analysis and step-by-step delivery plan | Draft | WP1 |
 | GOV-007 | AI review agent (advisory) | Draft | WP1 |
 | GOV-008 | Build loop | Draft | WP1 |
+| CR-0001 | Build loop strict auto-merge | Draft | WP1 |
 | TRACE-001 | Traceability matrix (structure + seed) | Draft | WP1 |
 | PS-001 | Project charter | Draft | WP1 |
 | PS-002 | Product vision | Draft | WP2 / Step 1 |
