@@ -24,7 +24,7 @@ Read this file and [MASTER_BUILD_PROMPT.md](MASTER_BUILD_PROMPT.md) before chang
 3. **Check completeness:** approved requirement? documented workflow? data model? API contract? explicit financial rules? permissions? acceptance criteria? dependencies? If anything important is missing, **record the gap and ask** — do not invent business rules, thresholds, rates or provider interfaces.
 4. **Design first:** proposed changes, impacted domains, API and DB changes, security implications, test strategy, doc updates. Get human approval for material architectural or financial decisions.
 5. **Implement in small PRs** on a branch (`wp<n>-<topic>` or `feat/<ID>-<topic>`), never on `main`.
-6. **Validate:** run the relevant tests. Never claim a test passed if it was not run.
+6. **Validate:** run the relevant tests. Never claim a test passed if it was not run. Then get an independent review from a *separate* reviewer agent using `.claude/agents/amc-os-reviewer.md` (GOV-007) and include it in the hand-off; fix Blockers and Majors first.
 7. **Report** in the PR description using §5 below.
 
 ## 4. Conventions

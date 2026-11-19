@@ -44,7 +44,7 @@ All must pass before human review is requested:
 3. Unit tests.
 4. Integration tests (including tenant-isolation tests for any data-access change).
 5. Security scanning — dependency scan, secret scan, SAST.
-6. Human review by a qualified reviewer (financial code: a reviewer with fund accounting / NAV knowledge).
+6. Advisory AI review by the independent review agent (GOV-007), then human review by a qualified reviewer (financial code: a reviewer with fund accounting / NAV knowledge).
 7. CI/CD pipeline green.
 
 ## 4. Working protocol in this repository
