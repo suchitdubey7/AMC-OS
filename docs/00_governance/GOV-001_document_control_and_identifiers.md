@@ -143,6 +143,7 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | GOV-003 | AI-assisted development policy | Draft | WP1 |
 | GOV-004 | Release gates and operational governance | Draft | WP1 |
 | GOV-005 | Work package plan | Draft | WP1 |
+| GOV-006 | Gap analysis and step-by-step delivery plan | Draft | WP1 |
 | TRACE-001 | Traceability matrix (structure + seed) | Draft | WP1 |
 | PS-001 | Project charter | Draft | WP1 |
 | STD-001 | Coding standards | Draft | WP1 |
