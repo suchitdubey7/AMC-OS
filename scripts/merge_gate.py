@@ -9,7 +9,8 @@ Usage:
 
 Exit code 0 = PASS (loop may merge), 1 = FAIL (owner must merge), 2 = usage error.
 Rules:
-  G1  head is directly on top of base (fast-forwardable; only the next branch in the chain)
+  G1  everything the branch builds on is already in base (strict chain order) and it
+      merges into base without conflicts
   G2  no changed path is owned in .github/CODEOWNERS, except table-row-only edits to the
       GOV-001 register and GOV-006 plan, plus reviews/** and LOOP_STATE.md
   G3  every changed spec document under docs/ still has status Draft
@@ -111,10 +112,27 @@ def main() -> int:
 
     results: list[tuple[str, bool, str]] = []
 
-    base_sha = git("rev-parse", a.base).strip()
-    mb = git("merge-base", a.base, a.head).strip()
-    results.append(("G1 next in chain", mb == base_sha,
-                    "head is directly on base" if mb == base_sha else "head is not on top of base"))
+    # G1: every commit the branch builds on is already in base (no skipping an unmerged
+    # earlier branch), and the branch merges into base without conflicts.
+    unique = [c for c in git("rev-list", "--reverse", f"{a.base}..{a.head}").splitlines() if c]
+    if not unique:
+        g1_ok, g1_msg = False, "nothing to merge"
+    else:
+        head_sha_ = git("rev-parse", a.head).strip()
+        def is_anc(x: str, y: str) -> bool:
+            return subprocess.run(["git", "merge-base", "--is-ancestor", x, y], cwd=ROOT).returncode == 0
+        tips = {line.split()[0] for line in
+                git("for-each-ref", "--format=%(objectname) %(refname)", "refs/heads", "refs/remotes").splitlines()
+                if line and not line.endswith("/HEAD")}
+        # Another branch tip that the head contains but base does not = an unmerged earlier branch.
+        earlier = [t for t in tips if t != head_sha_ and is_anc(t, a.head) and not is_anc(t, a.base)]
+        on_base = not earlier
+        clean = subprocess.run(["git", "merge-tree", "--write-tree", a.base, a.head], cwd=ROOT,
+                               capture_output=True, text=True).returncode == 0
+        g1_ok = on_base and clean
+        g1_msg = ("builds only on merged work and merges cleanly" if g1_ok else
+                  ("builds on an unmerged branch" if not on_base else "merge conflict with base"))
+    results.append(("G1 next in chain", g1_ok, g1_msg))
 
     changed = [c for c in git("diff", "--name-only", f"{a.base}...{a.head}").splitlines() if c]
     patterns = owned_patterns()

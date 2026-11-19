@@ -160,14 +160,33 @@ def test_missing_review_fails(repo: Path) -> None:
     assert r.returncode == 1 and "no review file" in r.stdout
 
 
-def test_branch_not_on_base_fails(repo: Path) -> None:
+def test_main_moved_independently_still_passes(repo: Path) -> None:
     add_doc(repo); add_review(repo); commit(repo)
     git(repo, "checkout", "-q", "main")
     (repo / "other.txt").write_text("main moved\n")
     commit(repo)
     git(repo, "checkout", "-q", "feature")
+    assert gate(repo).returncode == 0
+
+
+def test_branch_stacked_on_unmerged_branch_fails(repo: Path) -> None:
+    add_doc(repo); add_review(repo); commit(repo)          # 'feature' = first branch, not merged
+    git(repo, "checkout", "-q", "-b", "feature2")
+    (repo / "docs" / "01_product_strategy" / "PS-098_second.md").write_text(DOC.format(status="Draft").replace("PS-099", "PS-098"))
+    add_review(repo, name="STEP-98_round1.md"); commit(repo)
+    r = run(repo, sys.executable, "scripts/merge_gate.py", "--base", "main", "--head", "feature2")
+    assert r.returncode == 1 and "unmerged branch" in r.stdout
+
+
+def test_merge_conflict_fails(repo: Path) -> None:
+    add_doc(repo); add_review(repo); commit(repo)
+    git(repo, "checkout", "-q", "main")
+    (repo / "docs" / "01_product_strategy").mkdir(exist_ok=True)
+    (repo / "docs" / "01_product_strategy" / "PS-099_test_doc.md").write_text(DOC.format(status="Draft").replace("Body.", "Other body."))
+    commit(repo)
+    git(repo, "checkout", "-q", "feature")
     r = gate(repo)
-    assert r.returncode == 1 and "G1" in r.stdout
+    assert r.returncode == 1 and "conflict" in r.stdout
 
 
 def test_failed_ci_fails(repo: Path) -> None:
