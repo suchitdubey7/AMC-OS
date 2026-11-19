@@ -158,3 +158,10 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | DA-000 | Data and database architecture v0.9 (input) | Draft — to be split | WP4 |
 | DDL-000 | Core schema v0.9 (tested on PostgreSQL 16.15) | Draft | WP4 |
 | DBT-000 | Integrity and isolation tests v0.9 (24 checks, passing) | Draft | WP4 |
+| EA-100 – EA-106 | AI orchestration architecture proposal set (overview, SoR registry, transactions, deployment, workspaces, failures, technology) | Draft — proposal | WP3 (ahead of sequence) |
+| AIML-100 – AIML-103 | Agent hierarchy, agent registry, tool registry, AI observability (proposal) | Draft — proposal | WP3/WP5 |
+| INT-100 | MCP and integration architecture (proposal) | Draft — proposal | WP3 |
+| SEC-100, SEC-101 | AI security and permission model; human-in-the-loop (proposal) | Draft — proposal | WP3 |
+| DA-100 | Data and decision intelligence (proposal) | Draft — proposal | WP3/WP4 |
+| TRACE-003 | Traceability for the AI orchestration proposal | Draft — proposal | WP3 |
+| ADR-0009 – ADR-0015 | Proposed AI orchestration decisions | Draft — proposal | WP3 |
