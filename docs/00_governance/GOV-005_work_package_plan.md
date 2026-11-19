@@ -25,7 +25,7 @@ The seven deliverables of the master build prompt (§22) are produced in seven w
 | WP6 | Remaining Stage D | D | API-001 API standards + first OpenAPI contracts, SEC-001 security architecture, SEC-002 threat model, REG-001 regulatory control registry, AIML-001 AI architecture, INF-001 infrastructure, CI/CD strategy, runbooks | WP3–WP5 | Not started |
 | WP7 | Stage E | E | TRACE-002 full traceability matrix; consistency review; baseline approval for G0–G2 of the first build increment | WP2–WP6 | Not started |
 
-Only after WP7 is approved does production application coding begin (master prompt §22–23). Exploratory spikes are allowed earlier only if labelled as such and kept out of `src/`.
+During the documentation phase, steps may build on Draft documents from earlier steps (owner decision D-3, GOV-008 §2). Only after WP7 is approved does production application coding begin (master prompt §22–23). Exploratory spikes are allowed earlier only if labelled as such and kept out of `src/`.
 
 ```mermaid
 flowchart LR
