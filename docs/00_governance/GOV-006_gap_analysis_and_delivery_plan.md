@@ -2,7 +2,7 @@
 id: GOV-006
 title: Gap Analysis against the Master Build Prompt and Step-by-Step Delivery Plan
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP1
@@ -13,14 +13,14 @@ last_updated: 2026-11-19
 
 The master build prompt's governance sections (§15–§18, §20) are now fully written down, but most of the specification work (§4–§14 and Deliverables 2–6 of §22) is still open or exists only as unsplit v0.9 drafts. This document lists every gap by brief section and turns them into 28 small, reviewable steps.
 
-## 1. Repository state (checked 19 Nov 2026, 23:00 IST)
+## 1. Repository state (updated 19 Nov 2026, 23:35 IST)
 
 | Branch | Content | Merged to `main`? |
 | --- | --- | --- |
-| `main` | v0.9 PRD, v0.9 database doc, DDL, tests (4 files) | — |
-| `wp1-governance-charter` | WP1: charter, governance, ADRs, folder structure (66 files) + this document | **No. No pull request opened yet** |
+| `main` | v0.9 inputs + WP1 (charter, governance, ADRs, folder structure) + Step 0 CI | — |
+| Unmerged chain | Step 1 and its review fixes, GOV-007 reviewer, GOV-008 build loop | No — live list and merge order in [LOOP_STATE.md](../../LOOP_STATE.md) |
 
-**Gap 0:** WP1 must be reviewed and merged by the project owner. Branch protection on `main` is not yet switched on, and no CI pipeline exists, so nothing currently enforces the rules in GOV-003 and STD-001.
+**Gap 0 (remaining):** branch protection on `main` is not yet switched on (owner action), so nothing yet *forces* the checks in GOV-003 before a merge. CI now runs documentation checks and database tests (Step 0).
 
 ## 2. Gap analysis by brief section
 
@@ -48,7 +48,7 @@ Status key: ✅ covered · 🟡 partly covered (v0.9 draft or principle only) ·
 | 11 | AI & ML governance | 🟡 | PRD-000 Ch 9 (11 agents) | Agent fields missing (input/output schema, model version, evaluation suite); brief adds Dealing assistant and Risk assistant; RAG source metadata spec; **10 ML use cases and model governance not specified** |
 | 12 | Security architecture | ❌ | Controls listed in PRD-000 Ch 7 | Security architecture doc; **formal threat model**; mapping to ISO 27001, SOC 2, OWASP ASVS, NIST CSF; incident response; privileged access; key management design |
 | 13 | Technology stack | 🟡 | ADR-0004/5/6/7 | ADRs still needed: identity provider, Redis, orchestrator, LangGraph, containers/Kubernetes, Terraform, observability, CI/CD, cloud provider and region |
-| 14 | Repo structure & Stages A–E | 🟡 | Structure ✅; Stage A 1/10 done, B 0/10, C 0/14 as split docs, D 2/12 (testing, release governance), E structure only | See plan below |
+| 14 | Repo structure & Stages A–E | 🟡 | Structure ✅; Stage A: 1/10 drafted (Step 1, in review), none approved; B 0/10, C 0/14 as split docs, D 2/12 (testing, release governance), E structure only | See plan below |
 | 15 | Architecture governance | ✅ | GOV-002 | ARB members not named (interim approver) |
 | 16 | Engineering standards | ✅ | STD-001, QA-001 | Service README template; CI enforcement not built |
 | 17 | AI-assisted development | ✅ | GOV-003 | Enforcement needs branch protection + CI |
@@ -86,9 +86,9 @@ flowchart LR
 
 | Step | Content | Brief § | Depends on |
 | --- | --- | --- | --- |
-| **0** ✅ done 19 Nov 2026 (branch protection pending, owner action) | You merge WP1; switch on branch protection; add CI: DDL + DBT tests on PostgreSQL, Markdown link check, ID-uniqueness check, front-matter check | 15–17 | — |
+| **0** 🟡 partly done 19 Nov 2026 (WP1 merged, CI added; branch protection pending, owner action) | You merge WP1; switch on branch protection; add CI: DDL + DBT tests on PostgreSQL, Markdown link check, ID-uniqueness check, front-matter check | 15–17 | — |
 | **Stage A — business** | | | |
-| 1 🔄 in review | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
+| 1 🔄 in review (review fixes round 2: branch `wp2-step01b-review-fixes`) | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
 | 2 | BA-001 business capability map (all 17 domains, level 1–3 capabilities) | 4, 22-D2 | 0 |
 | 3 | BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs) | 14-A | 2 |
 | 4 | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
