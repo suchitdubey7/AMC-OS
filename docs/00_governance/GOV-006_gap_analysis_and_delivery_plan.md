@@ -91,7 +91,7 @@ flowchart LR
 | 1 🔄 in review (review fixes round 2: branch `wp2-step01b-review-fixes`) | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
 | 2 🔄 in review (branch `wp2-step02-capability-map`) | BA-001 business capability map (all 17 domains, level 1–3 capabilities) | 4, 22-D2 | 0 |
 | 3 🔄 in review (branch `wp2-step03-operating-model`) | BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs) | 14-A | 2 |
-| 4 | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
+| 4 🔄 in review (branch `wp2-step04-workflows`) | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
 | 5 | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
 | 6 | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
 | 7 | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |

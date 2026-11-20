@@ -2,12 +2,12 @@
 id: PS-002
 title: Product Vision
 status: Draft
-version: 0.2
+version: 0.3
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
 step: 1
-last_updated: 2026-11-19
+last_updated: 2026-11-20
 ---
 
 # PS-002 — Product Vision
@@ -59,16 +59,16 @@ Give Indian mutual fund AMCs one integrated, configurable operating platform, fr
 - No unexplained financial difference and no cross-tenant incident since go-live.
 - Leadership MIS that used to take days arrives the same day.
 
-**Timeline check [ASSUMPTION — confirm: project owner (question Q11 in LOOP_STATE.md)].** Months count from the start of the roadmap (PS-001):
+**Timeline (owner decision D-12, 20 Nov 2026, answering question Q11).** Go-live by month 24 takes priority, so the pilot starts earlier. Months count from the start of the roadmap (PS-001):
 
 | Months | Milestone | Basis |
 | --- | --- | --- |
 | 1–3 | Documentation programme (Steps 0–28) | GOV-006 §3 |
-| 18–22 | Pilot AMC starts, with a parallel run of at least 3 months | PS-001 §6 and O5 |
-| about 21–25 | Pilot go-live after a clean parallel run | PS-001 §6 + 3 months. **Conflict declared:** PS-001 O1 (all 17 domains live at the pilot by month 24) and PS-001 §9 (pilot and rollout in months 22–24) need go-live by month 24; a pilot that starts after month 21 may not finish a 3-month parallel run by month 24. Raised in Q11 |
+| about 15–18 | Pilot AMC starts, with a parallel run of at least 3 months | PS-001 §6 and O5; D-12 |
+| by 24 | Pilot go-live after a clean parallel run | PS-001 O1 and §9; D-12. This removes the conflict declared in v0.2 (a pilot starting after month 21 could not finish a 3-month parallel run by month 24) |
 | 25–36 | Further AMCs sign and go live | 9–18-month sales cycles (PS-003 §4), started in parallel with the pilot |
 
-Reaching 3–5 *paying* AMCs by month 36 is tight unless sales to the second and later AMCs start well before pilot go-live. Whether the 3–5 includes the pilot AMC is not yet decided; this document assumes it does.
+Reaching 3–5 *paying* AMCs by month 36 is tight unless sales to the second and later AMCs start well before pilot go-live. The 3–5 includes the pilot AMC (owner decision D-12).
 
 ## 6. What AMC OS is not
 
