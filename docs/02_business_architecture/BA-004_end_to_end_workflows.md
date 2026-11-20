@@ -48,7 +48,7 @@ Each workflow has a card and, where it helps, a Mermaid diagram.
 
 ## 2. Workflow register
 
-v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 also contains **W6b Trade settlement**, which GOV-001 did not count; it becomes **WF-018**. New workflows for D01, D06 and D07 are **WF-019…WF-028** **[DES]**. WF-029 and WF-030 (D02) were added by PRD-002 (Step 6), which holds their cards (PRD-002 §6.2–§6.3); WF-031 (D03) and WF-032 (D04) were added by PRD-003 and PRD-004 (Step 7), which hold their cards (§6.2 of each). IDs are never reused.
+v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 also contains **W6b Trade settlement**, which GOV-001 did not count; it becomes **WF-018**. New workflows for D01, D06 and D07 are **WF-019…WF-028** **[DES]**. WF-029 and WF-030 (D02) were added by PRD-002 (Step 6), which holds their cards (PRD-002 §6.2–§6.3); WF-031 (D03) and WF-032 (D04) were added by PRD-003 and PRD-004 (Step 7), which hold their cards (§6.2 of each); WF-033 (D09) and WF-034 (D08) were added by PRD-009 and PRD-008 (Step 8), which hold their cards (§6.2 of each). IDs are never reused.
 
 | WF | Workflow | v0.9 source | Main domains | Accountable department | BA-002 process |
 | --- | --- | --- | --- | --- | --- |
@@ -84,6 +84,8 @@ v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 al
 | WF-030 | Scheme merger, winding-up and maturity — card in PRD-002 §6.3 | **new** | D02 | DEP-13 Products and marketing | P1 (supporting) |
 | WF-031 | Investment policy review — card in [PRD-003](../03_product_requirements/PRD-003_investment_management.md) §6.2 | **new** | D03 | DEP-02 / DEP-03 (CIO) | P2 (supporting) |
 | WF-032 | Performance measurement and attribution — card in [PRD-004](../03_product_requirements/PRD-004_portfolio_management.md) §6.2 | **new** | D04 | DEP-11 Risk management | P3 (supporting) |
+| WF-033 | Daily risk run and risk alerts — card in [PRD-009](../03_product_requirements/PRD-009_risk_management.md) §6.2 | **new** | D09 | DEP-11 Risk management | — (no BA-002 process covers risk monitoring) |
+| WF-034 | Compliance rule change lifecycle — card in [PRD-008](../03_product_requirements/PRD-008_compliance_management.md) §6.2 | **new** | D08 | DEP-09 Compliance | P11 (supporting) |
 
 ```mermaid
 flowchart LR
@@ -1022,8 +1024,8 @@ Every domain appears in at least one workflow (checked by script; see §6). Doma
 | D05 | WF-004, WF-005, WF-006, WF-024 | — |
 | D06 | WF-004, WF-023, WF-024, WF-025 | — |
 | D07 | WF-018, WF-023, WF-026, WF-027, WF-028 | — |
-| D08 | WF-001, WF-002, WF-003, WF-004, WF-005, WF-006, WF-014, WF-016, WF-017, WF-024, WF-025 | Rule change lifecycle (CAP-D08-001, CAP-D08-008) → PRD-008 (Step 8), REG-001 (Step 25) |
-| D09 | WF-023 only | **Daily risk run and risk alerts** (CAP-D09-001…013) have no end-to-end workflow in PRD-000 or here → PRD-009 (Step 8) |
+| D08 | WF-001, WF-002, WF-003, WF-004, WF-005, WF-006, WF-014, WF-016, WF-017, WF-024, WF-025, WF-034 | — (WF-034 added by PRD-008, Step 8; registry fields in REG-001, Step 25) |
+| D09 | WF-023, WF-033 | — (WF-033 added by PRD-009, Step 8) |
 | D10 | WF-001, WF-007, WF-008, WF-009, WF-010, WF-011, WF-017, WF-018, WF-025, WF-027 | — |
 | D11 | WF-001, WF-007, WF-010, WF-011, WF-017 | Fair valuation (CAP-D11-005) → PRD-011 (Step 9) |
 | D12 | WF-007, WF-008, WF-009, WF-010, WF-011, WF-013, WF-015, WF-024, WF-025, WF-026, WF-027, WF-028 | — |
@@ -1044,7 +1046,7 @@ BA-002 §7 processes P1–P12 each map to at least one workflow (§2 register); 
 | C3 | PRD-000 W10 and W11 describe AMC OS computing units and redemption amounts; under owner decision Q2 (mirror the RTA) these are checks of the RTA's figures. Who sends the redemption payout file is not known | PRD-013 (Step 9); pilot discovery |
 | C4 | Event names in PRD-000 (lower-case, dotted, e.g. `trading.trade.confirmed`) differ from the GOV-001 §4 format `<NAME>.v<n>` (e.g. `NAV_APPROVED.v1`) | EA-007 event catalogue (Step 13) |
 | C5 | PRD-000 W3 names a "Portfolio Agent" that is not in the brief's D17 list | AIML-001 (Step 26) — same as BA-001 §5 C4 |
-| C6 | D09 Risk and D15 Finance have no end-to-end workflow in PRD-000; BA-002 P13 has no workflow | PRD-009 (Step 8), PRD-015 (Step 9) |
+| C6 | D09 Risk and D15 Finance have no end-to-end workflow in PRD-000; BA-002 P13 has no workflow | D09 part closed by PRD-009 (Step 8, WF-033); D15 and P13 → PRD-015 (Step 9) |
 | C7 | Approval thresholds, delegated authority, recertification and review frequencies, tolerances and escalation limits named in the cards are tenant configuration with no values yet **[ASSUMPTION]** | Pilot discovery; BA-005 (Step 5) for who approves |
 | C8 | QA-001 still limits end-to-end workflow tests to WF-001…WF-017; BA-004 defines WF-001…WF-028, including the control workflows WF-020, WF-022 and WF-028 | Next QA-001 revision |
 | C9 | BA-003 TERM-078 calls SSI "Standing Settlement Instructions" and maps it to CAP-D07-002; BA-001 and BA-004 use "standard settlement instruction" under CAP-D07-004 (.2) | Next BA-003 revision |
