@@ -6,11 +6,13 @@
 
 ## Next action
 
+**Owner answers 20 Nov 2026 (D-7 to D-16):** apply them when the related documents are next touched. In particular, D-12 changes the pilot timing in PS-001 §6 and PS-002 §5 — make that edit as a small fix (Step 1 follow-up) before or alongside Step 4. The repository is still public until the owner switches it (D-6).
+
 **Step 4** on a new branch `wp2-step04-workflows` from the chain tip: BA-004 end-to-end workflows WF-001…WF-0nn (re-key PRD-000 W1–W17, add new workflows for D01, D06 and D07), GOV-006 §3. Each workflow lists the `CAP-` IDs it uses (BA-001) and the `DEP-` departments involved (BA-002), and names the external system at each hand-off (BA-002 §5).
 
 After that: Steps 5, 6, … in GOV-006 order.
 
-Housekeeping for the owner: `tests/governance/__pycache__/` is tracked and the repo has no `.gitignore`, so every local pytest run dirties the tree (STEP-02 round 1 finding 8). Owner-only path (`.github/` not involved, but adding `.gitignore` at root is a repo-wide change) — please untrack it.
+Housekeeping: `.gitignore` added and `__pycache__` untracked by the owner on 20 Nov 2026 (STEP-02 round 1 finding 8 closed).
 
 Finding left open from Step 3: STEP-03 round 1 Nit 14 — GOV-001 `last_updated` and the register heading "as of 19 Nov 2026" were not changed, because only table rows of GOV-001 may change on a loop branch (merge gate G2); owner may update the dates.
 
@@ -41,6 +43,16 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-4 | Loop may merge only through `scripts/merge_gate.py` (CR-0001, GOV-008 §5) | 2026-11-19 |
 | D-5 | Paid external expert review before any T1 document is Approved | 2026-11-19 |
 | D-6 | Repository to become private (owner action) | 2026-11-19 |
+| D-7 (Q5) | Cloud: AWS Mumbai (ap-south-1) primary, Hyderabad (ap-south-2) for disaster recovery | 2026-11-20 |
+| D-8 (Q6) | Sign-in: each AMC's own identity provider via OIDC/SAML; Keycloak for AMCs without one | 2026-11-20 |
+| D-9 (Q8) | No `ANTHROPIC_API_KEY` repo secret for now; reviews run inside loop sessions | 2026-11-20 |
+| D-10 (Q9) | Branch protection on `main` is not on; merge gate + CODEOWNERS remain the control | 2026-11-20 |
+| D-11 (Q10) | First target segment: new AMCs (C3) first, mid-size AMCs (C2) second | 2026-11-20 |
+| D-12 (Q11) | Go-live by month 24 wins: pilot starts earlier (about month 15–18) so the parallel run ends by month 24. "3–5 paying AMCs by month 36" includes the pilot AMC | 2026-11-20 |
+| D-13 (Q12, Q15) | `CAP-Dxx-nnn(.m)`, `DEP-nn` and `TERM-nnn` are official IDs (added to GOV-001 §4) | 2026-11-20 |
+| D-14 (Q13) | D01 "Subscription management" = the AMC's subscription to AMC OS (plans, entitlements, metering) | 2026-11-20 |
+| D-15 (Q14) | Systems stance stays per domain (replace / connect / mirror, BA-002 §5); per-capability detail during pilot discovery | 2026-11-20 |
+| D-16 (Q16) | Fund accounting and NAV: AMC OS replaces them where the AMC does them in-house; mirrors and validates where outsourced to the custodian (also answers architecture proposal OD-2 direction) | 2026-11-20 |
 
 ## Waiting for owner (cannot be auto-merged)
 
@@ -55,14 +67,4 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| Q5 | Cloud and region | GOV-006 | Cloud-neutral; AWS India as reference |
-| Q6 | Identity provider | GOV-006 | Customer IdP via OIDC; Keycloak for shared SaaS |
-| Q8 | Add `ANTHROPIC_API_KEY` repo secret so the AI review also runs on GitHub? | GOV-007 | Review runs inside each loop session only |
-| Q9 | Has branch protection on `main` been switched on? | Step 0 | Treated as pending |
-| Q10 | First target segment: new AMCs (C3) before mid-size AMCs (C2)? PRD-000 put both first | Step 1 fixes (PS-003 §3) | C3 first, C2 second |
-| Q11 | Does the "3–5 paying AMCs" target include the pilot AMC? Is month 36 the right horizon? And: pilot start at month 18–22 (PS-001 §6) plus a 3-month parallel run can end after month 24, which clashes with O1 and the roadmap (go-live by month 24). Which wins? | Step 1 fixes (PS-002 §5) | Includes the pilot; month 36; conflict left open |
-| Q12 | Add the capability ID `CAP-Dxx-nnn` (and `.m` for level 3) to the GOV-001 §4 identifier table? | Step 2 (BA-001 §1) | Used in BA-001 as a proposal |
-| Q13 | D01 "Subscription management": does it mean the AMC's subscription to AMC OS (plans, entitlements, metering), not investor subscriptions? | Step 2 (BA-001 CAP-D01-006) | Yes, the AMC's subscription to AMC OS |
-| Q14 | Brief §22 Deliverable 2 asks for the "systems" in the operating model. Add "which current systems each capability replaces" to BA-002 (Step 3)? | Step 2 (BA-001 §5 C7) | Done per domain in BA-002 §5 (replace / connect / mirror); per-capability detail left to pilot discovery |
-| Q15 | Add department IDs `DEP-nn` (BA-002 §3) and term IDs `TERM-nnn` (BA-003) to the GOV-001 §4 identifier table? | Step 3 | Used in BA-002 / BA-003 as a proposal |
-| Q16 | At the pilot AMC (and AMCs generally), is fund accounting and NAV done in-house or outsourced to the custodian? This decides whether AMC OS replaces it or mirrors and validates it (BA-002 §5) | Step 3 | Replace where in-house; mirror and validate where outsourced |
+| — | None open (Q5–Q16 answered 20 Nov 2026, see D-7 to D-16) | — | — |
