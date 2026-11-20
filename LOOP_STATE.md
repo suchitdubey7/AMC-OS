@@ -6,7 +6,7 @@
 
 ## Next action
 
-**Step 8** on a new branch `wp2-step08-prd-trading-settlement-compliance-risk` from the chain tip: PRD-006 Trading and Execution (D06), PRD-007 Settlement (D07, split from PRD-000 Module 05), PRD-008 Compliance (D08) and PRD-009 Risk (D09), GOV-006 §3. Re-key PRD-000 FR-04-09…11 (left by PRD-005 §2), Module 05, Module 06 and Module 07; re-key the Module 04 allocation acceptance criterion; settle the side-exit states of the order state machine (PRD-005 C4); give D09 its daily risk run and risk-alert workflow (BA-004 §5.1 C6); continue numbering (next free: WF-033, NFR-PERF-007, NFR-AUD-006, NFR-RET-003, NFR-SEC-004, NFR-SCAL-003).
+**Step 8** on a new branch `wp2-step08-prd-trading-settlement-compliance-risk` from the chain tip: PRD-006 Trading and Execution (D06), PRD-007 Settlement (D07, split from PRD-000 Module 05), PRD-008 Compliance (D08) and PRD-009 Risk (D09), GOV-006 §3. Re-key PRD-000 FR-04-09…11 (left by PRD-005 §2), Module 05, Module 06 and Module 07; re-key the Module 04 allocation acceptance criterion; check PRD-005 open points C4 (amended order version and re-route after broker reject), C5 (FR-04-09…11, zero lost fills, raw FIX archive), C9 (who writes post-trade allocation results); give D09 its daily risk run and risk-alert workflow (BA-004 §5.1 C6); continue numbering (next free: WF-033, NFR-PERF-007, NFR-AUD-006, NFR-RET-003, NFR-SEC-004, NFR-SCAL-003).
 
 After that: Steps 9, 10, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
@@ -44,7 +44,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 10:57 IST, build loop, CR-0001 gate PASS) |
 | 9 | `wp2-step06-prd-platform-product` | Step 6: PRD-001 Platform Administration (D01), PRD-002 Product and Scheme Management (D02); WF-029, WF-030 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 6 Minor, 3 Nits — 8 fixed, Nit 9 (commit trailer) left; round 1 had 2 Major, both fixed) | pass | yes (20 Nov 12:43 IST, build loop, CR-0001 gate PASS) |
 | 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005, PRD-001, BA-004 WF-020 and GOV-001 §4 | Round 5: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 5 Nits — all fixed except Nit 9 (version bumps, accepted Draft practice) and Nit 10 (trailer)) | pass | yes (20 Nov 2026, merged on the owner's instruction in chat — GOV-001 §4 row, outside the CR-0001 G2 exception) |
-| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 (D03), PRD-004 (D04), PRD-005 (D05); WF-031, WF-032 added to BA-004 register | see review STEP-07 | see gate | see gate |
+| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 (D03), PRD-004 (D04), PRD-005 (D05); WF-031, WF-032 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 4 Minor, 2 Nits — all fixed except Nit 6 (trailer); round 1 had 1 Major, fixed) | see gate | see gate |
 
 ## Owner decisions used by the loop
 

@@ -185,8 +185,8 @@ Definition of done: as PRD-000 Chapter 5.
 | Exception | Handling | Source |
 | --- | --- | --- |
 | Compliance data incomplete | Result `INDETERMINATE`, treated as BLOCK | WF-005 |
-| Broker reject | Order `REJECTED_BY_BROKER`; dealer may re-route as a new release | PRD-000 Module 04 point 14; WF-004 |
-| Late fill after cancel | Exception queue (CAP-D12-008); handled in D06 | PRD-000 Module 04 point 14 |
+| Broker reject | Order `REJECTED_BY_BROKER` (closed: no outgoing transition in §4.3). A re-route is a new order or order version that goes through compliance and approval again; which of the two is open point C4 | PRD-000 Module 04 point 14; WF-004 |
+| Fill after the order is `CANCELLED` (a fill while `CANCEL_REQUESTED` follows §4.3) | Exception queue (CAP-D12-008); handled in D06 | PRD-000 Module 04 point 14 |
 | Duplicate fill | Ignored by execution ID (idempotent, D06) | PRD-000 Module 04 point 14 |
 | Price outside band | Refused at validation (FR-D05-004) | PRD-000 Module 04 point 14 |
 | Connection loss to a broker | Handled by D06 (reconnect and recovery); order state unchanged until D06 reports | PRD-000 Module 04 point 14 |
@@ -224,12 +224,13 @@ Within PRD-000 C8 and ADR-0008 (read and propose only): the **CIO copilot** (CAP
 | C1 | Regulatory basis for dealing-room controls (FR-D05-011), fair allocation (BRL-D05-003) and any minimum number of debt quotes (FR-D05-008) **[VAL]** | REG-001 (Step 25) |
 | C2 | Raw broker-message retention period (BRL-D05-005) **[VAL]** | REG-001 (Step 25) |
 | C3 | Approval thresholds and the policy minimum number of debt quotes **[ASSUMPTION]** | Pilot discovery |
-| C4 | How an amended order version re-enters `PENDING_COMPLIANCE` (BRL-D05-004, AC-US-D05-008-1): not in PRD-000 or the DDL-000 transition table | PRD-006 (Step 8) with D06 states; DA-001 (Step 15) |
+| C4 | How an amended order version re-enters `PENDING_COMPLIANCE` (BRL-D05-004, AC-US-D05-008-1): not in PRD-000 or the DDL-000 transition table; the same question applies to re-routing after `REJECTED_BY_BROKER`, which has no outgoing transition (§9) | DA-001 (Step 15) or a PRD-005 revision |
 | C5 | FR-04-09…11 (execution, allocation, confirmation), the allocation acceptance criterion, "zero lost fills" (Module 04 point 17) and the raw FIX archive (point 15) are not re-keyed here | PRD-006 (Step 8) |
 | C6 | Override permission: BA-005 §4 maps `compliance.pretrade.override` to CAP-D08-011; BA-001 puts "override with approval" in CAP-D05-010 (.3) | EA-003 (Step 11); next BA-005 revision |
 | C7 | Dealer rights added in §7 (†) are not in BA-005 §3 | Next BA-005 revision |
 | C8 | Which AI assistant may propose orders: BA-001 has CAP-D17-003 CIO copilot read-only and CAP-D17-004 Dealing assistant as context only | AIML-001 (Step 26) |
 | C9 | `trading.block_allocation` holds `allocated_quantity` and `average_price`, which D06 produces: either D06 writes into the D05 schema (a cross-domain write, AGENTS.md §2.3) or D05 records them from D06 events. Where post-trade allocation results live and who writes them is open | EA-003 (Step 11), DA-001 (Step 15) |
+| C10 | DDL-000 enforces transitions only on `UPDATE` of `state` (trigger `trading.tg_order_state`): there is no CHECK on allowed state values, no rule that a new order starts in `DRAFT`, and the `PARTIALLY_FILLED → PARTIALLY_FILLED` self-transition writes no order event. Needed for FR-D05-016: a state-domain CHECK, `DRAFT` enforced on insert, and a decision on whether further partial fills are order events or only D06 `execution` records | DA-001 / DDL (Steps 15–16) |
 
 ## Sources
 
