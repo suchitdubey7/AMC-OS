@@ -28,7 +28,7 @@ This document states what AMC OS must do to be the single source of truth for ev
 
 | PRD-000 v0.9 | Here | Note |
 | --- | --- | --- |
-| FR-01-01 … FR-01-13 | FR-D02-001 … FR-D02-013 | Same order; capability added; wording shortened. Additions and removals are marked **(changed)** in §4.1 with the reason |
+| FR-01-01 … FR-01-13 | FR-D02-001 … FR-D02-013 | Same order; capability added; wording shortened. Changes of meaning or source are marked **(changed)** in §4.1 with the reason; added cross-references (for example "(D08)", "(WF-029)", a CAP- ID) are not tagged |
 | BR-01-1 … BR-01-5 (business **rules**) | BRL-D02-001 … BRL-D02-005 | GOV-001 §4 reserves `BR-` for business *requirements*; rules are `BRL-` |
 | US-PRD-01, US-PRD-02 (Ch 5) | US-D02-001, US-D02-002 | |
 | Module 01 point 18 acceptance criteria | AC-US-D02-002-1, AC-US-D02-003-1 | |
@@ -54,17 +54,17 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | ID (was) | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
 | FR-D02-001 (FR-01-01) | M | CAP-D02-001 | **Scheme master:** legal name, short name, AMFI scheme code, ISINs per plan and option, SEBI category and sub-category, open/close/interval type, launch date, face value, base currency, fund managers (effective-dated), custodian, RTA, auditor, trustee approval reference |
-| FR-D02-002 (FR-01-02) | M | CAP-D02-002 | **Scheme categorisation:** category from a governed list mirroring the SEBI categorisation circular in force (currently the 26 Feb 2026 circular, PRD-000 Appendix A R5); each category carries its default investment-limit rule pack **[REG]** |
+| FR-D02-002 (FR-01-02) | M | CAP-D02-002 | **Scheme categorisation:** category from a governed list mirroring the SEBI categorisation circular in force (currently the 26 Feb 2026 circular, which superseded clause 2.6 of the June 2024 Master Circular; PRD-000 Appendix A R5); each category carries its default investment-limit rule pack **[REG]** |
 | FR-D02-003 (FR-01-03) | M | CAP-D02-003 | **Plans and options:** Direct and Regular plans; Growth and IDCW (payout, reinvestment, transfer) options; each with its own ISIN, NAV series and TER |
 | FR-D02-004 (FR-01-04) | M | CAP-D02-006 | **Scheme configuration:** minimum investment, additional purchase, SIP/STP/SWP frequencies and minimums, exit-load slabs (effective-dated), lock-in (e.g. ELSS), cut-off times, settlement cycle, benchmark(s), TER schedule, side-pocket eligibility |
 | FR-D02-005 (FR-01-05) **(changed)** | M | CAP-D02-005 | **NFO management:** NFO calendar, offer period, minimum subscription amount, allotment date, collection tracking from the RTA, refund if the minimum is not met, conversion to open-ended on the reopening date. *Added here:* allotment and refunds are done by the RTA (or the AMC's bank — BA-004 WF-001 **[ASSUMPTION — confirm: Product Manager, pilot discovery]**); AMC OS tracks and mirrors them (Q2). Offer-period length and refund timeline are parameters **[VAL]** |
 | FR-D02-006 (FR-01-06) | M | CAP-D02-004 | **SID, KIM, SAI document management:** versioned documents, each linked to the scheme version it describes; addenda; filing and observation dates with SEBI; publication to the website |
 | FR-D02-007 (FR-01-07) | M | CAP-D02-006 | **Investment mandate:** asset-allocation ranges (min/max % per asset class), permitted instruments, derivatives use, overseas limits, credit-quality limits — compiled into compliance rules (D08) automatically |
 | FR-D02-008 (FR-01-08) | M | CAP-D02-007 | **Benchmark configuration:** primary and additional benchmarks, TRI variant, effective dates, data source (index data from CAP-D16-004) |
-| FR-D02-009 (FR-01-09) | M | CAP-D02-009 | **Lifecycle states:** `DRAFT → IN_REVIEW → FILED_WITH_SEBI → SEBI_OBSERVATIONS → APPROVED_FOR_LAUNCH → NFO_OPEN → NFO_CLOSED → ALLOTTED → ACTIVE → (SUSPENDED_SUBSCRIPTIONS) → MERGING → WOUND_UP / MATURED`, plus **`CANCELLED`** when the NFO minimum is not met (added here: BA-004 WF-001 uses it but PRD-000 FR-01-09 did not list it) |
+| FR-D02-009 (FR-01-09) **(changed)** | M | CAP-D02-009 | **Lifecycle states:** `DRAFT → IN_REVIEW → FILED_WITH_SEBI → SEBI_OBSERVATIONS → APPROVED_FOR_LAUNCH → NFO_OPEN → NFO_CLOSED → ALLOTTED → ACTIVE → (SUSPENDED_SUBSCRIPTIONS) → MERGING → WOUND_UP / MATURED`, plus **`CANCELLED`** when the NFO minimum is not met (added here: BA-004 WF-001 uses it but PRD-000 FR-01-09 did not list it) |
 | FR-D02-010 (FR-01-10) | M | CAP-D02-010 | **Amendments:** fundamental-attribute change workflow (with investor exit-option window) and non-fundamental change, each creating a new scheme version (WF-029) **[REG — fundamental attribute change rules; VAL exact exit window]** |
 | FR-D02-011 (FR-01-11) **(changed)** | S | CAP-D02-001 (view) | **Product performance:** returns vs benchmark and peers (CAGR, rolling, SIP returns) shown per scheme. *Changed:* PRD-000 named "the Performance engine (Module 07/14)"; the source is now CAP-D04-009 and FE-10 (BA-001 §3 note, GOV-001 §5) — D02 only displays the numbers |
-| FR-D02-012 (FR-01-12) | S | CAP-D02-001 (view) | **Product profitability:** revenue, distributor cost and opex allocation per scheme shown from D15 (CAP-D15-005, FE-08) — D02 only displays them |
+| FR-D02-012 (FR-01-12) **(changed)** | S | CAP-D02-001 (view) | **Product profitability:** revenue, distributor cost and opex allocation per scheme. *Changed:* PRD-000 named "Module 13"; the source is now D15 (CAP-D15-005, FE-08) — D02 only displays the numbers |
 | FR-D02-013 (FR-01-13) | M | CAP-D02-004 | **Product disclosures:** factsheet, riskometer, portfolio disclosure and TER disclosure data feeds; disclosure calendar |
 
 ### 4.2 New requirements **[DES]**
@@ -153,7 +153,7 @@ flowchart TD
 | Hand-offs (outside) | Trustees; SEBI where required **[VAL]**; RTA (unit conversion or final redemption); exchanges' MF platforms; custodian |
 | Preconditions | Scheme `ACTIVE`, `SUSPENDED_SUBSCRIPTIONS` or reaching maturity |
 | Final state | Merger: source scheme closed into the target, units converted by the RTA and mirrored. Winding-up / maturity: final redemption paid by the RTA and mirrored; scheme `WOUND_UP` or `MATURED`; books closed |
-| Approvals | As WF-029 for a fundamental change, including trustee approval evidence (BRL-D02-009) |
+| Approvals | Merger, winding-up, and abandoning a merger: as WF-029 for a fundamental change, including trustee approval evidence (BRL-D02-009). Maturity: Head of Products and Compliance Officer; whether trustee approval evidence is also needed at maturity is **[VAL]** (open point C1) |
 | Exceptions | RTA conversion does not reconcile with the NAVs from D11 → break (CAP-D12-003); assets cannot be liquidated by the planned date → escalation to CIO and Compliance; regulatory timelines **[VAL]** |
 | Audit | Decision, approvals, record and effective dates, NAVs used, RTA files and reconciliation, final state |
 | Source | **new** (BA-004 §5.1 D02 gap: CAP-D02-009 (.2), (.3), CAP-D02-010) |
@@ -170,7 +170,8 @@ stateDiagram-v2
   ACTIVE --> MATURED: maturity date; final redemption mirrored
   SUSPENDED_SUBSCRIPTIONS --> WOUND_UP: winding-up approved; final redemption mirrored
   SUSPENDED_SUBSCRIPTIONS --> MATURED: maturity date; final redemption mirrored
-  MERGING --> ACTIVE: merger abandoned before effective date, approved as a scheme change (WF-029)
+  MERGING --> ACTIVE: merger abandoned before effective date (same approvers as the merger); back to the state held before the merger
+  MERGING --> SUSPENDED_SUBSCRIPTIONS: as above, if the scheme was suspended before the merger
   WOUND_UP --> [*]
   MATURED --> [*]
 ```
@@ -184,12 +185,12 @@ From BA-005 §3 (D02 column) and §4, narrowed to each capability (BA-005 §7 C2
 | CAP-D02-001 Scheme master | Product Manager | Head of Products, then Compliance Officer; trustee approval evidence (BRL-D02-009) |
 | CAP-D02-002 Scheme categories (category list) | Product Manager | Compliance Officer and Head of Products **[DES]** |
 | CAP-D02-003 Plan and option management | Product Manager | Head of Products, then Compliance Officer; trustee approval evidence |
-| CAP-D02-004 SID, SAI, KIM documents | Product Manager | Legal Officer and Compliance Officer (BA-005 ROLE-21) |
+| CAP-D02-004 SID, SAI, KIM documents | Product Manager | Legal Officer and Compliance Officer (BA-005 ROLE-21); trustee approval evidence for a document change that is an amendment (BRL-D02-009) |
 | CAP-D02-005 NFO lifecycle | Product Manager | Head of Products, then Compliance Officer |
 | CAP-D02-006 Scheme configuration | Product Manager | Head of Products, then Compliance Officer; CIO for mandate ("A(mandate)"); CFO for fees and TER ("A(fees)"); trustee approval evidence |
 | CAP-D02-007 Benchmark mapping | Product Manager | Head of Products, Compliance Officer, CIO; trustee approval evidence |
 | CAP-D02-008 Scheme approvals | (the approval step itself) | As per row of the item approved; trustee evidence uploaded by the Legal Officer **[ASSUMPTION — confirm: DEP-10 of the pilot AMC]** |
-| CAP-D02-009 Product lifecycle (suspension, merger, winding-up, maturity) | Product Manager | Head of Products, Compliance Officer, CEO ("A(material)") |
+| CAP-D02-009 Product lifecycle (suspension, merger, winding-up, maturity) | Product Manager | Head of Products, Compliance Officer, CEO ("A(material)"); trustee approval evidence for merger and winding-up (BRL-D02-009) |
 | CAP-D02-010 Scheme changes | Product Manager | As WF-029 approvals |
 | CAP-D02-011 Regulatory document versioning | System (versions created automatically) | — (read: Compliance, Legal, Auditor; Trustee read-only as in PRD-000 Module 01 point 4 "Trustee viewer (read)" — wider than BA-005 ROLE-25, open point C7) |
 
@@ -241,7 +242,7 @@ NFR numbering continues after PRD-001.
 | ID | Requirement | Type / source |
 | --- | --- | --- |
 | NFR-PERF-001 | Scheme read API p95 < 100 ms | Proposed — PRD-000 Module 01 point 17 |
-| NFR-RET-002 | Scheme versions and document versions kept for the scheme's life plus the retention period | PRD-000 Module 01 point 17 **[VAL]** period |
+| NFR-RET-002 | Scheme versions and document versions kept for at least the scheme's life plus the retention period; whether they are kept forever is open point C6 | PRD-000 Module 01 point 17 **[VAL]** period |
 | NFR-AUD-002 | Difference view between any two scheme or document versions, with the approval chain and timestamps | PRD-000 Module 01 point 15 **[DES]** |
 
 Platform NFRs (NFR-SEC-001…003, NFR-AUD-001, NFR-AVAIL-001, NFR-DR-001) in PRD-001 §11 apply.
@@ -254,7 +255,7 @@ Within the boundary of PRD-000 C8 and ADR-0008 (read and propose only): the Comp
 
 | # | Point | Where closed |
 | --- | --- | --- |
-| C1 | List of fundamental attributes, exit-window length, NFO offer-period length and refund timeline, retention period, and whether trustee approval is legally required for every non-fundamental change (BRL-D02-009) — all **[VAL]** | REG-001 (Step 25), Compliance of pilot AMC |
+| C1 | List of fundamental attributes, exit-window length, NFO offer-period length and refund timeline, retention period, and whether trustee approval is legally required for every non-fundamental change (BRL-D02-009) and at maturity (WF-030) — all **[VAL]** | REG-001 (Step 25), Compliance of pilot AMC |
 | C2 | Exit-load cap (3% per secondary sources) and TER slabs need the primary SEBI text and effective dates before they enter the rule registry | REG-001 (Step 25) |
 | C3 | Who initiates NFO refunds (RTA or AMC via its bank) | Pilot discovery (BA-004 WF-001) |
 | C4 | BA-004 register gets WF-029 and WF-030 (rows added in this step); the full cards live here until BA-004's next revision | Next BA-004 revision |

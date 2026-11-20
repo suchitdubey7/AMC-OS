@@ -162,12 +162,12 @@ No new workflow is needed for D01: BA-004 §5.1 lists no D01 gap.
 
 ## 7. Permissions by capability
 
-BA-005 §3 gives D01 rights for the whole domain to the CTO (R A(tech config)), the Technology Administrator (C U S, A by Tenant Administrator), the Auditor (R audit log), the Tenant Administrator, the Information Security Officer and the Platform Operator (BA-005 new-role rights); every other role has "—". This table splits those rights by capability (BA-005 §7 C2). "Maker" may create or submit; "Checker" approves (≠ maker, SOD-01). Cells marked **†** give a right that BA-005 §3 does not give; each is listed with its reason below the table and must be carried into the BA-005 D01 column (open point C9). Everyone not listed has no access.
+BA-005 §3 gives D01 rights for the whole domain to the CTO (R A(tech config)), the Technology Administrator (C U S, A by Tenant Administrator), the Auditor (R audit log), the Tenant Administrator, the Information Security Officer and the Platform Operator (BA-005 new-role rights); every other role has "—", apart from the CEO and Compliance Officer read access to market-abuse access logs listed below the BA-005 §3 matrix. This table splits those rights by capability (BA-005 §7 C2). "Maker" may create or submit; "Checker" approves (≠ maker, SOD-01). Cells marked **†** give a right that BA-005 §3 does not give; each is listed with its reason below the table and must be carried into the BA-005 D01 column (open point C9). Everyone not listed has no access.
 
 | Capability | Maker | Checker | Read |
 | --- | --- | --- | --- |
 | CAP-D01-001 Tenant management | Platform Operator (create, provision, offboard) | Tenant Administrator (activation, offboarding confirmation; SOD-15) | CTO, Information Security Officer; Auditor through the audit log |
-| CAP-D01-002 User management | Technology Administrator; role owners (recertification)† | Tenant Administrator | Information Security Officer; Auditor through the audit log |
+| CAP-D01-002 User management | Technology Administrator; role owners (recertification)† | Tenant Administrator (user changes); recertification has no checker and is reported to DEP-16 (BA-005 §4 `platform.access.recertify`) | Information Security Officer; Auditor through the audit log |
 | CAP-D01-003 Identity | Technology Administrator (connection set-up) | Tenant Administrator; Information Security Officer for MFA and session policy | CTO; Auditor through the audit log |
 | CAP-D01-004 Role-based access | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant) | Information Security Officer; Compliance Officer receives the SOD-11 report†; Auditor through the audit log |
 | CAP-D01-005 Permission management | Technology Administrator; Platform Operator (break-glass request only) | Tenant Administrator; Information Security Officer (access policy) | Auditor through the audit log |
