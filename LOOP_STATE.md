@@ -1,18 +1,18 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-20 04:39 IST
-**Chain tip:** `wp2-step03-operating-model`
+**Updated:** 2026-11-20 08:50 IST
+**Chain tip:** `wp2-step04-workflows`
 
 ## Next action
 
-**Owner answers 20 Nov 2026 (D-7 to D-16):** apply them when the related documents are next touched. In particular, D-12 changes the pilot timing in PS-001 §6 and PS-002 §5 — make that edit as a small fix (Step 1 follow-up) before or alongside Step 4. The repository is still public until the owner switches it (D-6).
+**Step 5** on a new branch `wp2-step05-roles-permissions` from the chain tip: BA-005 roles and permissions (re-key PRD-000 Chapter 6; SoD rules SOD-01…SOD-11), GOV-006 §3. Use BA-002 §3 departments and §8 C1 (roles for DEP-10, DEP-16, DEP-17), group permissions by `CAP-` capability, and settle the open items BA-004 hands to BA-005: who may grant a SoD exception (WF-020), the named heads of department used as initiators in BA-004 cards, approvers in WF-021 and WF-023.
 
-**Step 4** on a new branch `wp2-step04-workflows` from the chain tip: BA-004 end-to-end workflows WF-001…WF-0nn (re-key PRD-000 W1–W17, add new workflows for D01, D06 and D07), GOV-006 §3. Each workflow lists the `CAP-` IDs it uses (BA-001) and the `DEP-` departments involved (BA-002), and names the external system at each hand-off (BA-002 §5).
+After that: Steps 6, 7, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
-After that: Steps 5, 6, … in GOV-006 order.
+Done in the Step 4 run (20 Nov 2026): D-12 pilot timing applied to PS-001 §6, §8, §9 and PS-002 §5 (Step 1 follow-up), with a note on the overlap between a month 15–18 pilot and the brief's build increments in months 16–21 (marked [ASSUMPTION] for the owner to confirm). Owner answers D-7, D-8, D-14, D-15, D-16 applied in BA-004. GOV-006 Step 1–3 cells updated to "merged".
 
-Housekeeping: `.gitignore` added and `__pycache__` untracked by the owner on 20 Nov 2026 (STEP-02 round 1 finding 8 closed).
+Findings left open from Step 4: STEP-04 round 1 Nit 14 — commit trailer is `Co-Authored-By: Claude` as the loop prompt requires (same as STEP-01 Nit 2). BA-004 §5.2 C8 (QA-001 still says WF-001…WF-017) and C9 (BA-003 TERM-078 SSI wording) wait for the next revision of those documents.
 
 Finding left open from Step 3: STEP-03 round 1 Nit 14 — GOV-001 `last_updated` and the register heading "as of 19 Nov 2026" were not changed, because only table rows of GOV-001 may change on a loop branch (merge gate G2); owner may update the dates.
 
@@ -28,10 +28,11 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | --- | --- | --- | --- | --- | --- |
 | 1 | `step-01-vision-market` | Step 1: PS-002, PS-003, PS-004 | RECOMMEND CHANGES (0 Blocker, 5 Major, 12 Minor, 2 Nit) | pass | yes (23:28, on owner instruction) |
 | 2 | `gov-07-review-agent` | GOV-007 reviewer, GOV-008 loop, this file | not yet reviewed | pass | yes (23:28, on owner instruction) |
-| 3 | `wp2-step01b-review-fixes` | Step 1 review fixes (PS-001–004, GOV-005, GOV-006, CI trigger) | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor accepted, 3 Nits — 2 fixed) | pending | no |
-| 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pass | no — owner-only files |
-| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pass | no |
-| 6 | `wp2-step03-operating-model` | Step 3: BA-002 operating model and department hierarchy (19 departments, owner of all 209 capabilities, systems stance per domain); BA-003 domain dictionary (96 terms) | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | no |
+| 3 | `wp2-step01b-review-fixes` | Step 1 review fixes (PS-001–004, GOV-005, GOV-006, CI trigger) | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor accepted, 3 Nits — 2 fixed) | pending | yes (20 Nov 07:15, on owner instruction) |
+| 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pass | yes (20 Nov 07:15, on owner instruction) |
+| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pass | yes (20 Nov 07:15, on owner instruction) |
+| 6 | `wp2-step03-operating-model` | Step 3: BA-002 operating model and department hierarchy (19 departments, owner of all 209 capabilities, systems stance per domain); BA-003 domain dictionary (96 terms) | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 07:15, on owner instruction) |
+| 7 | `wp2-step04-workflows` | Step 4: BA-004 end-to-end workflows WF-001…WF-028 (17 re-keyed, W6b → WF-018, 10 new for D01/D06/D07); D-12 pilot timing in PS-001/PS-002 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | see gate | see gate |
 
 ## Owner decisions used by the loop
 
@@ -58,10 +59,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | Branch | Why |
 | --- | --- |
-| `wp2-step01b-review-fixes` | Gate re-run 2026-11-20 (Step 3 run): same result — G1, G3, G4, G6 (CI unknown) pass; **G2 fail** (owner-only `.github/workflows/ci.yml`, GOV-005, GOV-006); G5 run from the tip reports a checkout mismatch only. Earlier gate run 2026-11-20 (Step 2 run): G1, G3, G4, G6 pass; **G2 fail** — owner-only: `.github/workflows/ci.yml`, GOV-005, GOV-006 (text, not just table cells). G5 could not run with this branch checked out because `scripts/merge_gate.py` arrives only in the later branch; run from the tip it reports a checkout mismatch, not a docs failure. Owner merge needed |
-| `gov-cr0001-merge-protocol` | Gate G2: governance, AGENTS.md, scripts, workflows (owner-only) |
-| `wp2-step02-capability-map` | Waits behind the two branches above (G1). Own gates G2–G4 expected to pass: changes only BA-001, README, GOV-001 register row, GOV-006 status cell, reviews/, LOOP_STATE.md; round 2 review RECOMMEND MERGE AFTER FIXES; CI success |
-| `wp2-step03-operating-model` | Waits behind the three branches above (G1). Own gates expected to pass: changes only BA-002, BA-003, README, GOV-001 register rows, GOV-006 status cell, reviews/, LOOP_STATE.md |
+| — | Nothing waiting before Step 4: Steps 1–3, CR-0001 and the Q5–Q16 answers were merged by the owner on 20 Nov 2026 |
 
 ## Questions for owner (open)
 
