@@ -159,8 +159,10 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | BA-001 | Business capability map | Draft | WP2 / Step 2 |
 | BA-002 | AMC operating model and department hierarchy | Draft | WP2 / Step 3 |
 | BA-003 | Domain dictionary (glossary with IDs) | Draft | WP2 / Step 3 |
-| BA-004 | End-to-end business workflows (WF-001…WF-028) | Draft | WP2 / Step 4 |
+| BA-004 | End-to-end business workflows (WF-001…WF-030; WF-029/030 cards in PRD-002) | Draft | WP2 / Step 4 |
 | BA-005 | User roles, permissions and segregation of duties | Draft | WP2 / Step 5 |
+| PRD-001 | Platform Administration (D01) — product requirements | Draft | WP2 / Step 6 |
+| PRD-002 | Product and Scheme Management (D02) — product requirements | Draft | WP2 / Step 6 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
