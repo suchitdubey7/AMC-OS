@@ -1,14 +1,16 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-19 23:45 IST
-**Chain tip:** `gov-cr0001-merge-protocol`
+**Updated:** 2026-11-20 00:35 IST
+**Chain tip:** `wp2-step02-capability-map`
 
 ## Next action
 
-**Step 2** on a new branch `wp2-step02-capability-map` from the chain tip: BA-001 business capability map (all 17 domains, level 1–3 capabilities), GOV-006 §3.
+**Step 3** on a new branch `wp2-step03-operating-model` from the chain tip: BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs), GOV-006 §3. Use the BA-001 capability IDs; include a short "systems replaced" column (BA-001 §5 C7) as the working default until the owner answers Q14.
 
-After that: Steps 3, 4, … in GOV-006 order.
+After that: Steps 4, 5, … in GOV-006 order.
+
+Housekeeping for the owner: `tests/governance/__pycache__/` is tracked and the repo has no `.gitignore`, so every local pytest run dirties the tree (STEP-02 round 1 finding 8). Owner-only path (`.github/` not involved, but adding `.gitignore` at root is a repo-wide change) — please untrack it.
 
 Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-01 round 3 Nit 2 — commit trailer follows the loop prompt (`Co-Authored-By: Claude`) rather than the older model-named format. STEP-01 round 3 finding 1 (was round 2 finding 6) — State Street pages B5 and B6 block automated fetches for the reviewer (HTTP 403); the writer opened both on 19 Nov 2026 and the cited wording matched.
 
@@ -23,7 +25,8 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 1 | `step-01-vision-market` | Step 1: PS-002, PS-003, PS-004 | RECOMMEND CHANGES (0 Blocker, 5 Major, 12 Minor, 2 Nit) | pass | yes (23:28, on owner instruction) |
 | 2 | `gov-07-review-agent` | GOV-007 reviewer, GOV-008 loop, this file | not yet reviewed | pass | yes (23:28, on owner instruction) |
 | 3 | `wp2-step01b-review-fixes` | Step 1 review fixes (PS-001–004, GOV-005, GOV-006, CI trigger) | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor accepted, 3 Nits — 2 fixed) | pending | no |
-| 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pending | no — owner-only files |
+| 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pass | no — owner-only files |
+| 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pass | no |
 
 ## Owner decisions used by the loop
 
@@ -40,8 +43,9 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | Branch | Why |
 | --- | --- |
-| `wp2-step01b-review-fixes` | Gate G2: changes `.github/workflows/ci.yml` and GOV-005/GOV-006 text (owner-only) |
+| `wp2-step01b-review-fixes` | Gate run 2026-11-20 (Step 2 run): G1, G3, G4, G6 pass; **G2 fail** — owner-only: `.github/workflows/ci.yml`, GOV-005, GOV-006 (text, not just table cells). G5 could not run with this branch checked out because `scripts/merge_gate.py` arrives only in the later branch; run from the tip it reports a checkout mismatch, not a docs failure. Owner merge needed |
 | `gov-cr0001-merge-protocol` | Gate G2: governance, AGENTS.md, scripts, workflows (owner-only) |
+| `wp2-step02-capability-map` | Waits behind the two branches above (G1). Own gates G2–G4 expected to pass: changes only BA-001, README, GOV-001 register row, GOV-006 status cell, reviews/, LOOP_STATE.md; round 2 review RECOMMEND MERGE AFTER FIXES; CI success |
 
 ## Questions for owner (open)
 
@@ -53,3 +57,6 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | Q9 | Has branch protection on `main` been switched on? | Step 0 | Treated as pending |
 | Q10 | First target segment: new AMCs (C3) before mid-size AMCs (C2)? PRD-000 put both first | Step 1 fixes (PS-003 §3) | C3 first, C2 second |
 | Q11 | Does the "3–5 paying AMCs" target include the pilot AMC? Is month 36 the right horizon? And: pilot start at month 18–22 (PS-001 §6) plus a 3-month parallel run can end after month 24, which clashes with O1 and the roadmap (go-live by month 24). Which wins? | Step 1 fixes (PS-002 §5) | Includes the pilot; month 36; conflict left open |
+| Q12 | Add the capability ID `CAP-Dxx-nnn` (and `.m` for level 3) to the GOV-001 §4 identifier table? | Step 2 (BA-001 §1) | Used in BA-001 as a proposal |
+| Q13 | D01 "Subscription management": does it mean the AMC's subscription to AMC OS (plans, entitlements, metering), not investor subscriptions? | Step 2 (BA-001 CAP-D01-006) | Yes, the AMC's subscription to AMC OS |
+| Q14 | Brief §22 Deliverable 2 asks for the "systems" in the operating model. Add "which current systems each capability replaces" to BA-002 (Step 3)? | Step 2 (BA-001 §5 C7) | Step 3 includes a short systems column |
