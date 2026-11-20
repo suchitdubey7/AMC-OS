@@ -1,8 +1,8 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-20 09:40 IST
-**Chain tip:** `wp2-step05-roles-permissions`
+**Updated:** 2026-11-20 10:00 IST
+**Chain tip:** `wp2-step05b-owner-answers`
 
 ## Next action
 
@@ -10,7 +10,7 @@
 
 After that: Steps 7, 8, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
-Done in the Step 5 run (20 Nov 2026, started early on owner request in chat): BA-005 roles, permissions and SoD; 2 review rounds. Defaults used until the owner answers Q17–Q19 are in the questions table.
+Done in the Step 5 run (20 Nov 2026, started early on owner request in chat): BA-005 roles, permissions and SoD; 2 review rounds. Owner answered Q17–Q19 in chat the same morning (D-17 to D-19), applied on branch `wp2-step05b-owner-answers`.
 
 Findings left open from Step 5: none (all round 1 and round 2 findings fixed).
 
@@ -35,7 +35,8 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 5 | `wp2-step02-capability-map` | Step 2: BA-001 business capability map (17 domains, 209 L2 capabilities, L3 breakdown) | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed) | pass | yes (20 Nov 07:15, on owner instruction) |
 | 6 | `wp2-step03-operating-model` | Step 3: BA-002 operating model and department hierarchy (19 departments, owner of all 209 capabilities, systems stance per domain); BA-003 domain dictionary (96 terms) | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 07:15, on owner instruction) |
 | 7 | `wp2-step04-workflows` | Step 4: BA-004 end-to-end workflows WF-001…WF-028 (17 re-keyed, W6b → WF-018, 10 new for D01/D06/D07); D-12 pilot timing in PS-001/PS-002 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 08:55, build loop, CR-0001 gate PASS) |
-| 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | see gate | see gate |
+| 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 09:45, build loop, CR-0001 gate PASS) |
+| 9 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 (D-17 to D-19) applied to BA-005 and GOV-001 §4 | see review STEP-05b | see gate | see gate |
 
 ## Owner decisions used by the loop
 
@@ -57,6 +58,9 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-14 (Q13) | D01 "Subscription management" = the AMC's subscription to AMC OS (plans, entitlements, metering) | 2026-11-20 |
 | D-15 (Q14) | Systems stance stays per domain (replace / connect / mirror, BA-002 §5); per-capability detail during pilot discovery | 2026-11-20 |
 | D-16 (Q16) | Fund accounting and NAV: AMC OS replaces them where the AMC does them in-house; mirrors and validates where outsourced to the custodian (also answers architecture proposal OD-2 direction) | 2026-11-20 |
+| D-17 (Q17) | `ROLE-nn` is an official ID (added to GOV-001 §4) | 2026-11-20 |
+| D-18 (Q18) | No segregation-of-duties rule can be waived, except SOD-03 (tenant-configurable, per PRD-000) | 2026-11-20 |
+| D-19 (Q19) | Small AMCs: a Tenant Administrator may also hold a business role, with Information Security Officer review of every role grant and the SOD-11 nightly report (BA-005 SOD-16 small-team mode) | 2026-11-20 |
 
 ## Waiting for owner (cannot be auto-merged)
 
@@ -68,6 +72,4 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| Q17 | Make `ROLE-nn` (role IDs, BA-005 §2) an official ID in GOV-001 §4, like CAP-, DEP- and TERM-? | Step 5 (BA-005 §7 C1) | Used in BA-005 as a proposal **[DES]** |
-| Q18 | Can any segregation-of-duties rule be waived, by whom and for how long? And how should very small AMCs (e.g. a two-person accounting team) be handled without weakening maker ≠ checker? | Step 5 (BA-005 §5.1, §7 C3) | No waiver except SOD-03 (tenant may switch it off by a Compliance-checked configuration change) |
-| Q19 | Every AMC would need at least three people with no business role (two Tenant Administrators and one Technology Administrator; SOD-05 + SOD-16). For small new AMCs, may a Tenant Administrator also hold a business role, with a compensating control such as Information Security Officer review of every grant? | Step 5 review round 2 (BA-005 §7 C3) | No: three admin-only people needed |
+| — | None open (Q17–Q19 answered 20 Nov 2026, see D-17 to D-19) | — | — |
