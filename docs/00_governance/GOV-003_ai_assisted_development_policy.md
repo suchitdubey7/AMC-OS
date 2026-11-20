@@ -11,7 +11,7 @@ last_updated: 2026-11-19
 
 # GOV-003 — AI-Assisted Development Policy
 
-AI agents speed up the work; humans stay accountable for it. AI-written code, documents and migrations go through exactly the same review and tests as human work, and no AI agent can approve or merge its own change.
+AI agents speed up the work; humans stay accountable for it. AI-written code, documents and migrations go through exactly the same review and tests as human work, and no AI agent can approve its own change. The only exception to "never merge" is the build loop's rule-based merge gate for low-risk document steps (CR-0001).
 
 This policy covers AI used to **build** AMC OS. AI features **inside** the product (copilots, agents) are governed by the AI/ML specifications in `docs/09_ai_and_ml/` and by ADR-0008.
 
@@ -24,7 +24,7 @@ This policy covers AI used to **build** AMC OS. AI features **inside** the produ
 | Generate boilerplate, migrations, tests, documentation | Access production secrets or production data |
 | Review code and identify defects | Connect to or modify live production databases |
 | Suggest performance improvements | Approve financial calculations |
-| Draft ADRs and change requests | Approve or merge their own changes |
+| Draft ADRs and change requests | Approve their own changes, or merge them except through the CR-0001 merge gate |
 | Run tests in non-production environments | Skip, disable or weaken tests to make a build pass |
 | | Deploy any release |
 | | Set any document or ADR status to Approved |
@@ -52,7 +52,7 @@ All must pass before human review is requested:
 - AI agents work on a branch named `wp<n>-<topic>` or `feat/<id>-<topic>`, never on `main`.
 - Each change is a pull request; the PR description follows the completion report in [AGENTS.md](../../AGENTS.md) (objective, files, decisions, DB/API/security impact, tests run and results, limitations, open decisions).
 - Commits made by an AI agent carry a `Co-Authored-By` trailer naming the agent, so AI-generated changes are identifiable in history.
-- Branch protection on `main`: at least one human approval, all checks green, no self-approval.
+- Merging into `main`: by the project owner, or by the build loop only when `scripts/merge_gate.py` passes (CR-0001). No AI ever approves.
 - Test results reported in a PR must be from tests actually run; "not run" is stated as such.
 
 ## 5. Data handling

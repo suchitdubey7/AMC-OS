@@ -30,6 +30,8 @@ An Architecture Review Board (ARB) approves every decision that is expensive to 
 
 > **Current state [ASSUMPTION]:** AMC OS is at founder stage; the people for these seats are not yet named. Until they are, the project owner (Suchit Dubey) acts as sole approver for Draft → Approved, and every such approval is marked `approved_by: project owner (interim)` so it can be re-reviewed when the ARB is staffed.
 
+> **Owner decision D-5 (19 Nov 2026):** paid external experts will review T1 documents (financial engines, compliance rules, NAV/accounting, security, tenant isolation) before the owner approves them. Until then those documents stay Draft.
+
 ## 2. What must go to the ARB
 
 | Category | Examples | Needs ADR |

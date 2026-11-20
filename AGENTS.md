@@ -35,7 +35,7 @@ Read this file and [MASTER_BUILD_PROMPT.md](MASTER_BUILD_PROMPT.md) before chang
 - Coding: [STD-001](docs/13_engineering_standards/STD-001_coding_standards.md). Testing: [QA-001](docs/12_testing_and_quality/QA-001_testing_strategy.md). AI policy: [GOV-003](docs/00_governance/GOV-003_ai_assisted_development_policy.md). Gates: [GOV-004](docs/00_governance/GOV-004_release_gates_and_operational_governance.md).
 - Major decisions need an ADR (`architecture/adrs/`, template ADR-0000).
 - Commits by an AI agent include a `Co-Authored-By` trailer for the agent.
-- You may never set a document or ADR to Approved, approve or merge your own PR, access production secrets or data, or deploy.
+- You may never set a document or ADR to Approved, approve your own PR, merge except through `scripts/merge_gate.py` (CR-0001), access production secrets or data, or deploy.
 
 ## 5. Completion report (every PR)
 

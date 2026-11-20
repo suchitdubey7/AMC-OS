@@ -1,8 +1,8 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-19 23:50 IST
-**Chain tip:** `wp2-step01b-review-fixes`
+**Updated:** 2026-11-19 23:45 IST
+**Chain tip:** `gov-cr0001-merge-protocol`
 
 ## Next action
 
@@ -20,9 +20,10 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Branch | Content | Review verdict | CI | Merged |
 | --- | --- | --- | --- | --- | --- |
-| 1 | `step-01-vision-market` | Step 1: PS-002, PS-003, PS-004 | RECOMMEND CHANGES (0 Blocker, 5 Major, 12 Minor, 2 Nit) | pass | no |
-| 2 | `gov-07-review-agent` | GOV-007 reviewer, GOV-008 loop, this file | not yet reviewed | pass | no |
+| 1 | `step-01-vision-market` | Step 1: PS-002, PS-003, PS-004 | RECOMMEND CHANGES (0 Blocker, 5 Major, 12 Minor, 2 Nit) | pass | yes (23:28, on owner instruction) |
+| 2 | `gov-07-review-agent` | GOV-007 reviewer, GOV-008 loop, this file | not yet reviewed | pass | yes (23:28, on owner instruction) |
 | 3 | `wp2-step01b-review-fixes` | Step 1 review fixes (PS-001–004, GOV-005, GOV-006, CI trigger) | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor accepted, 3 Nits — 2 fixed) | pending | no |
+| 4 | `gov-cr0001-merge-protocol` | CR-0001 merge gate, CODEOWNERS, secret scanning, reviewer self-test (7/7) | owner work, self-tested | pending | no — owner-only files |
 
 ## Owner decisions used by the loop
 
@@ -31,6 +32,16 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-1 | Reviewer is advisory; owner merges (GOV-007) | 2026-11-19 |
 | D-2 | Loop: stack steps; scheduled one step per run; 3 fix rounds; log gaps and continue (GOV-008) | 2026-11-19 |
 | D-3 | Steps may build on Draft documents; GOV-005 "start after Approved" applies to production build only (resolves review STEP-01 finding 4) | 2026-11-19 |
+| D-4 | Loop may merge only through `scripts/merge_gate.py` (CR-0001, GOV-008 §5) | 2026-11-19 |
+| D-5 | Paid external expert review before any T1 document is Approved | 2026-11-19 |
+| D-6 | Repository to become private (owner action) | 2026-11-19 |
+
+## Waiting for owner (cannot be auto-merged)
+
+| Branch | Why |
+| --- | --- |
+| `wp2-step01b-review-fixes` | Gate G2: changes `.github/workflows/ci.yml` and GOV-005/GOV-006 text (owner-only) |
+| `gov-cr0001-merge-protocol` | Gate G2: governance, AGENTS.md, scripts, workflows (owner-only) |
 
 ## Questions for owner (open)
 

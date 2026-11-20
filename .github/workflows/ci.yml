@@ -54,3 +54,48 @@ jobs:
           n=$(psql -d amcos -Atc "select count(*) from pg_class k join pg_namespace s on s.oid=k.relnamespace where k.relkind in ('r','p') and s.nspname not in ('pg_catalog','information_schema','pg_toast') and not (s.nspname='platform' and k.relname='tenant') and exists (select 1 from pg_attribute a where a.attrelid=k.oid and a.attname='tenant_id' and not a.attisdropped) and not k.relforcerowsecurity")
           echo "Tenant tables without forced RLS: $n"
           test "$n" -eq 0
+
+  governance:
+    name: Governance tooling tests (merge gate)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: python -m pytest -q tests/governance
+
+  secrets:
+    name: Secret scan (gitleaks, full history)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  code-security:
+    name: Python code security (active once application code exists)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect application code
+        id: detect
+        run: |
+          if find src -name '*.py' -print -quit | grep -q .; then echo "has_code=true" >> "$GITHUB_OUTPUT";
+          else echo "has_code=false" >> "$GITHUB_OUTPUT"; echo "No Python code in src/ yet; skipping."; fi
+      - uses: actions/setup-python@v5
+        if: steps.detect.outputs.has_code == 'true'
+        with:
+          python-version: "3.12"
+      - name: Static security analysis (bandit)
+        if: steps.detect.outputs.has_code == 'true'
+        run: pip install bandit && bandit -r src -ll
+      - name: Known-vulnerability check on dependencies (pip-audit)
+        if: steps.detect.outputs.has_code == 'true'
+        run: |
+          pip install pip-audit
+          if [ -f requirements.txt ]; then pip-audit -r requirements.txt; else echo "No requirements.txt yet"; fi
