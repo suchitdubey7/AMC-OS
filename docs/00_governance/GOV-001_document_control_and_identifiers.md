@@ -104,6 +104,9 @@ A domain is never silently omitted: if a domain has no content yet, its PRD sect
 | Test case | `TC-<area>-nnn` | TC-NAV-021 | Automated test names include the ID |
 | Release | `REL-<yyyy>.<n>` | REL-2027.1 | |
 | Change request | `CR-nnnn` | CR-0003 | Changes to Approved documents |
+| Capability | `CAP-Dxx-nnn` (level 3: `.m`) | CAP-D04-012.2 | BA-001; owner decision D-13 (20 Nov 2026) |
+| Department | `DEP-nn` | DEP-07 | BA-002; owner decision D-13 |
+| Dictionary term | `TERM-nnn` | TERM-045 | BA-003; owner decision D-13 |
 
 IDs are never reused, even after deletion.
 
