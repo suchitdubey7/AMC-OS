@@ -92,8 +92,8 @@ flowchart LR
 | 2 ✅ merged to `main` 20 Nov 2026 (Draft, not Approved) | BA-001 business capability map (all 17 domains, level 1–3 capabilities) | 4, 22-D2 | 0 |
 | 3 ✅ merged to `main` 20 Nov 2026 (Draft, not Approved) | BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs) | 14-A | 2 |
 | 4 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
-| 5 🔄 in review (branch `wp2-step05-roles-permissions`) | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
-| 6 | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
+| 5 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
+| 6 🔄 in review (branch `wp2-step06-prd-platform-product`) | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
 | 7 | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |
 | 8 | PRD-006 Trading & Execution, PRD-007 Settlement (split), PRD-008 Compliance, PRD-009 Risk | 4 | 6 |
 | 9 | PRD-010 Accounting, PRD-011 Valuation & NAV, PRD-012 Fund Ops, PRD-013 Investor, PRD-014 Distribution, PRD-015 Finance, PRD-016 Data, PRD-017 AI; PRD-000 marked Superseded | 4 | 6 |
