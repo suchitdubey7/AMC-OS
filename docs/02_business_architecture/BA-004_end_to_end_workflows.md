@@ -48,7 +48,7 @@ Each workflow has a card and, where it helps, a Mermaid diagram.
 
 ## 2. Workflow register
 
-v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 also contains **W6b Trade settlement**, which GOV-001 did not count; it becomes **WF-018**. New workflows for D01, D06 and D07 are **WF-019…WF-028** **[DES]**. IDs are never reused.
+v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 also contains **W6b Trade settlement**, which GOV-001 did not count; it becomes **WF-018**. New workflows for D01, D06 and D07 are **WF-019…WF-028** **[DES]**. WF-029 and WF-030 (D02) were added by PRD-002 (Step 6), which holds their cards (PRD-002 §6.2–§6.3). IDs are never reused.
 
 | WF | Workflow | v0.9 source | Main domains | Accountable department | BA-002 process |
 | --- | --- | --- | --- | --- | --- |

@@ -34,7 +34,7 @@ This document states what AMC OS must do to run the platform for each AMC: set u
 | User story / acceptance criterion | `US-D01-nnn` / `AC-US-D01-nnn-n` | US-D01-001…012; US-PLT-01…03 re-keyed to US-D01-001…003 |
 | Non-functional requirement | `NFR-<AREA>-nnn` | See §11. NFR IDs are global; PRD-001 takes the first numbers in each area it uses, and later PRDs continue from the next free number |
 
-Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3.
+Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3. User stories use **C** critical (release-blocking) and **O** optional — as PRD-000 Chapter 5.
 
 ## 3. Business requirements
 
@@ -65,7 +65,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 - **FR-D01-006 (M) Joiner.** A user created or synced from the AMC's identity provider (D-8) starts with **no role**. Roles come only through an approved grant (FR-D01-016).
 - **FR-D01-007 (M) Mover.** When a user's department, job or reporting line changes, roles that do not fit the new job are flagged for removal and the role owner decides (WF-020).
 - **FR-D01-008 (M) Leaver.** A leaver's sessions are revoked and all roles removed. How quickly AMC OS learns of a leaver depends on the identity provider (pushed change or next sign-in) — confirm with each provider (EA-002). The maximum time from leaver event to revocation is a target to be set **[ASSUMPTION — confirm: DEP-16 of the pilot AMC]**.
-- **FR-D01-009 (M) Recertification.** Each role grant is recertified by the role owner at a tenant-set frequency **[ASSUMPTION]**; nobody certifies their own access (SOD-13); overdue recertifications escalate to DEP-16; whether access is then removed automatically is a tenant setting (WF-020).
+- **FR-D01-009 (M) Recertification.** Each role grant is recertified by the role owner at a tenant-set frequency **[ASSUMPTION — confirm: DEP-16 of the pilot AMC]**; nobody certifies their own access (SOD-13); overdue recertifications escalate to DEP-16; whether access is then removed automatically is a tenant setting (WF-020).
 - **FR-D01-010 (M) Service accounts and API clients.** Non-human identities (ROLE-27) have a named human owner, only the API operations their integration needs, credentials that can be rotated without downtime **[DES]**, and are reviewed in every recertification. They never hold approve (A) or override (O) rights.
 
 ### 4.3 Identity (CAP-D01-003) — BR-D01-001, BR-D01-002
@@ -90,7 +90,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 - **FR-D01-022 (M) Masking.** Investor personal data is masked by role; an Investor Service Executive may unmask one record with a recorded reason (BA-005 §3).
 - **FR-D01-023 (M) Break-glass access.** Platform-operator access to tenant business data follows WF-022: tenant approval by a Tenant Administrator, stated scope, time-boxed to at most 4 hours, every action logged, automatic expiry, report to the tenant (SOD-09 **[DES; CSCRF alignment VAL]**, SOD-15).
 - **FR-D01-024 (M) AI agent identities.** ROLE-26 can hold read tools and proposal/draft tools only (ADR-0008); a call by an AI agent identity to any approve, override, post, publish or execute operation returns HTTP 403 and raises a security alert (SOD-10).
-- **FR-D01-025 (M) Export controls.** Every export is watermarked with user and time; personal-data exports need a reason and approval; a bulk export above a tenant threshold raises an alert (PRD-000 Chapter 6; threshold **[ASSUMPTION]**).
+- **FR-D01-025 (M) Export controls.** Every export is watermarked with user and time; personal-data exports need a reason and approval; a bulk export above a tenant threshold raises an alert (PRD-000 Chapter 6; threshold **[ASSUMPTION — confirm: DEP-16 of the pilot AMC]**).
 
 ### 4.6 Subscription management (CAP-D01-006) — BR-D01-006 (D-14)
 
@@ -117,7 +117,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 
 - **FR-D01-038 (M) Business calendar master.** One source of holidays per calendar (exchanges, clearing, banks, RTA, settlement), changed under maker-checker (DA-000 `platform.business_calendar`). D07 and D12 use it (BA-001 §4).
 - **FR-D01-039 (M) Scheduled jobs.** A register of scheduled jobs and batch windows with owner, schedule, dependencies, last run and status; a missed or failed job raises an exception to its owner.
-- **FR-D01-040 (S) Notification channels.** Set-up of the channels AMC OS uses to notify users (in-app and e-mail at minimum; others **[ASSUMPTION]**).
+- **FR-D01-040 (S) Notification channels.** Set-up of the channels AMC OS uses to notify users (in-app and e-mail at minimum; others **[ASSUMPTION — confirm: pilot discovery]**).
 - **FR-D01-041 (M) Reference code lists.** Shared code lists (for example reason codes, country codes) are versioned and effective-dated.
 
 ### 4.10 Audit management (CAP-D01-010) — BR-D01-003
@@ -140,13 +140,13 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 | BRL-D01-001 | Tenant context comes only from the authenticated identity | Master prompt §3.4 **[DES]** |
 | BRL-D01-002 | Deny by default: a user or service account with no approved grant can do nothing | **[DES]** |
 | BRL-D01-003 | Nobody approves a role grant, scope change or approval authority for themselves | SOD-16 |
-| BRL-D01-004 | A tenant may change roles and rights by configuration but may not remove or weaken an SoD rule; only SOD-03 may be switched off (FR-D01-019) | BA-005 §5.1 (Q18 default) **[ASSUMPTION]** |
+| BRL-D01-004 | A tenant may change roles and rights by configuration but may not remove or weaken an SoD rule; only SOD-03 may be switched off (FR-D01-019) | BA-005 §5.1 **[ASSUMPTION — confirm: project owner, Q18]** |
 | BRL-D01-005 | The Technology Administrator and the Tenant Administrator hold no business role and no other role | SOD-05, SOD-16 (open for small AMCs: Q19) |
 | BRL-D01-006 | A platform operator has no default access to tenant business data and is never the checker of a tenant action | SOD-09, SOD-15 |
 | BRL-D01-007 | A configuration version applies only from its effective date after approval; past versions are never edited | PRD-000 C4 **[DES]** |
 | BRL-D01-008 | Audit events are never updated or deleted | PRD-000 C2, Chapter 7 |
 | BRL-D01-009 | An AI agent identity can never hold an approval authority or an approve, override, post, publish or execute permission | SOD-10; master prompt §3.1 |
-| BRL-D01-010 | A subscription downgrade, lapse or offboarding never deletes data before the export is confirmed (or the contract time limit passes) and the legal retention period is respected | **[ASSUMPTION]** (Q20, Q21); retention **[VAL]** |
+| BRL-D01-010 | A subscription downgrade, lapse or offboarding never deletes data before the export is confirmed (or the contract time limit passes) and the legal retention period is respected | **[ASSUMPTION — confirm: project owner, Q20, Q21]**; retention **[VAL]** |
 
 ## 6. Workflows
 
@@ -162,21 +162,32 @@ No new workflow is needed for D01: BA-004 §5.1 lists no D01 gap.
 
 ## 7. Permissions by capability
 
-BA-005 §3 gives D01 rights by role for the whole domain; this table narrows them to each capability (BA-005 §7 C2). "Maker" may create or submit; "Checker" approves (≠ maker, SOD-01); everyone not listed has no access.
+BA-005 §3 gives D01 rights for the whole domain to the CTO (R A(tech config)), the Technology Administrator (C U S, A by Tenant Administrator), the Auditor (R audit log), the Tenant Administrator, the Information Security Officer and the Platform Operator (BA-005 new-role rights); every other role has "—". This table splits those rights by capability (BA-005 §7 C2). "Maker" may create or submit; "Checker" approves (≠ maker, SOD-01). Cells marked **†** give a right that BA-005 §3 does not give; each is listed with its reason below the table and must be carried into the BA-005 D01 column (open point C9). Everyone not listed has no access.
 
 | Capability | Maker | Checker | Read |
 | --- | --- | --- | --- |
-| CAP-D01-001 Tenant management | Platform Operator (create, provision, offboard) | Tenant Administrator (activation, offboarding confirmation; SOD-15) | CTO, Information Security Officer, Auditor (audit log only) |
-| CAP-D01-002 User management | Technology Administrator; role owners (recertification) | Tenant Administrator | Information Security Officer, Auditor |
-| CAP-D01-003 Identity | Technology Administrator (connection set-up) | Tenant Administrator; Information Security Officer for MFA and session policy | CTO, Auditor |
-| CAP-D01-004 Role-based access | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant) | Information Security Officer, Compliance Officer (SoD report), Auditor |
-| CAP-D01-005 Permission management | Technology Administrator; Platform Operator (break-glass request only) | Tenant Administrator; Information Security Officer (access policy) | Auditor |
-| CAP-D01-006 Subscription management | Platform Operator (plan, entitlements) | Tenant Administrator confirms plan changes | CFO, CTO |
-| CAP-D01-007 Organization hierarchy | Technology Administrator | Tenant Administrator; CEO office for legal entities **[ASSUMPTION]** | All business roles (own organisation) |
-| CAP-D01-008 Configuration management | Technology Administrator or the setting's business owner | Checker from the owning department; plus Compliance Officer for a regulatory parameter (SOD-12); CTO for technical settings (BA-005 "A(tech config)") | Owning department, Auditor |
-| CAP-D01-009 System administration | Technology Administrator; Operations Analyst for calendars **[ASSUMPTION]** | Tenant Administrator; Operations Manager for calendars **[ASSUMPTION]** | All business roles |
+| CAP-D01-001 Tenant management | Platform Operator (create, provision, offboard) | Tenant Administrator (activation, offboarding confirmation; SOD-15) | CTO, Information Security Officer; Auditor through the audit log |
+| CAP-D01-002 User management | Technology Administrator; role owners (recertification)† | Tenant Administrator | Information Security Officer; Auditor through the audit log |
+| CAP-D01-003 Identity | Technology Administrator (connection set-up) | Tenant Administrator; Information Security Officer for MFA and session policy | CTO; Auditor through the audit log |
+| CAP-D01-004 Role-based access | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant) | Information Security Officer; Compliance Officer receives the SOD-11 report†; Auditor through the audit log |
+| CAP-D01-005 Permission management | Technology Administrator; Platform Operator (break-glass request only) | Tenant Administrator; Information Security Officer (access policy) | Auditor through the audit log |
+| CAP-D01-006 Subscription management | Platform Operator (plan, entitlements) | Tenant Administrator confirms plan changes | CTO; CFO† |
+| CAP-D01-007 Organization hierarchy | Technology Administrator | Tenant Administrator | CTO; all business roles read their own organisation unit and reporting line† |
+| CAP-D01-008 Configuration management | Technology Administrator, or the setting's business owner† | Checker from the owning department†; plus Compliance Officer for a regulatory parameter† (SOD-12); CTO for technical settings ("A(tech config)") | Owning department†; Auditor through the audit log |
+| CAP-D01-009 System administration | Technology Administrator | Tenant Administrator | CTO; all business roles read business calendars† |
 | CAP-D01-010 Audit management | System only (no human maker) | — | Auditor (R E), Information Security Officer (R E), CEO and Compliance Officer for market-abuse access logs (BA-005 §3) |
-| CAP-D01-011 Environment administration | Platform Operator | Tenant Administrator confirms production upgrade dates **[ASSUMPTION]** | CTO, Technology Administrator |
+| CAP-D01-011 Environment administration | Platform Operator | Tenant Administrator confirms production upgrade dates **[ASSUMPTION — confirm: pilot discovery]** | CTO, Technology Administrator |
+
+**Rights added beyond BA-005 §3 (†), with reasons [DES]:**
+
+| Cell | Reason |
+| --- | --- |
+| Role owners as makers of recertification decisions (CAP-D01-002) | BA-004 WF-020 and BA-005 `platform.access.recertify` already name the role owner (department head); BA-005 §3 has no D01 cell for it |
+| Compliance Officer receives the SoD report (CAP-D01-004) | SOD-11 sends the nightly toxic-combination report to Compliance |
+| CFO reads subscription (CAP-D01-006) | WF-019 names DEP-14 for subscription cost |
+| Business roles read own organisation unit and reporting line (CAP-D01-007) | Scopes, approval routing and recertification depend on them (FR-D01-017, FR-D01-032); read only, own record **[ASSUMPTION — confirm: DEP-16 of the pilot AMC]** |
+| Setting owner as maker; owning department checker and reader; Compliance Officer checker (CAP-D01-008) | BA-004 WF-021, BA-005 `platform.config.approve` and SOD-12 already give these; BA-005 §3 D01 column does not show them |
+| Business roles read business calendars (CAP-D01-009) | Calendars decide business dates in every domain (BA-001 §4: one holiday source for D07, D12) |
 
 ## 8. User stories and acceptance criteria
 
@@ -191,7 +202,7 @@ BA-005 §3 gives D01 rights by role for the whole domain; this table narrows the
 | US-D01-007 | As a Head of Fund Accounting, I want configuration changes to apply only from their effective date | C | **AC-US-D01-007-1** Given an approved new version of a setting effective from date D, when a process runs for a business date before D, then it uses the previous version; on or after D it uses the new one. |
 | US-D01-008 | As a Compliance Officer, I want regulatory parameters to need my approval | C | **AC-US-D01-008-1** Given a change to a setting marked regulatory parameter, when only the owning department's checker has approved, then the change is not effective until a Compliance Officer also approves. |
 | US-D01-009 | As a Tenant Administrator, I want break-glass access to end on its own | C | **AC-US-D01-009-1** Given break-glass access approved for 2 hours, when 2 hours pass, then the access ends without any action, and the tenant receives a report of every action taken. |
-| US-D01-010 | As a CISO, I want AI agents unable to approve anything | C | **AC-US-D01-010-1** Given an AI agent identity, when it calls any approve, override, post, publish or execute operation, then HTTP 403 is returned and a security alert is raised. |
+| US-D01-010 | As an Information Security Officer, I want AI agents unable to approve anything | C | **AC-US-D01-010-1** Given an AI agent identity, when it calls any approve, override, post, publish or execute operation, then HTTP 403 is returned and a security alert is raised. |
 | US-D01-011 | As an Auditor, I want proof that the audit log was not altered | C | **AC-US-D01-011-1** Given a day's audit events for a tenant, when one stored event is changed outside the application, then the hash-chain check for that day fails and an alert is raised. |
 | US-D01-012 | As a Tenant Administrator, I want only my entitled modules switched on | O | **AC-US-D01-012-1** Given a tenant not entitled to D14, when any user calls a D14 API, then it is refused with `NOT_ENTITLED` and no data is returned. |
 
@@ -203,7 +214,7 @@ Definition of done for every story: as PRD-000 Chapter 5 (unit and integration t
 | --- | --- |
 | Identity-provider connection test fails during onboarding | Tenant stays in `SETUP` (WF-019) |
 | No capacity in the chosen cell | New cell or other cell, decided in EA-004 (Step 12) |
-| AMC does not confirm its export | Tenant stays `SUSPENDED` until the contract time limit **[ASSUMPTION]** (Q21) |
+| AMC does not confirm its export | Tenant stays `SUSPENDED` until the contract time limit **[ASSUMPTION — confirm: project owner, Q21]** |
 | Role request conflicts with an SoD rule | Refused with the rule shown (FR-D01-018) |
 | Recertification overdue | Escalation to DEP-16; optional automatic removal (tenant setting) |
 | Configuration change fails catalogue validation or UAT test | Back to the maker (WF-021) |
@@ -256,6 +267,7 @@ No D01 AI feature is proposed. AI agents act through ROLE-26 identities governed
 | C6 | Configuration catalogue schema (`platform` or a separate `config` schema) is not decided | EA-003 (Step 11) |
 | C7 | TRACE-001 seed row "BR-D12-001 … FR-D01-0xx (SOD rules)" can now point to FR-D01-018 | TRACE-002 (Step 27) |
 | C8 | NFR IDs are allocated per PRD (§2); no central NFR register yet | TRACE-002 (Step 27) |
+| C9 | The † rights of §7 are not yet in the BA-005 §3 D01 column | Next BA-005 revision |
 
 ## Sources
 
