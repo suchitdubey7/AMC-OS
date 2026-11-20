@@ -31,9 +31,9 @@ This document states what AMC OS must do so that research becomes governed, docu
 | FR-02-01 … FR-02-10 | FR-D03-001 … FR-D03-010 | Same order. FR-02-01 and FR-02-02 (security and issuer master) are **(changed)**: their records belong to D16 (BA-001 §5 C2); here they state what D03 needs from those records |
 | BR-02-1 … BR-02-4 (business **rules**) | BRL-D03-001 … BRL-D03-004 | `BR-` is reserved for business *requirements* (GOV-001 §4) |
 | US-INV-01, US-INV-02 (Ch 5) and the three Module 02 point 7 stories | US-D03-001 … US-D03-005 | |
-| Module 02 point 18 acceptance criteria | AC-US-D03-002-1 (restricted list), AC-US-D03-006-1 (quorum) | |
+| Module 02 point 18 acceptance criteria | AC-US-D03-002-2 (restricted list), AC-US-D03-006-1 (quorum) | |
 | Module 02 point 6 (credit approval for a new debt issuer) | Covered by WF-002 (BA-004) and FR-D03-012 | No new `WF-` ID |
-| — | FR-D03-011 … FR-D03-020, BRL-D03-005 … 008, US-D03-006 … 010, WF-031 | **New** **[DES]** |
+| — | FR-D03-011 … FR-D03-020, BRL-D03-005 … 008, US-D03-006 … 010, WF-031; acceptance criteria AC-US-D03-003-1, AC-US-D03-004-1 and AC-US-D03-006-2 on re-keyed or new stories | **New** **[DES]** |
 
 ## 3. Business requirements
 
@@ -69,7 +69,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | ID | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
 | FR-D03-011 | M | CAP-D03-007 (.1) | **Research approval:** a recommendation or research note is visible to fund managers only after its checker (Head of Research, or CIO) approves it; drafts stay with the author |
-| FR-D03-012 | M | CAP-D03-007 (.3) | **Debt-issuer credit approval and review expiry:** a debt issuer enters the universe only through WF-002 (Investment Committee vote); each approval carries a review date; when the review date passes, the issuer moves to `WATCHLIST` automatically and new buys warn (BRL-D03-003). PRD-000 Module 02 point 6 step 3 adds a credit-risk score from D09 (FE-05) as an input; D03 shows it, never computes it |
+| FR-D03-012 | M | CAP-D03-007 (.3) | **Debt-issuer credit approval and review expiry:** a debt issuer enters the universe only through WF-002 (Investment Committee vote); each approval carries a review date; when the review date passes, the issuer moves to `WATCHLIST` automatically and new buys warn (BRL-D03-003). PRD-000 Module 02 point 6 step 3 adds a credit-risk score from D09 (FE-05) as an input; D03 shows it, never computes it. The proposal carries a proposed issuer limit; on approval the limit is sent to D08 as a rule-change request (CAP-D08-002) and is used in compliance checks only once D08 approves it (Module 02 point 6 steps 1 and 5) |
 | FR-D03-013 | M | CAP-D03-008 (.1) | **House view and scheme strategy:** the CIO records a house view and a strategy per scheme (asset-class tilts, duration stance, sector preferences, themes) as a versioned, effective-dated document approved by the Investment Committee |
 | FR-D03-014 | M | CAP-D03-008 (.2) | **Strategy targets to D04:** an approved strategy can carry target ranges (for example asset-class or sector ranges) that are sent to D04 as targets for construction (PRD-004 FR-D04-004); D04 never changes them |
 | FR-D03-015 | M | CAP-D03-009 (.1) | **Investment policy:** an investment policy per scheme and for the AMC as a whole (house policy), versioned and effective-dated, approved by the Investment Committee and reviewed on a schedule through WF-031 |
@@ -149,7 +149,8 @@ From BA-005 §3 (D03 column) and §4, narrowed to each capability (BA-005 §7 C2
 | CAP-D03-004 Investment recommendations | Research Analyst; Fund Manager ("C(recommend)") | Head of Research |
 | CAP-D03-005 Investment committee workflows | CIO (agenda, papers) | Committee members vote; quorum rule (BRL-D03-006) |
 | CAP-D03-006 Investment decisions | Fund Manager† (decision record for own scheme) | — (record, not approval) |
-| CAP-D03-007 Research approval (universe additions, debt-issuer credit) | Research Analyst | Head of Research within delegated authority, else Investment Committee (`investment.universe.approve`) |
+| CAP-D03-007 Research approval — universe additions | Research Analyst | Head of Research within delegated authority, else Investment Committee (`investment.universe.approve`) |
+| CAP-D03-007 Research approval — debt-issuer credit | Research Analyst (credit analyst) | Investment Committee vote only (PRD-000 Module 02 point 13, WF-002, FR-D03-012) |
 | CAP-D03-008 Portfolio strategy | CIO | Investment Committee |
 | CAP-D03-009 Investment policy; restricted and watch lists | CIO (policy); Compliance Officer (restricted list, "R C U (restricted list) A") | Investment Committee (policy); a second Compliance Officer (restricted list, SOD-01) |
 | CAP-D03-010 Research intelligence | System (alerts); Research Analyst | — |
@@ -164,9 +165,9 @@ Priority: **C** critical (release-blocking), **O** optional — as PRD-000 Chapt
 | --- | --- | --- | --- |
 | US-D03-001 (was US-INV-01) | As an Analyst, I want to publish a recommendation with a target price | C | **AC-US-D03-001-1** Given a published recommendation, when edited, then a new version is created and v1 remains viewable. |
 | US-D03-002 (was US-INV-02) | As Compliance, I want instant restricted-list effect | C | **AC-US-D03-002-1** Given an addition at 10:00:00, when an order is placed at 10:00:06, then it is blocked. **AC-US-D03-002-2** (was Module 02 point 18) Given a security on the restricted list, when a dealer submits a buy order in any scheme, then the order is rejected with code `RESTRICTED_SECURITY` and an audit event is written. |
-| US-D03-003 (was Module 02 point 7) | As a Research Analyst, I want my recommendation shown to fund managers and the CIO with its history | C | **AC-US-D03-003-1** Given an approved recommendation with three versions, when a fund manager opens it, then all versions are listed with dates and the approver of each. |
-| US-D03-004 (was Module 02 point 7) | As a CIO, I want every trade linked to a decision record | C | **AC-US-D03-004-1** Given an order without a decision record ID, when it is submitted, then it is refused (PRD-005 FR-D05-001). |
-| US-D03-005 (was Module 02 point 7) | As a Compliance Officer, I want to add a security to the restricted list with immediate effect | C | See AC-US-D03-002-1. |
+| US-D03-003 (was Module 02 point 7) | As a Research Analyst, I want my recommendation shown to fund managers and the CIO with its history | C | **AC-US-D03-003-1** (new **[DES]**) Given an approved recommendation with three versions, when a fund manager opens it, then all versions are listed with dates and the approver of each. |
+| US-D03-004 (was Module 02 point 7) | As a CIO, I want every trade linked to a decision record | C | **AC-US-D03-004-1** (new **[DES]**) Given an order without a decision record ID, when it is submitted, then it is refused (PRD-005 FR-D05-001). |
+| US-D03-005 (was Module 02 point 7) | As a Compliance Officer, I want to add a security to the restricted list with immediate effect | C | See AC-US-D03-002-1 and AC-US-D03-002-2. |
 | US-D03-006 | As a CIO, I want committee decisions valid only with quorum | C | **AC-US-D03-006-1** (was Module 02 point 18) Given an IC meeting without quorum, when votes are recorded, then the decision cannot move to `APPROVED`. **AC-US-D03-006-2** Given a member who declared a conflict on an item, when votes on that item are counted, then that member's vote is not accepted. |
 | US-D03-007 | As a Head of Research, I want lapsed credit approvals flagged | C | **AC-US-D03-007-1** Given a debt issuer whose review date was yesterday, when today starts, then its universe state is `WATCHLIST` and a new buy order receives a WARN. |
 | US-D03-008 | As a CIO, I want overdue policy reviews visible | C | **AC-US-D03-008-1** Given a scheme policy past its review date, when the CIO overview loads, then the policy is flagged until WF-031 records a new version or a confirmed review. |

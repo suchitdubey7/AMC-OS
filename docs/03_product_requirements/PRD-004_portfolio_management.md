@@ -30,10 +30,10 @@ This document states what AMC OS must do to give fund managers an accurate, real
 | --- | --- | --- |
 | FR-03-01 … FR-03-11 | FR-D04-001 … FR-D04-011 | Same order; FR-03-07 is **(changed)**: compliance is checked by calling D08, not by D04 holding rules |
 | BR-03-1 … BR-03-3 | BRL-D04-001 … BRL-D04-003 | |
-| US-PM-01 … US-PM-03 (Ch 5) | US-D04-001 … US-D04-003 | |
+| US-PM-01 … US-PM-03 (Ch 5) and the three Module 03 point 7 stories | US-D04-001 … US-D04-005 | The Module 03 point 7 cash-ladder story is **merged** into US-D04-001 (same need as US-PM-01); the CIO drift story → US-D04-005; the Risk Manager snapshot story → US-D04-004 |
 | Module 03 point 18 acceptance criteria | AC-US-D04-001-2 (partial fill), AC-US-D04-004-1 (frozen snapshot) | |
 | Module 03 point 6 (daily index-fund rebalance) | Covered by WF-003 (BA-004) | No new `WF-` ID |
-| — | FR-D04-012 … FR-D04-019, BRL-D04-004 … 007, US-D04-004 … 009, WF-032 | **New** **[DES]** |
+| — | FR-D04-012 … FR-D04-019, BRL-D04-004 … 007, US-D04-006 … 009, WF-032; acceptance criterion AC-US-D04-005-1 on a re-keyed story | **New** **[DES]** |
 
 ## 3. Business requirements
 
@@ -53,7 +53,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | ID (was) | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
 | FR-D04-001 (FR-03-01) | M | CAP-D04-001 | **Portfolio master:** one portfolio per scheme, plus sub-portfolios (side pocket, segregated portfolio, derivative sleeve) |
-| FR-D04-002 (FR-03-02) | M | CAP-D04-002 (.1), (.2) | **Holdings book:** positions by security with quantity, cost (lot-level, FIFO / weighted average per accounting policy), accrued interest, market value, % NAV, settled vs traded quantities. The official cost and accruals come from D10 (CAP-D10-005); D04 shows them |
+| FR-D04-002 (FR-03-02) **(changed)** | M | CAP-D04-002 (.1), (.2) | **Holdings book:** positions by security with quantity, cost (lot-level, FIFO / weighted average per accounting policy), accrued interest, market value, % NAV, settled vs traded quantities. *Changed:* the official cost and accruals come from D10 (CAP-D10-005, BA-001 §4 accruals row); D04 shows them |
 | FR-D04-003 (FR-03-03) | M | CAP-D04-002 (.3) | **Real-time position:** start-of-day + executed trades + expected corporate actions = intraday position, updated on every fill |
 | FR-D04-004 (FR-03-04) | M | CAP-D04-003, CAP-D04-004 | **Security allocations and target weights:** target % per security / sector / asset class; drift = actual − target. Targets may come from the approved scheme strategy (PRD-003 FR-D03-014) |
 | FR-D04-005 (FR-03-05) | S | CAP-D04-005 (.1) | **Model portfolios:** shared models applied to several schemes (for example index funds, ETFs) |
@@ -72,7 +72,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | FR-D04-013 | M | CAP-D04-007 (.3) | **Exposure vs internal targets:** exposure compared with the scheme strategy's target ranges (PRD-003 FR-D03-014), with drift shown |
 | FR-D04-014 | M | CAP-D04-008 (.1) | **Active weights:** portfolio weight − benchmark weight per security, sector and asset class, using the scheme's benchmark mapping (PRD-002 FR-D02-008) and constituents from D16 |
 | FR-D04-015 | M | CAP-D04-008 (.2), CAP-D04-009 (.1) | **Returns and relative return:** portfolio return and return relative to the benchmark for any period, calculated only by FE-10 from frozen snapshots and published NAVs (BRL-D04-005). The return method (for example time-weighted) is set in FE-10 (Step 23) |
-| FR-D04-016 | M | CAP-D04-010 (.1) | **Drift and headroom alerts:** alerts when drift from target, or headroom to a D08 limit, crosses the threshold set per scheme (BRL-D04-004) |
+| FR-D04-016 | M | CAP-D04-010 (.1) | **Drift and headroom alerts:** alerts when drift from target, or the headroom to a limit as reported by D08 (FE-04; D04 never evaluates limits, BA-001 §4), crosses the threshold set per scheme (BRL-D04-004) |
 | FR-D04-017 | M | CAP-D04-010 (.2), (.3) | **Monitoring views:** intraday cash and position watch for each fund manager; a CIO overview of drift, exposure and alerts across all schemes |
 | FR-D04-018 | M | CAP-D04-011 (.2) | **Point-in-time holdings:** holdings as of any past date and time, from snapshots and position events, including the version used after a NAV correction (BRL-D04-002) |
 | FR-D04-019 | M | CAP-D04-005 (.1) | **Model changes approved:** a change to a model portfolio is made by the fund manager and approved by the CIO before it affects any proposal (PRD-000 Module 03 point 13) |
@@ -86,7 +86,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | BRL-D04-003 (BR-03-3) | The cash ladder must never show negative projected cash without an alert. Borrowing rules come from the rule registry (e.g., intraday borrowing permitted per SEBI circular of 10 July 2026) | **[REG — VAL conditions]** |
 | BRL-D04-004 | Drift and headroom alert thresholds are set per scheme in configuration, approved by the CIO | **[DES]**; values **[ASSUMPTION — confirm: CIO of the pilot AMC]** |
 | BRL-D04-005 | Returns and attribution are produced only by FE-10, only from frozen snapshots and published NAVs, and each result records the engine and input versions | **[DES]** (master prompt §3.1, §3.2) |
-| BRL-D04-006 | A performance result is shown outside D04 and D09 (for example on a factsheet through PRD-002 FR-D02-011) only after the Risk officer approves the run (WF-032). Rules for publishing scheme performance to investors are regulatory **[VAL]** | **[DES]** |
+| BRL-D04-006 | A performance result is shown outside D04 and D09 (for example on a factsheet through PRD-002 FR-D02-011 and FR-D02-013) only after the Risk officer approves the run (WF-032). Rules for publishing scheme performance to investors are regulatory **[VAL]** | **[DES]** |
 | BRL-D04-007 | A rebalance proposal never becomes an order by itself: the fund manager accepts it and the orders start as `DRAFT` in D05 (WF-003; ADR-0008) | **[DES]** |
 
 ## 6. Workflows
@@ -106,7 +106,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | --- | --- |
 | Trigger | Daily: after the NAV for D is approved (returns). Period end (month, quarter, year) or on request: attribution |
 | Initiator | System; Risk Manager owns the run |
-| Departments | **DEP-11 Risk management** — accountable for CAP-D04-009 (BA-002 §4); DEP-02 / DEP-03 (users), DEP-13 (factsheet, PRD-002 FR-D02-011), DEP-07 (NAV inputs) |
+| Departments | **DEP-11 Risk management** — accountable for CAP-D04-009 (BA-002 §4); DEP-02 / DEP-03 (users), DEP-13 (factsheet, PRD-002 FR-D02-011, FR-D02-013), DEP-07 (NAV inputs) |
 | Capabilities | CAP-D04-009, CAP-D04-008, CAP-D04-011, CAP-D11-014, CAP-D16-004 |
 | Hand-offs (outside) | Index data (benchmark returns and constituents) from the index provider through D16 — "Confirm with provider" (INT-001, Step 14) |
 | Preconditions | Frozen snapshots and published NAVs for the period; benchmark data for the period |
@@ -159,7 +159,7 @@ Priority: **C** critical (release-blocking), **O** optional — as PRD-000 Chapt
 | US-D04-002 (was US-PM-02) | As an FM, I want rebalance proposals that never breach limits | C | **AC-US-D04-002-1** Given any proposal, when compliance what-if runs, then no BLOCK results exist. |
 | US-D04-003 (was US-PM-03) | As an FM, I want Brinson attribution | O | **AC-US-D04-003-1** Given a month of data, when attribution runs, then allocation + selection + interaction = active return (±0.01 bp). |
 | US-D04-004 (was Module 03 point 7) | As a Risk Manager, I want end-of-day immutable snapshots, so that every risk number can be reproduced | C | **AC-US-D04-004-1** (was Module 03 point 18) Given an approved NAV for date D, when someone tries to change a D position, then the system refuses and requires a NAV-correction workflow. |
-| US-D04-005 (was Module 03 point 7) | As a CIO, I want to see drift from model across all schemes | C | **AC-US-D04-005-1** Given three schemes on one model, when the CIO overview loads, then each scheme's drift per security is shown with its alert status. |
+| US-D04-005 (was Module 03 point 7) | As a CIO, I want to see drift from model across all schemes | C | **AC-US-D04-005-1** (new **[DES]**) Given three schemes on one model, when the CIO overview loads, then each scheme's drift per security is shown with its alert status. |
 | US-D04-006 | As an FM, I want exposure by issuer group across my schemes | C | **AC-US-D04-006-1** Given two holdings in issuers of the same group, when the exposure view loads, then they are summed under the group with each issuer listed. |
 | US-D04-007 | As an FM, I want active weights against the scheme's benchmark | C | **AC-US-D04-007-1** Given a benchmark change effective date D (PRD-002), when active weights are shown for D−1 and D, then each date uses the benchmark mapped on that date. |
 | US-D04-008 | As a Product Manager, I want only approved performance on the factsheet | C | **AC-US-D04-008-1** Given a WF-032 run not yet approved by the Risk officer, when the factsheet feed is built, then that run's results are not used. |

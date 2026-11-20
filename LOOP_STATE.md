@@ -8,7 +8,7 @@
 
 **Step 8** on a new branch `wp2-step08-prd-trading-settlement-compliance-risk` from the chain tip: PRD-006 Trading and Execution (D06), PRD-007 Settlement (D07, split from PRD-000 Module 05), PRD-008 Compliance (D08) and PRD-009 Risk (D09), GOV-006 §3. Re-key PRD-000 FR-04-09…11 (left by PRD-005 §2), Module 05, Module 06 and Module 07; re-key the Module 04 allocation acceptance criterion; settle the side-exit states of the order state machine (PRD-005 C4); give D09 its daily risk run and risk-alert workflow (BA-004 §5.1 C6); continue numbering (next free: WF-033, NFR-PERF-007, NFR-AUD-006, NFR-RET-003, NFR-SEC-004, NFR-SCAL-003).
 
-After that: Steps 8, 9, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
+After that: Steps 9, 10, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
 Done in the Step 5 run (20 Nov 2026, started early on owner request in chat): BA-005 roles, permissions and SoD; 2 review rounds. Owner answered Q17–Q19 and six follow-ups in chat the same morning (D-17 to D-25), applied on branch `wp2-step05b-owner-answers`, which also updates PRD-001 to match.
 
