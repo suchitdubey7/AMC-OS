@@ -1,0 +1,41 @@
+## AMC OS Review Agent — advisory review
+
+**PR:** `wp2-step05b-owner-answers` · **Step / WP:** WP2 Step 5 follow-up (owner answers Q17–Q19 and six follow-ups, recorded as D-17 to D-25), review round 3 · **Reviewed at:** fdac55604f398d0325a3755e18f13fdfe51c36f6
+
+**Verdict (advisory):** RECOMMEND MERGE AFTER FIXES
+All round 1 and round 2 Blockers and Majors are fixed, and all nine owner answers are recorded accurately. What is left is Minor and Nit only: one decision record is missing part of an answer, one wording drifts from the owner's answer, and the branch still depends on the loop choosing not to auto-merge it.
+
+### Findings
+| # | Severity | File:line | Finding | Suggested fix |
+| --- | --- | --- | --- | --- |
+| 1 | Minor | LOOP_STATE.md:7–11, :75; scripts/merge_gate.py (not changed) | Round 2 finding 1 was fixed by listing the branch under "Waiting for owner". I ran `merge_gate.py` on a scratch clone at fdac556 (`--ci unknown`). **G2 passes** even with the GOV-001 §4 row. The only failing check is G4, because the latest review file (round 2) says RECOMMEND CHANGES. Once this round 3 review is saved with a verdict that has no Blocker or Major, G4 will pass too and the script will return PASS. GOV-008 §5 steps 1–3 then tell the loop to merge the oldest unmerged branch, and this branch is that one. The only things stopping an auto-merge are the "Waiting for owner" row and GOV-008 §5 rule 5. The "Next action" section does not tell the next run to skip merging this branch. | Add one line to "Next action": "Do not auto-merge `wp2-step05b-owner-answers` even if merge_gate.py passes (GOV-001 §4 row; owner merge)". Or have the owner merge it before the next scheduled run. Fixing `TABLE_ONLY_ALLOWED` in the script is still an owner-only change. |
+| 2 | Minor | LOOP_STATE.md:69 | D-25 records only that the mode is switched off within a grace period. It leaves out the second half of the owner's answer: Tenant Administrators then give up their business roles. BA-005:219 includes it, so the decision record is the less complete of the two. | Add ", and Tenant Administrators then give up their business roles" to D-25. |
+| 3 | Minor | BA-005:219, :252; LOOP_STATE.md:69 | The owner said the mode "is switched off after a grace period". The change says "must be switched off **within** a grace period". That turns an automatic end into a duty on someone. The document also does not say who decides the AMC is no longer small, who switches the mode off, or what happens if nobody does it when the grace period ends. C3 lists only the "small" test as open. | Use the owner's wording ("is switched off when the grace period ends"). Add to C3 (pilot discovery): the grace period length, who detects that the AMC is no longer small, and whether the switch-off is automatic. Do not invent answers. |
+| 4 | Nit | BA-005:228 | The Tenant Administrator row in the conflict table cites "D-19…D-22". It leaves out D-23 (a grant to the only ISO is reviewed by a Compliance Officer) and D-24 (the review is blocking). SOD-16 at :219 has both. | Change the citation to "D-19…D-25" or add "(a Compliance Officer for the only ISO)". |
+| 5 | Nit | BA-005:234 | "Both appear in the SOD-11 nightly report": the owner put each access grant in the nightly report. He did not say that the small-team mode setting itself appears there. This is a reasonable design addition but it has no label. | Mark that clause **[DES]**. |
+| 6 | Nit | LOOP_STATE.md:4 | "Updated: about 11:45 IST" is earlier than the commit that contains it: fdac556 is 06:51:01 UTC, which is 12:21 IST. This is the same kind of slip as round 2 Nit 6. | Use the commit time, or "about 12:20 IST". |
+| 7 | Nit | branch name | GOV-008 §2 rule 2 keeps the `step<NN>b` suffix for `…b-review-fixes` branches. This branch records owner answers. The review files (`STEP-05b_round*`) are consistent with the branch name, so G4 is not affected. | None needed. Say so in the hand-off if the owner wants the naming kept strict. |
+| 8 | Nit | commits d3bf8bc, 8a53286, fdac556 | The trailer is `Co-Authored-By: Claude <noreply@anthropic.com>`. This is the known, accepted item (STEP-01 Nit 2, STEP-04 Nit 14). | None needed unless the owner wants the model-named format. |
+
+### Checks run
+| Check | Result |
+| --- | --- |
+| scripts/check_docs.py | Run on a `git archive` export of fdac556: "32 spec documents checked; 0 problem(s)." |
+| pytest tests/governance | Run on the same export: 14 passed. This matches the commit message. |
+| scripts/merge_gate.py (read-only, scratch clone, `--base origin/main --ci unknown`) | FAIL. G1, G2, G3, G5 and G6 pass; G4 fails because round 2 says RECOMMEND CHANGES. G2 passing confirms finding 1. Nothing was merged, and the real repository was not touched. |
+| Arithmetic re-computed | No derived numbers in the change. The admin head-count logic still holds: 3 admin-only people without the mode, 1 with it (the Technology Administrator, still bound by SOD-05). LOOP_STATE times: rows 7 and 8 match git (UTC+5:30). The "Updated" time does not (finding 6). |
+| Sources | No external facts were added. D-17…D-25 were compared with the owner answers in the task brief ("source not opened": I did not have the original chat). They match, except for the gaps in findings 2 and 3. Internal references resolve: SOD-03, SOD-11, SOD-12, WF-020, WF-021, ROLE-11, ROLE-17, ROLE-22, and the GOV-001 §4 and §7 rows. No stale Q17/Q18/Q19 references remain in docs/. |
+| Scope vs GOV-006 step | Q17 is in GOV-001 §4:110, BA-005 §2:44 and C1. Q18 is in §5.1, §6 and D-18. Q19 and the six follow-ups are in SOD-16:219, §4:192, the conflict table:228, ROLE-19:133, C3 and D-19…D-25. GOV-006 changes only the Step 5 status cell. Nothing from the brief is missing apart from finding 2. The only extras are the labelled [DES] restrictions and the clause in finding 5. No domain is affected. |
+| Round 2 findings | 1 (owner merge routing): fixed in LOOP_STATE:39 and :75, with a remaining risk (finding 1). 2 ([DES] labels): fixed at :219. 3 (lone ISO, blocking review, outgrowing "small", §4 row): fixed through D-23…D-25 and :192. 4 (R6): fixed at :274. 5 (C3 wording): fixed at :252. 6 (Updated time): recurred (finding 6). 7 (trailer): accepted item. |
+| Governance / IDs | BA-005 front matter is complete (v0.2, Draft, last_updated 2026-11-20). `ROLE-nn` does not clash with other IDs, and the example ROLE-11 exists. The GOV-001 §7 register row is unchanged, which is correct. No status was changed to Approved. This is round 3 of 3 under GOV-008 §2 rule 5. No Blocker or Major remains, so BLOCKED is not triggered. |
+| Architecture (GOV-002 §4) | No change to tenancy, data or engines. The control relaxation has compensating controls: no self-approval, a blocking ISO review before the grant takes effect, a Compliance Officer fallback for the only ISO, the nightly report, and dual approval to switch the mode on. |
+| Instruction injection | None found in the diff, the review files or the commit messages. |
+
+### Not checked
+- The owner's original chat wording. I relied on the answers given in the task brief.
+- The GitHub Actions status of the push run for fdac556. I did not query GitHub, so CI was passed to the gate as `unknown`.
+- Whether the round 1 and round 2 review files are unedited copies of what the reviewer produced. The round 1 file matches the working tree; I had no independent original to compare against.
+
+_This review is advisory. Only the project owner can merge (GOV-003, GOV-007)._
+
+Relevant files: /home/claude/amc-os/docs/02_business_architecture/BA-005_roles_and_permissions.md, /home/claude/amc-os/LOOP_STATE.md, /home/claude/amc-os/docs/00_governance/GOV-001_document_control_and_identifiers.md, /home/claude/amc-os/docs/00_governance/GOV-006_gap_analysis_and_delivery_plan.md, /home/claude/amc-os/docs/00_governance/GOV-008 (loop rules §2, §5), /home/claude/amc-os/scripts/merge_gate.py, /home/claude/amc-os/reviews/STEP-05b_round2.md. No memory was used. The repository was not changed: checks ran on an export at /tmp/claude-0/-home-claude-amc-os/74e5c18c-8432-5483-a14e-f8a8488896ad/scratchpad/r3 and a scratch clone at /tmp/claude-0/-home-claude-amc-os/74e5c18c-8432-5483-a14e-f8a8488896ad/scratchpad/clone.

@@ -1,10 +1,12 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-20 about 11:45 IST
+**Updated:** 2026-11-20 about 12:30 IST
 **Chain tip:** `wp2-step05b-owner-answers`
 
 ## Next action
+
+**Do not auto-merge `wp2-step05b-owner-answers`**, even if `scripts/merge_gate.py` passes: it adds a GOV-001 §4 identifier row, which only the owner may merge (CR-0001 G2; review STEP-05b round 3 finding 1).
 
 **Step 6** on a new branch `wp2-step06-prd-platform-product` from the chain tip: PRD-001 Platform Administration (new; D01) and PRD-002 Product and Scheme Management (D02), GOV-006 §3. Re-key PRD-000 FR-01-nn to `FR-D02-nnn`; write new `FR-D01-nnn` from BA-001 D01 capabilities and BA-004 WF-019…WF-022; use BA-005 roles and SoD; close BA-005 §7 C7 (US-PLT-01 maker) in PRD-001.
 
@@ -66,7 +68,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-22 | In small-team mode the Information Security Officer reviews each access grant before it takes effect | 2026-11-20 |
 | D-23 | Small-team mode: a grant to the AMC's only Information Security Officer is reviewed by a Compliance Officer | 2026-11-20 |
 | D-24 | Small-team mode: the ISO pre-effect review is blocking (a rejection stops the grant) | 2026-11-20 |
-| D-25 | Small-team mode: when an AMC is no longer small, the mode is switched off within a grace period (length set in pilot discovery) | 2026-11-20 |
+| D-25 | Small-team mode: when an AMC is no longer small, the mode is switched off when a grace period ends (length set in pilot discovery), and Tenant Administrators then give up their business roles | 2026-11-20 |
 
 ## Waiting for owner (cannot be auto-merged)
 
