@@ -1016,21 +1016,21 @@ Every domain appears in at least one workflow (checked by script; see §6). Doma
 | Domain | Workflows | Gap |
 | --- | --- | --- |
 | D01 | WF-019, WF-020, WF-021, WF-022, WF-026 (calendar master) | — |
-| D02 | WF-001, WF-011, WF-029, WF-030 | — (WF-029 and WF-030 added by PRD-002, Step 6) |
+| D02 | WF-001, WF-011, WF-029, WF-030, WF-031, WF-032 | — (WF-029 and WF-030 added by PRD-002, Step 6) |
 | D03 | WF-002, WF-003, WF-031 | — (WF-031 added by PRD-003, Step 7) |
 | D04 | WF-001, WF-003, WF-006, WF-007, WF-009, WF-011, WF-018, WF-026, WF-027, WF-032 | — (WF-032 added by PRD-004, Step 7) |
 | D05 | WF-004, WF-005, WF-006, WF-024 | — |
 | D06 | WF-004, WF-023, WF-024, WF-025 | — |
 | D07 | WF-018, WF-023, WF-026, WF-027, WF-028 | — |
-| D08 | WF-001, WF-002, WF-003, WF-004, WF-005, WF-006, WF-014, WF-016, WF-017, WF-024, WF-025 | Rule change lifecycle (CAP-D08-001, CAP-D08-008) → PRD-008 (Step 8), REG-001 (Step 25) |
+| D08 | WF-001, WF-002, WF-003, WF-004, WF-005, WF-006, WF-014, WF-016, WF-017, WF-024, WF-025, WF-029, WF-031 | Rule change lifecycle (CAP-D08-001, CAP-D08-008) → PRD-008 (Step 8), REG-001 (Step 25) |
 | D09 | WF-023 only | **Daily risk run and risk alerts** (CAP-D09-001…013) have no end-to-end workflow in PRD-000 or here → PRD-009 (Step 8) |
-| D10 | WF-001, WF-007, WF-008, WF-009, WF-010, WF-011, WF-017, WF-018, WF-025, WF-027 | — |
-| D11 | WF-001, WF-007, WF-010, WF-011, WF-017 | Fair valuation (CAP-D11-005) → PRD-011 (Step 9) |
+| D10 | WF-001, WF-007, WF-008, WF-009, WF-010, WF-011, WF-017, WF-018, WF-025, WF-027, WF-030 | — |
+| D11 | WF-001, WF-007, WF-010, WF-011, WF-017, WF-030, WF-032 | Fair valuation (CAP-D11-005) → PRD-011 (Step 9) |
 | D12 | WF-007, WF-008, WF-009, WF-010, WF-011, WF-013, WF-015, WF-024, WF-025, WF-026, WF-027, WF-028 | — |
-| D13 | WF-001, WF-007, WF-010, WF-011, WF-012, WF-017 | Switch, STP, SWP, IDCW, service requests and complaints (CAP-D13-006, -008, -009, -010, -014, -015) → PRD-013 (Step 9) |
+| D13 | WF-001, WF-007, WF-010, WF-011, WF-012, WF-017, WF-029, WF-030 | Switch, STP, SWP, IDCW, service requests and complaints (CAP-D13-006, -008, -009, -010, -014, -015) → PRD-013 (Step 9) |
 | D14 | WF-010, WF-012, WF-013 | — |
 | D15 | WF-013 (commission as cost) only | **Monthly MIS and revenue** (BA-002 P13; CAP-D15-001, CAP-D15-009) have no workflow → PRD-015 (Step 9) |
-| D16 | WF-001, WF-002, WF-009, WF-015, WF-016, WF-023, WF-028 | — |
+| D16 | WF-001, WF-002, WF-009, WF-015, WF-016, WF-023, WF-028, WF-032 | — |
 | D17 | WF-002, WF-004, WF-007, WF-014, WF-015, WF-016 | — |
 
 BA-002 §7 processes P1–P12 each map to at least one workflow (§2 register); **P13 Management reporting** has none yet (D15 row above).

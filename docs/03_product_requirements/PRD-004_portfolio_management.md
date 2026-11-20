@@ -60,9 +60,9 @@ Every requirement also obeys PRD-000 common rules C1–C8.
 | FR-D04-004 (FR-03-04) | M | CAP-D04-003, CAP-D04-004 | **Allocations and target weights:** target % per security, sector and asset class; drift = actual − target |
 | FR-D04-005 (FR-03-05) | S | CAP-D04-005 (.1) | **Model portfolios:** shared models applied to several schemes (for example index schemes and ETFs) |
 | FR-D04-006 (FR-03-06) | M | CAP-D04-005 (.2), CAP-D04-006 | **Construction and rebalancing:** generate proposed orders to move toward targets subject to constraints (limits, lot sizes, liquidity, minimum trade size, tax lots) with a deterministic optimiser, not AI |
-| FR-D04-007 (FR-03-07) | M | CAP-D04-005 | **Investment constraints:** proposals are checked by the D08 compliance what-if (CAP-D08-006), so that an accepted proposal contains no BLOCK result |
-| FR-D04-008 (FR-03-08) | M | CAP-D04-002 (.4) | **Cash management:** cash ladder T to T+n — opening cash, settlements due, investor subscriptions and redemptions (provisional and final, from the RTA through the D13 mirror), IDCW payouts, expenses, margin calls, TREPS / repo maturities |
-| FR-D04-009 (FR-03-09) **(changed)** | S → **M** | CAP-D04-009 | **Performance attribution:** Brinson (allocation, selection, interaction) for equity; duration / curve / spread / carry for debt; daily and period. *Changed:* priority raised from S to M because GOV-001 §5 makes FE-10 a core engine of D04 and BA-004 §5.1 asks for its workflow (WF-032) **[DES]**; the method is FE-10 |
+| FR-D04-007 (FR-03-07) **(changed)** | M | CAP-D04-005 | **Investment constraints:** the optimiser reads the effective limit parameters it needs as constraints through the D08 API (read only), and every proposal is then checked by the D08 compliance what-if (CAP-D08-006), so that an accepted proposal contains no BLOCK result. *Changed:* PRD-000 said D04 "pulls compliance rules"; under BA-001 §4 rule logic stays in D08, and D04 holds no limit data of its own |
+| FR-D04-008 (FR-03-08) | M | CAP-D04-002 (.4) | **Cash management:** cash ladder T to T+n — opening cash, settlements due, investor subscriptions and redemptions (provisional and final, from the RTA through the D13 mirror), IDCW payouts, expenses, margin calls, TREPS (tri-party repo) / repo maturities |
+| FR-D04-009 (FR-03-09) | S | CAP-D04-009 | **Performance attribution:** Brinson (the standard split of active return into allocation, selection and interaction effects) for equity; duration / curve / spread / carry for debt; daily and period. Method in FE-10. Priority kept at S as in PRD-000; whether to make it release-blocking (M, and US-D04-005 C) is open point C7 |
 | FR-D04-010 (FR-03-10) | M | CAP-D04-011 (.1) | **Portfolio snapshots:** immutable end-of-day snapshot after NAV approval, used for history, disclosure, risk and AI (as `portfolio.snapshot` `DRAFT → FROZEN → SUPERSEDED` in DDL-000) |
 | FR-D04-011 (FR-03-11) | S | CAP-D04-005 (.3) | **What-if:** simulate trades and see the effect on limits, risk, duration and cash |
 
@@ -74,7 +74,7 @@ Every requirement also obeys PRD-000 common rules C1–C8.
 | FR-D04-013 | M | CAP-D04-007 (.1), (.2) | **Exposure views:** exposure by sector, issuer, issuer group, rating and asset class, gross and net including derivatives, intraday and end of day. Exposure *limits* are D08 (CAP-D08-005); risk measures are D09 (CAP-D09-006) — BA-001 §4 |
 | FR-D04-014 | S | CAP-D04-007 (.3) | **Exposure vs internal targets:** exposure compared with the scheme strategy's internal targets (not limits), with drift shown |
 | FR-D04-015 | M | CAP-D04-008 (.1) | **Active weights:** weights vs the scheme's primary benchmark (mapping from CAP-D02-007, constituents from CAP-D16-004), by security, sector and asset class |
-| FR-D04-016 | M | CAP-D04-008 (.2), CAP-D04-009 (.1) | **Returns vs benchmark:** scheme and plan returns and relative return vs the benchmark (TRI variant) for standard periods, from FE-10 |
+| FR-D04-016 | M | CAP-D04-008 (.2), CAP-D04-009 (.1) | **Returns vs benchmark:** scheme and plan returns and relative return vs the benchmark (TRI — total return index, which adds back reinvested dividends) for standard periods, from FE-10 |
 | FR-D04-017 | M | CAP-D04-010 | **Portfolio monitoring:** alerts on drift beyond a tolerance, on limit headroom below a configured level (headroom computed by D08), on projected negative cash (BRL-D04-003) and on large intraday moves; a CIO overview across schemes. Tolerances are tenant configuration **[ASSUMPTION — confirm: CIO of the pilot AMC]** |
 | FR-D04-018 | M | CAP-D04-011 (.2) | **Point-in-time queries:** holdings for any past date as frozen for that date's approved NAV, or as corrected by a later snapshot version, chosen explicitly |
 | FR-D04-019 | M | CAP-D04-002 | **Position adjustments:** a correction to a position not caused by a trade, settlement, corporate action or transfer is an `ADJUSTMENT` event with reason, evidence and maker-checker (BRL-D04-001) |
@@ -161,7 +161,7 @@ From BA-005 §3 (D04 column), split by capability. Roles with "R" in D04 in BA-0
 | US-D04-002 (was US-PM-02) | As a Fund Manager, I want rebalance proposals that never breach limits | C | **AC-US-D04-002-1** Given any proposal, when compliance what-if runs, then no BLOCK results exist in a proposal the FM can accept. |
 | US-D04-003 (Module 03 point 7) | As a CIO, I want to see drift from model across all schemes, so that I can direct rebalancing | C | **AC-US-D04-003-1** Given schemes mapped to a model, when the CIO opens the overview, then each scheme's drift by security and asset class is shown as at the latest fill. |
 | US-D04-004 (Module 03 point 7) | As a Risk Manager, I want end-of-day immutable snapshots, so that every risk number can be reproduced | C | **AC-US-D04-004-1** Given a frozen snapshot, when anyone tries to change it, then the change is refused and audited. |
-| US-D04-005 (was US-PM-03) | As a Fund Manager, I want Brinson attribution | C (was O; FR-D04-009) | **AC-US-D04-005-1** Given a month of data, when attribution runs, then allocation + selection + interaction = active return (±0.01 bp). |
+| US-D04-005 (was US-PM-03) | As a Fund Manager, I want Brinson attribution | O | **AC-US-D04-005-1** Given a month of data, when attribution runs, then allocation + selection + interaction = active return (±0.01 bp). |
 | US-D04-006 (Module 03 point 18) | As a Fund Manager, I want partial fills reflected at once | C | **AC-US-D04-006-1** Given a partial fill of 4,000 of 10,000 shares, when the fill arrives, then the intraday position increases by 4,000 within 1 second and the cash ladder updates for the settlement date. |
 | US-D04-007 (Module 03 point 18) | As Head of Fund Accounting, I want past positions locked after NAV approval | C | **AC-US-D04-007-1** Given an approved NAV for date D, when someone tries to change a D position, then the system refuses and requires the NAV-correction workflow (WF-017). |
 | US-D04-008 | As a Fund Manager, I want to be warned before cash goes negative | C | **AC-US-D04-008-1** Given a projected cash balance below zero on any day T…T+n, when the ladder recalculates, then an alert goes to the scheme's FM and the CIO. |
@@ -169,7 +169,7 @@ From BA-005 §3 (D04 column), split by capability. Roles with "R" in D04 in BA-0
 | US-D04-010 | As a Fund Manager, I want active weights against my benchmark | C | **AC-US-D04-010-1** Given benchmark constituents certified for date D, when active weights are shown for D, then for every security active weight = portfolio weight − benchmark weight, and the active weights sum to zero within rounding. |
 | US-D04-011 | As a Compliance Officer, I want published returns reproducible | C | **AC-US-D04-011-1** Given an approved period result, when it is re-run with the stored inputs and FE-10 version, then every figure matches exactly. |
 
-AC-US-D04-010-1 sums to zero because portfolio weights and benchmark weights each sum to 100% (with cash counted as a position).
+AC-US-D04-010-1 sums to zero because portfolio weights and benchmark weights each sum to 100%. This holds only when every non-security line of the portfolio (cash, net current assets) is counted as a position with a benchmark weight of zero, and derivative exposure is shown separately rather than in the weights.
 
 ## 9. Exceptions
 
@@ -215,6 +215,7 @@ Within PRD-000 C8 and ADR-0008: an assistant may explain drift, flag concentrati
 | C4 | WF-032 is added to the BA-004 register in this step; its card lives here | Next BA-004 revision |
 | C5 | Drift and headroom tolerances have no values **[ASSUMPTION]** | Pilot discovery |
 | C6 | Where D04 positions and D10 books differ in purpose (investment view vs books of account), which is reconciled to which | FE-07 (Step 22), DA-001 (Step 15) |
+| C7 | Should performance attribution be release-blocking (FR-D04-009 M, US-D04-005 C) rather than S / O as in PRD-000? GOV-001 §5 makes FE-10 a D04 engine and BA-004 §5.1 asked for its workflow | Owner (Q22) |
 
 ## Sources
 

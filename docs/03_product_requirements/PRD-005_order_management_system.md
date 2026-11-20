@@ -33,6 +33,7 @@ This document states what AMC OS must do to take an investment decision to a val
 | FR-04-12, FR-04-13, FR-04-14 | FR-D05-009, FR-D05-010, FR-D05-011 | |
 | BR-04-1 … BR-04-4 | BRL-D05-001 … BRL-D05-004 | BR-04-3 is split: intent before execution here; allocation by intent in PRD-006 |
 | BR-04-5 (raw broker messages kept) | → PRD-006 (CAP-D06-006) | |
+| Module 04 point 17 "zero lost fills"; Ch 7 Throughput "50,000 fills/min platform" | → PRD-006 (CAP-D06-002) | Fill-side NFRs |
 | US-OMS-01 … US-OMS-04 (Ch 5) | US-D05-001 … US-D05-004 | US-OMS-02's allocation criterion (Module 04 AC 50/30/20) moves to PRD-006 |
 | Module 04 point 18 second criterion | AC-US-D05-005-1 | |
 | — | FR-D05-012 … FR-D05-019, BRL-D05-005 … 008, US-D05-006 … 010 | **New** **[DES]** |
@@ -57,9 +58,9 @@ Every requirement also obeys PRD-000 common rules C1–C8 (in particular C7: eve
 | ID (was) | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
 | FR-D05-001 (FR-04-01) | M | CAP-D05-001 | **Order creation:** from a rebalance proposal (D04), from a model, manually, or by bulk upload. Fields: scheme, security, side (buy/sell; for derivatives buy/sell open/close), quantity or amount, order type, limit price, time-in-force, broker preference, decision record ID (mandatory, FR-D03-010), reason |
-| FR-D05-002 (FR-04-02) | M | CAP-D05-001 (.2) | **Order types:** market, limit, stop-loss limit (where the broker supports it), VWAP / TWAP instruction (broker algorithm), negotiated (debt RFQ / OTC), primary market (IPO / bond issue application) **[IND]** |
+| FR-D05-002 (FR-04-02) | M | CAP-D05-001 (.2) | **Order types:** market, limit, stop-loss limit (where the broker supports it), VWAP / TWAP instruction (broker algorithm that spreads the order to match the volume- or time-weighted average price), negotiated (debt RFQ — request for quotes — or OTC, over the counter), primary market (IPO / bond issue application) **[IND]** |
 | FR-D05-003 (FR-04-03) | M | CAP-D05-004, CAP-D05-005 | **Modification and cancellation:** amend quantity or price before full execution; cancel the unexecuted remainder; every change re-runs compliance |
-| FR-D05-004 (FR-04-04) | M | CAP-D05-002 | **Validation:** lot size, tick size, price band, security status, settlement-holiday check (calendar master, FR-D01-038), sufficient holdings for sells (no short selling in cash equity), available projected cash for buys (D04 cash ladder) |
+| FR-D05-004 (FR-04-04) | M | CAP-D05-002 | **Validation:** lot size, tick size, price band, security status, settlement-holiday check (calendar master, FR-D01-038), sufficient holdings for sells (no short selling in cash equity), available projected cash for buys (D04 cash ladder). *Added here* **[DES]**: the security is in the scheme's approved universe and not on the restricted list (PRD-003 FR-D03-003, FR-D03-004), checked at creation and again at release |
 | FR-D05-005 (FR-04-05) | M | CAP-D05-010 | **Pre-trade compliance:** synchronous call to D08 (WF-005); result PASS / WARN / BLOCK per rule; WARN needs acknowledgement text; BLOCK needs the override workflow |
 | FR-D05-006 (FR-04-06) | M | CAP-D05-003 (.1) | **Approval hierarchy:** configurable matrix by order size (% of scheme net assets, notional), instrument (for example unlisted debt, derivatives) and soft-limit warnings; auto-approval within the fund manager's authority. Threshold values are tenant configuration **[ASSUMPTION — confirm: CIO of the pilot AMC]** |
 | FR-D05-007 (FR-04-07) **(changed)** | M | CAP-D05-006 (.1), (.2) | **Block orders and broker selection:** combine same-security orders from several schemes into one block; record the pre-trade allocation intent; select the broker from the empanelled list (CAP-D06-001), within broker limits (% of turnover per broker) and the best-execution policy. *Changed:* PRD-000 FR-04-07 is titled "block orders and broker allocation"; allocating fills after execution is D06 (CAP-D06-004) |
@@ -70,7 +71,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (in particular C7: eve
 
 ### 4.2 Order state machine
 
-From PRD-000 Module 04 and DDL-000 `trading.order_state_transition` (unchanged):
+From PRD-000 Module 04 and DDL-000 `trading.order_state_transition`, copied unchanged here; the gaps this PRD finds in it are open point C3:
 
 `DRAFT → PENDING_COMPLIANCE → (COMPLIANCE_BLOCKED → OVERRIDE_REQUESTED → OVERRIDE_APPROVED | REJECTED) → PENDING_APPROVAL → APPROVED → RELEASED_TO_DESK → ROUTED → PARTIALLY_FILLED → FILLED → ALLOCATED → CONFIRMED → CLOSED`; side exits `CANCEL_REQUESTED → CANCELLED`, `EXPIRED`, `REJECTED_BY_BROKER`. Transitions not in the table are refused by the database trigger and the service. `ROUTED` and later states are set from D06 events (CAP-D05-007 (.2)).
 
@@ -82,7 +83,7 @@ From PRD-000 Module 04 and DDL-000 `trading.order_state_transition` (unchanged):
 | FR-D05-013 | M | CAP-D05-004 (.1), (.2) | **Order versions:** an amendment creates a new order version; the new version passes validation, compliance and (if the threshold is crossed) approval again before it can be released (BRL-D05-004). After release, an amendment is sent to D06 as a cancel-and-replace or amend request, as the broker supports |
 | FR-D05-014 | M | CAP-D05-005 (.2) | **Cancel confirmation:** a cancel request on a routed order stays `CANCEL_REQUESTED` until D06 reports the broker's confirmation; fills arriving meanwhile still count (DDL-000 allows `CANCEL_REQUESTED → PARTIALLY_FILLED / FILLED`) |
 | FR-D05-015 | M | CAP-D05-007 (.2) | **Fill status:** fill quantity, average price and remaining quantity from D06 are shown on the order and on the block in real time |
-| FR-D05-016 | M | CAP-D05-009 (.2) | **Emergency override for an out-of-universe security:** an order on a security not in the scheme's approved universe is blocked unless an override approved by both the CIO and a Compliance Officer exists (BRL-D03-001) |
+| FR-D05-016 | M | CAP-D05-009 (.2) | **Emergency override for an out-of-universe security:** an order on a security not in the scheme's approved universe fails validation unless an emergency override approved by both the CIO and a Compliance Officer exists for that scheme and security (BRL-D03-001). The override is a separate approval request (CAP-D12-011) raised before the order is created or resubmitted; it is not the D08 compliance-override path (`OVERRIDE_REQUESTED`, SOD-04). A restricted-list BLOCK can never be overridden this way |
 | FR-D05-017 | M | CAP-D05-010 (.1) | **What is checked:** the pre-trade check covers the order version together with the scheme's start-of-day holdings, today's executions and other pending orders (WF-005); a check with incomplete data returns `INDETERMINATE`, treated as BLOCK |
 | FR-D05-018 | M | CAP-D05-006 (.2) | **Fixed allocation intent:** the allocation intent of a block (scheme and quantity or proportion) is recorded before release and cannot be changed after the first fill except through the D06 deviation approval (Head of Dealing and Compliance) |
 | FR-D05-019 | S | CAP-D05-001 (.1) | **Bulk upload:** a file of orders is validated row by row; each valid row becomes a separate `DRAFT` order with the same decision record or its own; invalid rows are returned with reasons and nothing is created for them |
@@ -91,11 +92,11 @@ From PRD-000 Module 04 and DDL-000 `trading.order_state_transition` (unchanged):
 
 | ID (was) | Rule | Label |
 | --- | --- | --- |
-| BRL-D05-001 (BR-04-1) | No order reaches a broker without a PASS (or acknowledged WARN) or an approved override from compliance for its current version | **[DES]** (PRD-000 unlabelled) |
+| BRL-D05-001 (BR-04-1) | No order reaches a broker without a PASS (or acknowledged WARN) or an approved override from compliance for its current version. "Or acknowledged WARN" is added to BR-04-1 here, following FR-04-05 and W4 | **[DES]** (PRD-000 unlabelled) |
 | BRL-D05-002 (BR-04-2) | The fund manager who originates an order cannot be the dealer on the same order (configurable; default on — SOD-03) | **[IND]** |
 | BRL-D05-003 (BR-04-3, first part) | The allocation of a block is decided before execution (intent); allocating fills by that intent after execution is a PRD-006 rule | **[DES]**; fair allocation **[REG — VAL exact clause]** (PRD-000 FR-04-10) |
 | BRL-D05-004 (BR-04-4) | An amended order is a new order version; the compliance result of v1 does not cover v2 | **[DES]** |
-| BRL-D05-005 | An order without a decision record cannot leave `DRAFT` | PRD-000 FR-02-10 **[REG — VAL clause]** |
+| BRL-D05-005 | An order cannot be created without a decision record (DDL-000 `trading.order.decision_id` is NOT NULL) | PRD-000 FR-02-10 **[REG — VAL clause]** |
 | BRL-D05-006 | A compliance override needs two distinct approvers, from Compliance and Investment (CCO + CIO or delegates), and a reason | SOD-04 |
 | BRL-D05-007 | The approver of an order is not its maker (SOD-01); an AI agent identity may draft orders but never submit, approve or release them (SOD-10) | SOD-01, SOD-10 |
 | BRL-D05-008 | A late fill on a cancelled order is never dropped; it goes to the exception queue (CAP-D12-008) | PRD-000 Module 04 point 14 **[DES]** |
@@ -123,7 +124,7 @@ From BA-005 §3 (D05 column) and §4, split by capability. Roles with "R" in D05
 | CAP-D05-003 Order approval | — | CIO above the threshold ("A J"); auto-approval within FM authority (`trading.order.approve`) |
 | CAP-D05-004 Order amendments | Fund Manager (own) | As for a new order version |
 | CAP-D05-005 Order cancellation | Fund Manager (own); Dealer for the unexecuted remainder of a released order ("R U") | — |
-| CAP-D05-006 Order routing | Dealer (block, broker selection, intent — "R U (route, block, allocate)") | — |
+| CAP-D05-006 Order routing | Dealer (block, broker selection, intent — "R U (route, block, allocate)") | Head of Dealing when a debt order has fewer quotes than the policy minimum (US-D05-004)† |
 | CAP-D05-007 Order status | System (from D06) | — |
 | CAP-D05-008 Order history | System | — |
 | CAP-D05-009 Maker-checker | — | CIO **and** Compliance Officer for an out-of-universe override (FR-D05-016) |
@@ -131,7 +132,7 @@ From BA-005 §3 (D05 column) and §4, split by capability. Roles with "R" in D05
 | CAP-D05-011 Post-trade compliance | System | — |
 | CAP-D05-012 Order audit | System; Dealer records the recorded-line reference | — |
 
-No right beyond BA-005 §3 is added.
+**Right added beyond BA-005 §3 (†) [DES]:** the Head of Dealing (approval authority on ROLE-08, BA-005 §4) as checker for releasing a debt order with too few quotes — PRD-000 US-OMS-04 requires it, but BA-005 §4 lists the Head of Dealing only for WF-004 allocation deviations, WF-023 and WF-025. To be carried into BA-005 (open point C7).
 
 ## 8. User stories and acceptance criteria
 
@@ -143,8 +144,8 @@ No right beyond BA-005 §3 is added.
 | US-D05-004 (was US-OMS-04) | As a Dealer, I want debt RFQ quote capture | O | **AC-US-D05-004-1** Given a debt order, when fewer than the policy minimum quotes are captured, then release needs Head of Dealing approval. |
 | US-D05-005 (Module 04 point 18) | As Compliance, I want the order lifecycle enforced | C | **AC-US-D05-005-1** Given an order in `FILLED`, when a user tries to set it to `DRAFT`, then the transition is rejected and logged. |
 | US-D05-006 | As a Compliance Officer, I want amended orders re-checked | C | **AC-US-D05-006-1** Given an order v1 with a PASS, when the quantity is amended, then v2 is in `PENDING_COMPLIANCE` and cannot be released until its own result is PASS, acknowledged WARN or overridden. |
-| US-D05-007 | As a Compliance Officer, I want the FM never to execute own orders | C | **AC-US-D05-007-1** Given SOD-03 on, when the originating FM (who also holds the Dealer role) tries to route the order, then it is refused with `SOD_VIOLATION`. |
-| US-D05-008 | As a CIO, I want every order linked to a decision | C | **AC-US-D05-008-1** Given an order with no decision record, when it is submitted, then it is refused with `DECISION_RECORD_REQUIRED`. |
+| US-D05-007 | As a Compliance Officer, I want the FM never to execute own orders | C | **AC-US-D05-007-1** Given a user holding both Fund Manager and Dealer for the same scheme because SOD-03 was off when the roles were granted, and SOD-03 since switched on, when that user tries to route an order they originated, then it is refused with `SOD_VIOLATION` (defence in depth; the grant-time refusal is PRD-001 FR-D01-018). |
+| US-D05-008 | As a CIO, I want every order linked to a decision | C | **AC-US-D05-008-1** Given an order request with no decision record, when it is sent, then it is refused at creation with `DECISION_RECORD_REQUIRED` and no order is stored. |
 | US-D05-009 | As a Fund Manager, I want sells refused when the scheme does not hold enough | C | **AC-US-D05-009-1** Given a scheme holding 1,000 shares with a pending sell of 600, when a new sell of 500 is created in cash equity, then it fails validation (600 + 500 = 1,100 > 1,000). |
 | US-D05-010 | As a CTO, I want duplicate submissions to have no effect | C | **AC-US-D05-010-1** Given an order created with an `Idempotency-Key`, when the same request is sent again with the same key, then no second order is created and the first order is returned. |
 
@@ -166,7 +167,7 @@ No right beyond BA-005 §3 is added.
 
 | Exists in DDL-000 | Not yet in DDL-000, or to check (for DA-001 / DDL, Steps 15–16) **[DES]** |
 | --- | --- |
-| `trading.order`, `trading.order_event`, `trading.order_state_transition`, `trading.block_allocation` | Order versions with their compliance-result reference; approval-matrix configuration; override requests; bulk-upload batches; RFQ quotes (or in D06 — decide in EA-003); recorded-line references. **Check:** DDL-000 has no transition for amending a released order (FR-D05-013) and no path from a partly filled, then cancelled order to `ALLOCATED` — open point C3 |
+| `trading.order`, `trading.order_event`, `trading.order_state_transition`, `trading.block_allocation` | Order versions with their compliance-result reference; approval-matrix configuration; override requests; bulk-upload batches; RFQ quotes (or in D06 — decide in EA-003); recorded-line references. **Check:** the DDL-000 state-machine and column gaps listed in open point C3 |
 
 **Interfaces (indicative, not contracts):** PRD-000 Module 04 point 11 names `oms-svc` endpoints `/orders`, `/orders/{id}/amend`, `/orders/{id}/cancel`, `/blocks`, `/allocations`, `/executions` and a synchronous call to `compliance-svc /pretrade/check`; `/allocations` and `/executions` move to D06. Final paths and `API-D05-nnn` IDs: Step 24 (TRACE-001 seed `API-D05-001 POST /v1/orders`); events `oms.order.*`: EA-007 (Step 13).
 
@@ -182,7 +183,11 @@ Availability of core trading-day services (PRD-001 NFR-AVAIL-001) applies to the
 
 ## 12. AI in this domain
 
-Within PRD-000 C8 and ADR-0008: the **Dealing assistant** (D17, brief list) may explain why an order was blocked and draft orders, which a fund manager must submit; it never submits, approves or releases (BRL-D05-007). PRD-000 Module 04 point 16 names "CIO Copilot" and "Portfolio Agent" for these tasks; naming is settled in AIML-001 (Step 26).
+Within PRD-000 C8 and ADR-0008 (read and propose only):
+
+- **CIO copilot** (CAP-D17-003 (.2)) explains why an order was blocked (PRD-000 Module 04 point 16).
+- **Dealing assistant** (CAP-D17-004) gives dealers order and execution context.
+- Drafting orders is not given to any assistant yet (open point C8). Whatever drafts them, an AI agent identity never submits, approves or releases an order (BRL-D05-007).
 
 ## 13. Open points
 
@@ -190,10 +195,12 @@ Within PRD-000 C8 and ADR-0008: the **Dealing assistant** (D17, brief list) may 
 | --- | --- | --- |
 | C1 | Fair-allocation clause and dealing-room controls **[VAL]**; any regulatory minimum number of debt quotes **[VAL]** | REG-001 (Step 25) |
 | C2 | Approval thresholds, escalation times, RFQ quote minimum — tenant configuration with no values **[ASSUMPTION]** | Pilot discovery |
-| C3 | DDL-000 order state machine: no amend-after-release transition; no path for allocating partial fills of a cancelled order (`CANCELLED` is final); `PENDING_APPROVAL → APPROVED` must also cover auto-approval | DDL (Step 16) |
+| C3 | DDL-000 `trading` gaps against this PRD: (a) no transition back to `PENDING_COMPLIANCE`, and `order_version` sits on the order row, so no amendment is possible before or after release (FR-D05-013, AC-US-D05-006-1) — either add the transitions or make each version its own row; (b) no cancel from `PENDING_COMPLIANCE`, `PENDING_APPROVAL` or `OVERRIDE_*`; (c) no way out of `REJECTED_BY_BROKER` for a re-release; (d) no allocation path for partial fills of an order that ends `CANCELLED` or `EXPIRED`; (e) `PENDING_APPROVAL → APPROVED` must also cover auto-approval; (f) `side` allows only BUY / SELL, while derivatives need buy / sell open / close; (g) no state or table for the emergency out-of-universe override (FR-D05-016) | DDL (Step 16) |
 | C4 | Whether RFQ quotes live in `trading` or `execution` | EA-003 (Step 11) |
 | C5 | Whether a WARN acknowledgement needs a second person for some rules | PRD-008 (Step 8) |
 | C6 | TRACE-001 seed row gives `FR-D05-013*` (provisional) for v0.9 FR-04-13; the re-key here makes it FR-D05-010 | TRACE-002 (Step 27) |
+| C7 | The † right of §7 (Head of Dealing for too few debt quotes) is not yet in BA-005 | Next BA-005 revision |
+| C8 | Drafting orders: PRD-000 gives it to a "Portfolio Agent", which is not in the brief's D17 list; no D17 assistant drafts orders yet | AIML-001 (Step 26) |
 
 ## Sources
 
