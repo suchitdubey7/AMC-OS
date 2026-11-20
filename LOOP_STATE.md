@@ -1,7 +1,7 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-20 11:35 IST
+**Updated:** 2026-11-20 about 11:45 IST
 **Chain tip:** `wp2-step05b-owner-answers`
 
 ## Next action
@@ -10,7 +10,7 @@
 
 After that: Steps 7, 8, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
-Done in the Step 5 run (20 Nov 2026, started early on owner request in chat): BA-005 roles, permissions and SoD; 2 review rounds. Owner answered Q17–Q19 and three follow-ups in chat the same morning (D-17 to D-22), applied on branch `wp2-step05b-owner-answers`.
+Done in the Step 5 run (20 Nov 2026, started early on owner request in chat): BA-005 roles, permissions and SoD; 2 review rounds. Owner answered Q17–Q19 and six follow-ups in chat the same morning (D-17 to D-25), applied on branch `wp2-step05b-owner-answers`.
 
 Findings left open from Step 5: none (all round 1 and round 2 findings fixed).
 
@@ -36,7 +36,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 6 | `wp2-step03-operating-model` | Step 3: BA-002 operating model and department hierarchy (19 departments, owner of all 209 capabilities, systems stance per domain); BA-003 domain dictionary (96 terms) | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 07:15, on owner instruction) |
 | 7 | `wp2-step04-workflows` | Step 4: BA-004 end-to-end workflows WF-001…WF-028 (17 re-keyed, W6b → WF-018, 10 new for D01/D06/D07); D-12 pilot timing in PS-001/PS-002 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 08:39 IST, build loop, CR-0001 gate PASS) |
 | 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 10:57 IST, build loop, CR-0001 gate PASS) |
-| 9 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-22) applied to BA-005 and GOV-001 §4 | see review STEP-05b | see gate | see gate |
+| 9 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005 and GOV-001 §4 | Round 3 (see reviews/STEP-05b_round*.md) | see push | no — **owner merge needed**: adds a row to the GOV-001 §4 identifier table, outside the CR-0001 G2 exception |
 
 ## Owner decisions used by the loop
 
@@ -64,15 +64,18 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-20 | What counts as a "small" AMC for small-team mode: decided in pilot discovery | 2026-11-20 |
 | D-21 | Small-team mode is switched on only with approval of both the Information Security Officer and a Compliance Officer | 2026-11-20 |
 | D-22 | In small-team mode the Information Security Officer reviews each access grant before it takes effect | 2026-11-20 |
+| D-23 | Small-team mode: a grant to the AMC's only Information Security Officer is reviewed by a Compliance Officer | 2026-11-20 |
+| D-24 | Small-team mode: the ISO pre-effect review is blocking (a rejection stops the grant) | 2026-11-20 |
+| D-25 | Small-team mode: when an AMC is no longer small, the mode is switched off within a grace period (length set in pilot discovery) | 2026-11-20 |
 
 ## Waiting for owner (cannot be auto-merged)
 
 | Branch | Why |
 | --- | --- |
-| — | Nothing waiting before Step 4: Steps 1–3, CR-0001 and the Q5–Q16 answers were merged by the owner on 20 Nov 2026 |
+| `wp2-step05b-owner-answers` | Adds the `ROLE-nn` row to the GOV-001 §4 identifier table (owner decision D-17). CR-0001 G2 lets the loop merge only new GOV-001 **register** rows and GOV-006 status cells, so the owner must merge this branch. Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
 
 ## Questions for owner (open)
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| — | None open (Q17–Q19 and follow-ups answered 20 Nov 2026, see D-17 to D-22) | — | — |
+| — | None open (Q17–Q19 and follow-ups answered 20 Nov 2026, see D-17 to D-25) | — | — |

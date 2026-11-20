@@ -189,7 +189,7 @@ The approval actions of BA-004, with the permission name in PRD-000's `domain.ob
 | `operations.break.force_match` | CAP-D12-009 | WF-015 | Operations Analyst | Operations Manager | SOD-01 |
 | `operations.payout.release` | CAP-D12-009 | WF-011 | Operations Analyst | At least two bank-mandate signatories (BR-10-3 **[IND]**) | SOD-01 |
 | `distribution.commission_run.approve` | CAP-D14-011 | WF-013 | Distributor Manager | Finance Officer or CFO; payment by two signatories | SOD-07 |
-| `platform.role_grant.approve` | CAP-D01-004 | WF-020 | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant) | SOD-05, SOD-16 |
+| `platform.role_grant.approve` | CAP-D01-004 | WF-020 | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant); in small-team mode also an Information Security Officer before the grant takes effect (a Compliance Officer for a grant to the only one) | SOD-05, SOD-16 |
 | `platform.access.recertify` | CAP-D01-002 | WF-020 | Role owner (department head) | — (review; reported to DEP-16) | SOD-13 |
 | `platform.config.approve` | CAP-D01-008 | WF-021 | Technology Administrator or setting owner | Checker from the department that owns the setting; plus Compliance Officer for a regulatory parameter | SOD-12 |
 | `platform.breakglass.approve` | CAP-D01-005 | WF-022 | Platform Operator | Tenant Administrator | SOD-09, SOD-15 |
@@ -216,7 +216,7 @@ SOD-01…SOD-11 are carried over from PRD-000 Chapter 6 unchanged (labels includ
 | SOD-13 | Nobody certifies their own access in a recertification | WF-020 | **new** (BA-004 WF-020) |
 | SOD-14 | The person who proposes a broker (Head of Dealing) is not the only approver of its empanelment | WF-023 | **new** (BA-004 WF-023) |
 | SOD-15 | A platform operator can never be the checker for a tenant action; tenant activation and break-glass access need confirmation by the tenant's own Tenant Administrator | WF-019, WF-022 | **new** (BA-004 WF-019, WF-022) |
-| SOD-16 | Nobody approves a role grant, scope change or approval authority for themselves; a grant of the Tenant Administrator role is approved by another Tenant Administrator and reported to the Information Security Officer; the Tenant Administrator holds no other role. **Small-team mode (owner decisions D-19, D-20…D-22):** only for a small AMC — the test for "small" (for example number of active users) is open and set in pilot discovery **[VAL]** (D-20). In this mode a Tenant Administrator may also hold a business role, but never ROLE-17 Technology Administrator or ROLE-22 Information Security Officer; they still never approve their own access; **every access grant** (role, scope change, approval authority) is reviewed by an Information Security Officer who is not the grantee **before it takes effect** (D-22) and is listed in the SOD-11 nightly report. The mode is switched on only by a configuration change (WF-021) approved by both an Information Security Officer and a Compliance Officer (D-21) | WF-020; role grant | **new** (review STEP-05 round 1; D-19…D-22) |
+| SOD-16 | Nobody approves a role grant, scope change or approval authority for themselves; a grant of the Tenant Administrator role is approved by another Tenant Administrator and reported to the Information Security Officer; the Tenant Administrator holds no other role. **Small-team mode (owner decisions D-19…D-25):** only for a small AMC — the test for "small" (for example number of active users) is open and set in pilot discovery **[VAL]** (D-20). In this mode a Tenant Administrator may also hold a business role, but never ROLE-17 Technology Administrator or ROLE-22 Information Security Officer **[DES]**; they still never approve their own access; **every access grant** (role, scope change, approval authority) is reviewed by an Information Security Officer who is not the grantee **[DES]** **before it takes effect** (D-22) and is listed in the SOD-11 nightly report. The review is a blocking approval: a rejection stops the grant (D-24). A grant to the AMC's only Information Security Officer is reviewed by a Compliance Officer instead (D-23). When the AMC is no longer small, the mode must be switched off within a grace period set in pilot discovery **[VAL]**, and Tenant Administrators then give up their business roles (D-25). The mode is switched on only by a configuration change (WF-021) approved by both an Information Security Officer and a Compliance Officer (D-21) | WF-020; role grant | **new** (review STEP-05 round 1; D-19…D-25) |
 
 **Conflicting role pairs** checked at grant time and by the SOD-11 nightly scan (from SOD-02, SOD-03, SOD-05, SOD-09, SOD-10, SOD-16):
 
@@ -231,13 +231,13 @@ SOD-01…SOD-11 are carried over from PRD-000 Chapter 6 unchanged (labels includ
 
 ### 5.1 Can a SoD rule ever be waived?
 
-No, with two exceptions. **Owner decision D-18 (20 Nov 2026):** no SoD rule can be waived, except (1) SOD-03, which PRD-000 already makes tenant-configurable — switched off only by a configuration change (WF-021) checked by a Compliance Officer; and (2) the small-team mode of SOD-16 (owner decisions D-19…D-22, §5 table). Both appear in the SOD-11 nightly report.
+No, with two exceptions. **Owner decision D-18 (20 Nov 2026):** no SoD rule can be waived, except (1) SOD-03, which PRD-000 already makes tenant-configurable — switched off only by a configuration change (WF-021) checked by a Compliance Officer; and (2) the small-team mode of SOD-16 (owner decisions D-19…D-25, §5 table). Both appear in the SOD-11 nightly report.
 
 ## 6. Points BA-004 left for this document
 
 | BA-004 open point | Answer here |
 | --- | --- |
-| Who may grant a SoD exception (WF-020) | §5.1 — no waivers except SOD-03 and the SOD-16 small-team mode, each by checked configuration (owner decisions D-18…D-22) |
+| Who may grant a SoD exception (WF-020) | §5.1 — no waivers except SOD-03 and the SOD-16 small-team mode, each by checked configuration (owner decisions D-18…D-25) |
 | Named heads used as initiators and approvers (Head of Dealing, Head of Fund Accounting, Operations Manager…) | §4 approval authorities |
 | Approver of configuration changes (WF-021) | §4 `platform.config.approve` and SOD-12 |
 | Approver of broker empanelment (WF-023) | Still the body named in the AMC's broker policy **[ASSUMPTION]**, confirm in pilot discovery; SOD-14 added |
@@ -249,7 +249,7 @@ No, with two exceptions. **Owner decision D-18 (20 Nov 2026):** no SoD rule can 
 | --- | --- | --- |
 | C1 | `ROLE-nn` IDs were not in GOV-001 §4 | Closed: owner decision D-17 added them |
 | C2 | PRD-000 Chapter 6 has 14 columns, not 17 domains; D06/D07/D12 share columns, D16 has none. The re-keying in §3 copies the shared column into each domain (with the D06 corrections marked †). **This differs from BA-001 §7**, which says BA-005 groups permissions by capability: here only the approval permissions in §4 carry `CAP-` IDs; rights per capability inside each domain are set in the per-domain PRDs | PRD-001…PRD-017 (Steps 6–9) |
-| C3 | A small new AMC (owner decision D-11: new AMCs first) may have too few people to keep every SoD rule. Small-team mode (D-19…D-22) eases the administrator count; what counts as "small" is open (D-20). A two-person accounting team still cannot have separate preparer, senior and head, and no waiver is allowed (D-18); how such a team keeps SOD-01 is left to pilot discovery | Pilot discovery |
+| C3 | A small new AMC (owner decision D-11: new AMCs first) may have too few people to keep every SoD rule. Small-team mode (D-19…D-25) eases the administrator count; what counts as "small" is open (D-20). A two-person accounting team still cannot have separate preparer, senior and head, and SOD-01 cannot be waived (D-18); how such a team keeps SOD-01 is left to pilot discovery | Pilot discovery |
 | C4 | PRD-000 SOD-09 is labelled "CSCRF alignment VAL"; BA-002 §2 notes CSCRF obligations depend on whether an AMC is a Qualified RE | REG-001, SEC-001 (Step 25) |
 | C5 | BA-003 has no terms for "role", "scope" or "approval authority" | Next BA-003 revision |
 | C6 | Which market-abuse records (recorded communications, dealing-room access logs) AMC OS holds, as opposed to the AMC's telephony or physical-access systems | SEC-001, REG-001 (Step 25); pilot discovery |
@@ -271,4 +271,4 @@ All sources are inside this repository; no external facts are introduced.
 | R3 | [BA-002](BA-002_amc_operating_model.md) §1–§4, §8 | Departments, committees, accountable departments, missing roles (C1) |
 | R4 | [BA-001](BA-001_business_capability_map.md) §3 | Capability IDs (CAP-D01-002…005, CAP-D16-004, CAP-D17-001) |
 | R5 | [GOV-001](../00_governance/GOV-001_document_control_and_identifiers.md) §3, §4 | Schema names, identifier formats |
-| R6 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-8, D-11 | Identity provider; first target segment |
+| R6 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-8, D-11, D-17…D-25 | Identity provider; first target segment; role IDs; SoD waivers; small-team mode |
