@@ -65,4 +65,5 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| — | None open (Q5–Q16 answered 20 Nov 2026, see D-7 to D-16) | — | — |
+| Q17 | Make `ROLE-nn` (role IDs, BA-005 §2) an official ID in GOV-001 §4, like CAP-, DEP- and TERM-? | Step 5 (BA-005 §7 C1) | Used in BA-005 as a proposal **[DES]** |
+| Q18 | Can any segregation-of-duties rule be waived, by whom and for how long? And how should very small AMCs (e.g. a two-person accounting team) be handled without weakening maker ≠ checker? | Step 5 (BA-005 §5.1, §7 C3) | No waiver except SOD-03 (tenant may switch it off by a Compliance-checked configuration change) |
