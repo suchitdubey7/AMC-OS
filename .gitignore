@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+
+# Editors and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Local secrets and environment files (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local database scratch
+/tmp/
+*.log
