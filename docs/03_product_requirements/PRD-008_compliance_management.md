@@ -28,7 +28,7 @@ This document states what AMC OS must do to stop investment-limit breaches befor
 
 | PRD-000 v0.9 | Here | Note |
 | --- | --- | --- |
-| FR-06-01 … FR-06-14 | FR-D08-001 … FR-D08-014 | Same order; capability added; wording shortened. FR-06-01 is **(changed)**: the register keeps the 10 fields of PRD-000, and the remaining fields of the master prompt §9 are added in REG-001 (Step 25, GOV-006 §2 row 9). FR-06-12 is **(changed)**: the example report formats are not repeated as requirements here; the report list is REG-001's |
+| FR-06-01 … FR-06-14 | FR-D08-001 … FR-D08-014 | Same order; capability added; wording shortened. FR-06-01 is **(changed)**: the register keeps the 10 fields of PRD-000, and the remaining fields of the master prompt §9 are added in REG-001 (Step 25, GOV-006 §2 row 9). FR-06-04 is **(changed)** in its label only (see FR-D08-004). FR-06-12 is **(changed)**: the example report formats are not repeated as requirements here; the report list is REG-001's |
 | BR-06-1 … BR-06-5 (business **rules**) | BRL-D08-001 … BRL-D08-005 | `BR-` is reserved for business *requirements* (GOV-001 §4) |
 | US-CMP-01, US-CMP-02 (Ch 5) | US-D08-001, US-D08-002 | |
 | Module 06 point 7 stories (Compliance Officer, Fund Manager, Trustee) | US-D08-003 … US-D08-005 | |
@@ -49,7 +49,7 @@ This document states what AMC OS must do to stop investment-limit breaches befor
 
 ## 4. Functional requirements
 
-Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 are carried unchanged. Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3.
+Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 are carried unchanged unless the change is stated. Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3.
 
 ### 4.1 Re-keyed from PRD-000 Module 06
 
@@ -168,7 +168,7 @@ stateDiagram-v2
 | Hand-offs (outside) | SEBI, AMFI and other publishers as sources of circulars (read only; source list and channel in REG-001, Step 25 — confirm with each source) |
 | Preconditions | Register item exists for the source (or is created in this workflow) |
 | Final state | Rule version `APPROVED` and scheduled for its effective date, or `REJECTED` with reason returned to the requester; register item updated with the implemented rule and version |
-| Approvals | Interpretation of a new or changed regulation or circular reviewed by the Legal Officer (ROLE-21) or outside counsel before the rule is authored (master prompt §9: "Regulatory interpretation must be reviewed by qualified compliance and legal professionals"; open point C9). Author ≠ approver; approval needs passing tests (SOD-08). Approver: the CCO (PRD-000 Module 06 point 13; BA-005 §4 `compliance.rule.approve` says "another Compliance Officer" — open point C2); Risk officer (CRO) for `INTERNAL_RISK` rules (FR-D08-021, open point C3); emergency mid-day activation needs an additional maker-checker approval (BRL-D08-004) |
+| Approvals | Interpretation of a new or changed regulation or circular reviewed by the Legal Officer (ROLE-21) or outside counsel before the decision whether a rule change is needed, so a "no change" conclusion is also reviewed (master prompt §9: "Regulatory interpretation must be reviewed by qualified compliance and legal professionals"; open point C9). A "no change" closure is checked by a second Compliance Officer **[DES]**. Author ≠ approver; approval needs passing tests (SOD-08). Approver: the CCO (PRD-000 Module 06 point 13; BA-005 §4 `compliance.rule.approve` says "another Compliance Officer" — open point C2); Risk officer (CRO) for `INTERNAL_RISK` rules (FR-D08-021, open point C3); emergency mid-day activation needs an additional maker-checker approval (BRL-D08-004) |
 | Exceptions | Tests fail → back to author; back-test shows new breaches on current portfolios → impact note sent to the CIO and fund managers before approval, effective date may be moved; regulation effective before the rule can be approved → interim manual control recorded in the register and reported to the CCO **[DES]** |
 | Audit | Register item versions, impact assessment, copilot drafts and who adopted them, rule diff, test cases and results, back-test result, approval, effective date |
 | Source | **new** (BA-004 §5.1 D08 gap: CAP-D08-001, CAP-D08-008) |
@@ -177,10 +177,12 @@ stateDiagram-v2
 flowchart TD
   A[New circular, house-limit request, mandate change or risk-limit request] --> B[Register item created or updated; Compliance copilot may draft summary - draft only]
   B --> C[Impact assessment: rules, schemes, effective date]
-  C --> D{Rule change needed?}
-  D -- no --> E[Register item closed as no change, with reason]
-  D -- yes --> LR[Legal review of the interpretation: Legal Officer or outside counsel]
-  LR --> F[Author writes new rule version in DRAFT; copilot draft adopted only by author]
+  C --> R{Regulatory trigger?}
+  R -- yes --> LR[Legal review of the interpretation - regulatory triggers only: Legal Officer or outside counsel]
+  R -- no --> D
+  LR --> D{Rule change needed?}
+  D -- no --> E[Register item closed as no change, with reason; checked by a second Compliance Officer]
+  D -- yes --> F[Author writes new rule version in DRAFT; copilot draft adopted only by author]
   F --> G[Golden tests and back-test]
   G --> H{Tests pass?}
   H -- no --> F
@@ -201,7 +203,7 @@ From BA-005 §3 (D08 column) and §4, narrowed to each capability (BA-005 §7 C2
 | CAP-D08-002 Internal restrictions | CIO proposes (WF-031); Compliance Officer authors | As CAP-D08-001 |
 | CAP-D08-003 … CAP-D08-005 Scheme, issuer and exposure rules | Compliance Officer; system compiles mandate rules | As CAP-D08-001 |
 | CAP-D08-006, -007 Pre- and post-trade checks | System | — |
-| CAP-D08-008 Regulatory monitoring | Compliance Officer; AI agent identity drafts only (ROLE-26, SOD-10) | Legal Officer (ROLE-21) or outside counsel reviews the interpretation of a new or changed regulation before a rule is authored† (master prompt §9); an impact assessment closed as "no change" is checked by a second Compliance Officer **[DES]** |
+| CAP-D08-008 Regulatory monitoring | Compliance Officer; AI agent identity drafts only (ROLE-26, SOD-10) | Legal Officer (ROLE-21) or outside counsel reviews the interpretation of a new or changed regulation before the rule-change decision† (master prompt §9); an impact assessment closed as "no change" is checked by a second Compliance Officer **[DES]** |
 | CAP-D08-009, -010 Breach detection and investigation | System detects; Compliance Officer investigates | Second Compliance Officer for a change of classification (FR-D08-020) |
 | CAP-D08-011 Corrective actions | Fund Manager (cure plan, "S cure plan") | Compliance Officer (`compliance.breach.approve_plan`); regularisation: CCO **and** CEO (`compliance.breach.regularise`); pre-trade override: CCO **and** CIO (`compliance.pretrade.override`, SOD-04); temporary exemption: CCO **[DES]** |
 | CAP-D08-012 Evidence management | System; Compliance Officer builds packs | — (read: Auditor, Trustee) |

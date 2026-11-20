@@ -49,7 +49,7 @@ This document states what AMC OS must do to measure every material risk in every
 
 ## 4. Functional requirements
 
-Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 are carried unchanged. Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3.
+Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 are carried unchanged unless the change is stated. Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3.
 
 ### 4.1 Re-keyed from PRD-000 Module 07
 
