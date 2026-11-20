@@ -80,6 +80,8 @@ v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 al
 | WF-026 | Settlement obligations and funding | **new** | D07 | DEP-06 Fund operations and settlement | P5 |
 | WF-027 | Failed settlement management | **new** | D07 | DEP-06 Fund operations and settlement | P5 |
 | WF-028 | Settlement instruction (SSI) and bank-detail change | **new** | D07 | DEP-06 Fund operations and settlement | P5 (supporting) |
+| WF-029 | Scheme change (fundamental and non-fundamental) — card in [PRD-002](../03_product_requirements/PRD-002_product_and_scheme_management.md) §6.2 | PRD-000 Module 01 point 6 | D02 | DEP-13 Products and marketing | P1 (supporting) |
+| WF-030 | Scheme merger, winding-up and maturity — card in PRD-002 §6.3 | **new** | D02 | DEP-13 Products and marketing | P1 (supporting) |
 
 ```mermaid
 flowchart LR
@@ -1012,7 +1014,7 @@ Every domain appears in at least one workflow (checked by script; see §6). Doma
 | Domain | Workflows | Gap |
 | --- | --- | --- |
 | D01 | WF-019, WF-020, WF-021, WF-022, WF-026 (calendar master) | — |
-| D02 | WF-001, WF-011 | Scheme changes (CAP-D02-010) and merger, winding-up and maturity (CAP-D02-009 (.2), (.3)) have no workflow yet → PRD-002 (Step 6) |
+| D02 | WF-001, WF-011, WF-029, WF-030 | — (WF-029 and WF-030 added by PRD-002, Step 6) |
 | D03 | WF-002, WF-003 | Review of investment policy documents (CAP-D03-009 (.1)) → PRD-003 (Step 7) |
 | D04 | WF-001, WF-003, WF-006, WF-007, WF-009, WF-011, WF-018, WF-026, WF-027 | Performance attribution (CAP-D04-009, FE-10) → PRD-004 (Step 7) |
 | D05 | WF-004, WF-005, WF-006, WF-024 | — |
