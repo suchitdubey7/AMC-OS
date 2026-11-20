@@ -2,15 +2,17 @@
 
 **Status:** RUNNING
 **Updated:** 2026-11-20 (see commit time)
-**Chain tip:** `wp2-step05b-owner-answers` (main updated into it; to be merged on the owner's instruction in chat, 20 Nov 2026)
+**Chain tip:** `wp2-step07-prd-investment-portfolio-oms`
 
 ## Next action
 
-**Step 7** on a new branch `wp2-step07-prd-investment-portfolio-oms` from the chain tip: PRD-003 Investment Management (D03), PRD-004 Portfolio Management (D04) and PRD-005 Order Management System (D05), GOV-006 §3. Re-key PRD-000 Modules 02, 03 and 04 (OMS part) to `FR-D03/D04/D05-nnn` and business rules to `BRL-`; cover the BA-001 **new** capabilities of D03 and D04; give D03 a workflow for investment policy review (BA-004 §5.1) and D04 performance attribution; continue NFR numbering after PRD-002 (next free: NFR-PERF-002, NFR-RET-003, NFR-AUD-003, NFR-SEC-004 …). Use owner decisions D-17…D-25 (role IDs, no SoD waivers, small-team mode).
+**Step 8** on a new branch `wp2-step08-prd-trading-settlement-compliance-risk` from the chain tip: PRD-006 Trading and Execution (D06), PRD-007 Settlement (D07, split from PRD-000 Module 05), PRD-008 Compliance (D08) and PRD-009 Risk (D09), GOV-006 §3. Re-key PRD-000 FR-04-09…11 (left by PRD-005 §2), Module 05, Module 06 and Module 07; re-key the Module 04 allocation acceptance criterion; settle the side-exit states of the order state machine (PRD-005 C4); give D09 its daily risk run and risk-alert workflow (BA-004 §5.1 C6); continue numbering (next free: WF-033, NFR-PERF-007, NFR-AUD-006, NFR-RET-003, NFR-SEC-004, NFR-SCAL-003).
 
 After that: Steps 8, 9, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
 Done in the Step 5 run (20 Nov 2026, started early on owner request in chat): BA-005 roles, permissions and SoD; 2 review rounds. Owner answered Q17–Q19 and six follow-ups in chat the same morning (D-17 to D-25), applied on branch `wp2-step05b-owner-answers`, which also updates PRD-001 to match.
+
+Done in the Step 7 run (20 Nov 2026, on owner request in chat): PRD-003 Investment Management (FR-02-nn re-keyed + 10 new FRs, WF-031 investment policy review), PRD-004 Portfolio Management (FR-03-nn re-keyed + 8 new FRs, WF-032 performance measurement and attribution), PRD-005 Order Management (FR-04-01…08, 12…14 re-keyed + 5 new FRs; FR-04-09…11 left for PRD-006).
 
 Done in the Step 6 run (20 Nov 2026, scheduled, in parallel): PRD-001 Platform Administration (48 FRs, new) and PRD-002 Product and Scheme Management (FR-01-nn re-keyed + 12 new FRs, WF-029, WF-030); closes BA-005 §7 C7. It ran before the owner's answers D-17…D-25 reached main; PRD-001 was brought in line on `wp2-step05b-owner-answers`.
 
@@ -41,7 +43,8 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 7 | `wp2-step04-workflows` | Step 4: BA-004 end-to-end workflows WF-001…WF-028 (17 re-keyed, W6b → WF-018, 10 new for D01/D06/D07); D-12 pilot timing in PS-001/PS-002 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 08:39 IST, build loop, CR-0001 gate PASS) |
 | 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 10:57 IST, build loop, CR-0001 gate PASS) |
 | 9 | `wp2-step06-prd-platform-product` | Step 6: PRD-001 Platform Administration (D01), PRD-002 Product and Scheme Management (D02); WF-029, WF-030 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 6 Minor, 3 Nits — 8 fixed, Nit 9 (commit trailer) left; round 1 had 2 Major, both fixed) | pass | yes (20 Nov 12:43 IST, build loop, CR-0001 gate PASS) |
-| 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005, PRD-001, BA-004 WF-020 and GOV-001 §4 | Round 5: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 5 Nits — all fixed except Nit 9 (version bumps, accepted Draft practice) and Nit 10 (trailer)) | see push | on owner instruction in chat (20 Nov 2026): adds a row to the GOV-001 §4 identifier table, outside the CR-0001 G2 exception |
+| 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005, PRD-001, BA-004 WF-020 and GOV-001 §4 | Round 5: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 5 Nits — all fixed except Nit 9 (version bumps, accepted Draft practice) and Nit 10 (trailer)) | pass | yes (20 Nov 2026, merged on the owner's instruction in chat — GOV-001 §4 row, outside the CR-0001 G2 exception) |
+| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 (D03), PRD-004 (D04), PRD-005 (D05); WF-031, WF-032 added to BA-004 register | see review STEP-07 | see gate | see gate |
 
 ## Owner decisions used by the loop
 
@@ -77,7 +80,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | Branch | Why |
 | --- | --- |
-| `wp2-step05b-owner-answers` | Adds a GOV-001 §4 `ROLE-nn` row (outside the CR-0001 G2 exception); to be merged on the owner's instruction in chat, 20 Nov 2026 (not by the loop's gate). Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
+| — | Nothing waiting. Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
 
 ## Questions for owner (open)
 

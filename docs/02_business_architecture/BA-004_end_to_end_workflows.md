@@ -82,6 +82,8 @@ v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 al
 | WF-028 | Settlement instruction (SSI) and bank-detail change | **new** | D07 | DEP-06 Fund operations and settlement | P5 (supporting) |
 | WF-029 | Scheme change (fundamental and non-fundamental) — card in [PRD-002](../03_product_requirements/PRD-002_product_and_scheme_management.md) §6.2 | PRD-000 Module 01 point 6 | D02 | DEP-13 Products and marketing | P1 (supporting) |
 | WF-030 | Scheme merger, winding-up and maturity — card in PRD-002 §6.3 | **new** | D02 | DEP-13 Products and marketing | P1 (supporting) |
+| WF-031 | Investment policy review — card in [PRD-003](../03_product_requirements/PRD-003_investment_management.md) §6.2 | **new** | D03 | DEP-02 / DEP-03 (CIO) | P2 (supporting) |
+| WF-032 | Performance measurement and attribution — card in [PRD-004](../03_product_requirements/PRD-004_portfolio_management.md) §6.2 | **new** | D04 | DEP-11 Risk management | P3 (supporting) |
 
 ```mermaid
 flowchart LR
