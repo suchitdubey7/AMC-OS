@@ -46,7 +46,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 10:57 IST, build loop, CR-0001 gate PASS) |
 | 9 | `wp2-step06-prd-platform-product` | Step 6: PRD-001 Platform Administration (D01), PRD-002 Product and Scheme Management (D02); WF-029, WF-030 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 6 Minor, 3 Nits — 8 fixed, Nit 9 (commit trailer) left; round 1 had 2 Major, both fixed) | pass | yes (20 Nov 12:43 IST, build loop, CR-0001 gate PASS) |
 | 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005, PRD-001, BA-004 WF-020 and GOV-001 §4 | Round 5: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 5 Nits — all fixed except Nit 9 (version bumps, accepted Draft practice) and Nit 10 (trailer)) | pass | yes (20 Nov, by the owner's instruction in chat, merge 104bde6) |
-| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 Investment (D03), PRD-004 Portfolio (D04), PRD-005 OMS (D05); WF-031, WF-032 added to BA-004 register | STEP7_VERDICT | see gate | see gate |
+| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 Investment (D03), PRD-004 Portfolio (D04), PRD-005 OMS (D05); WF-031, WF-032 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 1 Minor, 2 Nits — all fixed; round 1 had 1 Major, fixed) | see gate | see gate |
 
 ## Owner decisions used by the loop
 
