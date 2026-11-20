@@ -2,7 +2,7 @@
 id: PRD-001
 title: Platform Administration (D01) — Product Requirements
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
@@ -14,7 +14,7 @@ last_updated: 2026-11-20
 
 This document states what AMC OS must do to run the platform for each AMC: set up and close tenants, let the right people in (and keep everyone else out), hold the AMC's organisation, subscription and configuration, keep a tamper-evident audit trail, and run environments and releases. PRD-000 v0.9 had no module for this domain (GOV-001 §3 gap); everything here is newly written from the capabilities in [BA-001](../02_business_architecture/BA-001_business_capability_map.md) (CAP-D01-001…011), the workflows WF-019…WF-022 in [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md), the roles and segregation-of-duties (SoD) rules in [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md), and the common rules C1–C8, Chapter 5 (US-PLT-01…03), Chapter 6 and Chapter 7 of [PRD-000 v0.9](PRD-000_master_prd_v0.9.md).
 
-**Builds on Draft documents:** PRD-000, BA-001, BA-002, BA-003, BA-004, BA-005, GOV-001, ADR-0003 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. Owner decisions D-7 (AWS Mumbai, Hyderabad for disaster recovery), D-8 (each AMC's own identity provider, Keycloak otherwise), D-11 (new AMCs first) and D-14 (D01 "subscription" = the AMC's subscription to AMC OS) are applied ([LOOP_STATE.md](../../LOOP_STATE.md)).
+**Builds on Draft documents:** PRD-000, BA-001, BA-002, BA-003, BA-004, BA-005, GOV-001, ADR-0003 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. Owner decisions D-7 (AWS Mumbai, Hyderabad for disaster recovery), D-8 (each AMC's own identity provider, Keycloak otherwise), D-11 (new AMCs first), D-14 (D01 "subscription" = the AMC's subscription to AMC OS) and D-17…D-25 (role IDs, no SoD waivers, small-team mode) are applied ([LOOP_STATE.md](../../LOOP_STATE.md)).
 
 **What this document is not:** the identity design (token claims, policy engine — EA-002, Step 10), the configuration-over-customisation design (EA-003, Step 11), cell and control-plane design (EA-004…EA-006, Step 12), table definitions (DA-001 / DDL, Steps 15–16), API contracts (Step 24) or the security architecture and threat model (SEC-001/002, Step 25). It adds **no new regulatory fact**; labels carried from PRD-000 keep their **[VAL]** qualifiers.
 
@@ -31,7 +31,7 @@ This document states what AMC OS must do to run the platform for each AMC: set u
 | Business requirement | `BR-D01-nnn` | BR-D01-001…007 (BR-D01-001 keeps the TRACE-001 seed wording) |
 | Functional requirement | `FR-D01-nnn` | FR-D01-001…048 (all new — PRD-000 had no D01 module) |
 | Business rule | `BRL-D01-nnn` | BRL-D01-001…010 |
-| User story / acceptance criterion | `US-D01-nnn` / `AC-US-D01-nnn-n` | US-D01-001…012; US-PLT-01…03 re-keyed to US-D01-001…003 |
+| User story / acceptance criterion | `US-D01-nnn` / `AC-US-D01-nnn-n` | US-D01-001…013; US-PLT-01…03 re-keyed to US-D01-001…003 |
 | Non-functional requirement | `NFR-<AREA>-nnn` | See §11. NFR IDs are global; PRD-001 takes the first numbers in each area it uses, and later PRDs continue from the next free number |
 
 Priority: **M** must (release-blocking), **S** should — as PRD-000 Chapter 3. User stories use **C** critical (release-blocking) and **O** optional — as PRD-000 Chapter 5.
@@ -78,10 +78,10 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 ### 4.4 Role-based access (CAP-D01-004) — BR-D01-002
 
 - **FR-D01-015 (M) Role catalogue.** Each tenant starts with the BA-005 §2 default roles ROLE-01…ROLE-27 and the BA-005 §3 default rights. A tenant may add or rename roles and change rights through configuration (§4.8), but cannot remove or weaken an SoD rule (BRL-D01-004).
-- **FR-D01-016 (M) Role grants (maker-checker).** The **Technology Administrator** (ROLE-17) requests a grant (maker); the **Tenant Administrator** (ROLE-19) approves it (checker). A grant of the Tenant Administrator role is approved by another Tenant Administrator and reported to the Information Security Officer (SOD-05, SOD-16). This follows PRD-000 Chapter 6 and BA-005 and **closes BA-005 §7 C7**: PRD-000 US-PLT-01 had the Tenant Administrator creating users with roles; it is re-keyed as US-D01-001 with the maker-checker split.
+- **FR-D01-016 (M) Role grants (maker-checker).** The **Technology Administrator** (ROLE-17) requests a grant (maker); the **Tenant Administrator** (ROLE-19) approves it (checker). A grant of the Tenant Administrator role is approved by another Tenant Administrator and reported to the Information Security Officer (SOD-05, SOD-16). In small-team mode (FR-D01-019) an Information Security Officer also approves every access grant before it takes effect (owner decisions D-22, D-24; a Compliance Officer for a grant to the only ISO, D-23). This follows PRD-000 Chapter 6 and BA-005 and **closes BA-005 §7 C7**: PRD-000 US-PLT-01 had the Tenant Administrator creating users with roles; it is re-keyed as US-D01-001 with the maker-checker split.
 - **FR-D01-017 (M) Scope and approval authority.** A grant carries scope attributes (schemes, desks, regions, distributors) and, where needed, an approval authority (BA-005 §4, for example "Head of Fund Accounting"). Both are effective-dated and part of the grant that is approved.
 - **FR-D01-018 (M) SoD enforcement.** The conflicting role pairs of BA-005 §5 are refused at request time with the rule shown, and re-checked at the moment of every action. A nightly toxic-combination scan reports any conflict to Compliance (SOD-11).
-- **FR-D01-019 (M) SoD waivers.** No SoD rule can be waived except SOD-03, which a tenant may switch off only through a configuration change checked by a Compliance Officer; the switch-off appears in the SOD-11 report (BA-005 §5.1 default, owner question Q18).
+- **FR-D01-019 (M) SoD waivers and small-team mode.** No SoD rule can be waived (owner decision D-18), except: (1) SOD-03, which a tenant may switch off only through a configuration change checked by a Compliance Officer; and (2) small-team mode of SOD-16 (D-19…D-25, BA-005 §5): only for a small AMC (test set in pilot discovery **[VAL]**, D-20), switched on only with approval of both an Information Security Officer and a Compliance Officer (D-21); switching it on is a configuration change (WF-021); a Tenant Administrator may then also hold a business role (never ROLE-17 or ROLE-22 **[DES]**); every access grant (role, scope change, approval authority) is approved by an Information Security Officer who is not the grantee **[DES]** before it takes effect, and a rejection blocks it (D-22, D-24; a Compliance Officer reviews grants to the only ISO, D-23); the mode is switched off when a grace period ends once the AMC is no longer small, and Tenant Administrators then give up business roles (D-25). Both exceptions and every small-team-mode grant appear in the SOD-11 report.
 
 ### 4.5 Permission management (CAP-D01-005) — BR-D01-001, BR-D01-002, BR-D01-005
 
@@ -140,8 +140,8 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 | BRL-D01-001 | Tenant context comes only from the authenticated identity | Master prompt §3.4 **[DES]** |
 | BRL-D01-002 | Deny by default: a user or service account with no approved grant can do nothing | **[DES]** |
 | BRL-D01-003 | Nobody approves a role grant, scope change or approval authority for themselves | SOD-16 |
-| BRL-D01-004 | A tenant may change roles and rights by configuration but may not remove or weaken an SoD rule; only SOD-03 may be switched off (FR-D01-019) | BA-005 §5.1 **[ASSUMPTION — confirm: project owner, Q18]** |
-| BRL-D01-005 | The Technology Administrator and the Tenant Administrator hold no business role and no other role | SOD-05, SOD-16 (open for small AMCs: Q19) |
+| BRL-D01-004 | A tenant may change roles and rights by configuration but may not remove or weaken an SoD rule; only SOD-03 may be switched off, and SOD-16 relaxed only in small-team mode (FR-D01-019) | BA-005 §5.1; owner decisions D-18, D-19 |
+| BRL-D01-005 | The Technology Administrator and the Tenant Administrator hold no business role and no other role; in small-team mode a Tenant Administrator may also hold a business role (FR-D01-019) | SOD-05, SOD-16; owner decisions D-19…D-25 |
 | BRL-D01-006 | A platform operator has no default access to tenant business data and is never the checker of a tenant action | SOD-09, SOD-15 |
 | BRL-D01-007 | A configuration version applies only from its effective date after approval; past versions are never edited | PRD-000 C4 **[DES]** |
 | BRL-D01-008 | Audit events are never updated or deleted | PRD-000 C2, Chapter 7 |
@@ -169,11 +169,11 @@ BA-005 §3 gives D01 rights for the whole domain to the CTO (R A(tech config)), 
 | CAP-D01-001 Tenant management | Platform Operator (create, provision, offboard) | Tenant Administrator (activation, offboarding confirmation; SOD-15) | CTO, Information Security Officer; Auditor through the audit log |
 | CAP-D01-002 User management | Technology Administrator; role owners (recertification)† | Tenant Administrator (user changes); recertification has no checker and is reported to DEP-16 (BA-005 §4 `platform.access.recertify`) | Information Security Officer; Auditor through the audit log |
 | CAP-D01-003 Identity | Technology Administrator (connection set-up) | Tenant Administrator; Information Security Officer for MFA and session policy | CTO; Auditor through the audit log |
-| CAP-D01-004 Role-based access | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant) | Information Security Officer; Compliance Officer receives the SOD-11 report†; Auditor through the audit log |
+| CAP-D01-004 Role-based access | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant); in small-team mode also an Information Security Officer before the grant takes effect, blocking (a Compliance Officer for a grant to the only ISO†) — D-22…D-24 | Information Security Officer; Compliance Officer receives the SOD-11 report†; Auditor through the audit log |
 | CAP-D01-005 Permission management | Technology Administrator; Platform Operator (break-glass request only) | Tenant Administrator; Information Security Officer (access policy) | Auditor through the audit log |
 | CAP-D01-006 Subscription management | Platform Operator (plan, entitlements) | Tenant Administrator confirms plan changes | CTO; CFO† |
 | CAP-D01-007 Organization hierarchy | Technology Administrator | Tenant Administrator | CTO; all business roles read their own organisation unit and reporting line† |
-| CAP-D01-008 Configuration management | Technology Administrator, or the setting's business owner† | Checker from the owning department†; plus Compliance Officer for a regulatory parameter† (SOD-12); CTO for technical settings ("A(tech config)") | Owning department†; Auditor through the audit log |
+| CAP-D01-008 Configuration management | Technology Administrator, or the setting's business owner† | Checker from the owning department†; plus Compliance Officer for a regulatory parameter† (SOD-12); CTO for technical settings ("A(tech config)"); switching small-team mode on: Information Security Officer **and** Compliance Officer† (D-21) | Owning department†; Auditor through the audit log |
 | CAP-D01-009 System administration | Technology Administrator | Tenant Administrator | CTO; all business roles read business calendars† |
 | CAP-D01-010 Audit management | System only (no human maker) | — | Auditor (R E), Information Security Officer (R E), CEO and Compliance Officer for market-abuse access logs (BA-005 §3) |
 | CAP-D01-011 Environment administration | Platform Operator | Tenant Administrator confirms production upgrade dates **[ASSUMPTION — confirm: pilot discovery]** | CTO, Technology Administrator |
@@ -187,6 +187,7 @@ BA-005 §3 gives D01 rights for the whole domain to the CTO (R A(tech config)), 
 | CFO reads subscription (CAP-D01-006) | WF-019 names DEP-14 for subscription cost |
 | Business roles read own organisation unit and reporting line (CAP-D01-007) | Scopes, approval routing and recertification depend on them (FR-D01-017, FR-D01-032); read only, own record **[ASSUMPTION — confirm: DEP-16 of the pilot AMC]** |
 | Setting owner as maker; owning department checker and reader; Compliance Officer checker (CAP-D01-008) | BA-004 WF-021, BA-005 `platform.config.approve` and SOD-12 already give these; BA-005 §3 D01 column does not show them |
+| Compliance Officer approves a grant to the only Information Security Officer (CAP-D01-004) and, with an ISO, switching small-team mode on (CAP-D01-008) | Owner decisions D-21, D-23; BA-005 SOD-16 |
 | Business roles read business calendars (CAP-D01-009) | Calendars decide business dates in every domain (BA-001 §4: one holiday source for D07, D12) |
 
 ## 8. User stories and acceptance criteria
@@ -205,6 +206,7 @@ BA-005 §3 gives D01 rights for the whole domain to the CTO (R A(tech config)), 
 | US-D01-010 | As an Information Security Officer, I want AI agents unable to approve anything | C | **AC-US-D01-010-1** Given an AI agent identity, when it calls any approve, override, post, publish or execute operation, then HTTP 403 is returned and a security alert is raised. |
 | US-D01-011 | As an Auditor, I want proof that the audit log was not altered | C | **AC-US-D01-011-1** Given a day's audit events for a tenant, when one stored event is changed outside the application, then the hash-chain check for that day fails and an alert is raised. |
 | US-D01-012 | As a Tenant Administrator, I want only my entitled modules switched on | O | **AC-US-D01-012-1** Given a tenant not entitled to D14, when any user calls a D14 API, then it is refused with `NOT_ENTITLED` and no data is returned. |
+| US-D01-013 | As an Information Security Officer of a small AMC, I want every access grant to wait for my approval in small-team mode | C | **AC-US-D01-013-1** Given small-team mode is off, when a Tenant Administrator approves only the switch-on request, then the mode stays off until an Information Security Officer **and** a Compliance Officer have both approved. **AC-US-D01-013-2** Given small-team mode is on, when a role, scope change or approval authority is granted, then it is not effective until an Information Security Officer who is not the grantee approves it; if the ISO rejects, the grant never takes effect. **AC-US-D01-013-3** Given the AMC has one ISO, when access is granted to that ISO, then a Compliance Officer is the required approver. **AC-US-D01-013-4** Given small-team mode is on, when a Tenant Administrator is offered ROLE-17 or ROLE-22, then the grant is refused with SOD-05 / SOD-16 shown. |
 
 Definition of done for every story: as PRD-000 Chapter 5 (unit and integration tests, API documentation, audit events verified, row-level-security negative test, performance test for any stated target, accessibility check).
 
@@ -216,6 +218,8 @@ Definition of done for every story: as PRD-000 Chapter 5 (unit and integration t
 | No capacity in the chosen cell | New cell or other cell, decided in EA-004 (Step 12) |
 | AMC does not confirm its export | Tenant stays `SUSPENDED` until the contract time limit **[ASSUMPTION — confirm: project owner, Q21]** |
 | Role request conflicts with an SoD rule | Refused with the rule shown (FR-D01-018) |
+| Small-team mode: Information Security Officer rejects a grant | Grant never takes effect; rejection in the SOD-11 report (FR-D01-019, D-24) |
+| Small-team mode: the AMC is no longer small and the grace period ends | Mode switched off; Tenant Administrators give up business roles (FR-D01-019, D-25); grace period and who detects the change set in pilot discovery **[VAL]** |
 | Recertification overdue | Escalation to DEP-16; optional automatic removal (tenant setting) |
 | Configuration change fails catalogue validation or UAT test | Back to the maker (WF-021) |
 | Tenant refuses break-glass | Incident handled without data access (WF-022) |
@@ -260,7 +264,7 @@ No D01 AI feature is proposed. AI agents act through ROLE-26 identities governed
 | # | Point | Where closed |
 | --- | --- | --- |
 | C1 | BA-005 §7 C7 (US-PLT-01 maker) — **closed here** by FR-D01-016 and US-D01-001 | — |
-| C2 | Small new AMCs may not have three people with no business role (BRL-D01-005) | Owner Q19 |
+| C2 | Small new AMCs may not have three people with no business role (BRL-D01-005) | Closed by owner decisions D-19…D-25 (small-team mode); the "small" test and grace period are set in pilot discovery |
 | C3 | Which usage measures are metered; what a lapsed module looks like | Owner Q20 |
 | C4 | Offboarding: export format, time to take data, retention after exit | Owner Q21; REG-001 (Step 25) |
 | C5 | Session time-outs, leaver revocation time, maintenance notice, bulk-export threshold have no values | EA-002 (Step 10), SEC-001 (Step 25), pilot discovery |
@@ -283,4 +287,4 @@ All sources are inside this repository; no external facts are introduced.
 | R6 | [GOV-001](../00_governance/GOV-001_document_control_and_identifiers.md) §3–§4; [TRACE-001](../00_governance/TRACE-001_traceability_matrix.md) §2 | IDs, seed rows |
 | R7 | [DA-000 v0.9](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 2, §4 register; `database/ddl/DDL-000_core_schema_v0.9.sql` | Schemas and existing tables |
 | R8 | [ADR-0003](../../architecture/adrs/ADR-0003_multi_tenancy_and_cells.md), [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md) | Isolation tiers, AI proposals |
-| R9 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-7, D-8, D-11, D-14 | Hosting, identity, segment, subscription meaning |
+| R9 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-7, D-8, D-11, D-14, D-17…D-25 | Hosting, identity, segment, subscription meaning, role IDs, SoD waivers, small-team mode |

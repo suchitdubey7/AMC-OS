@@ -107,6 +107,7 @@ A domain is never silently omitted: if a domain has no content yet, its PRD sect
 | Capability | `CAP-Dxx-nnn` (level 3: `.m`) | CAP-D04-012.2 | BA-001; owner decision D-13 (20 Nov 2026) |
 | Department | `DEP-nn` | DEP-07 | BA-002; owner decision D-13 |
 | Dictionary term | `TERM-nnn` | TERM-045 | BA-003; owner decision D-13 |
+| Role | `ROLE-nn` | ROLE-11 | BA-005; owner decision D-17 (20 Nov 2026) |
 
 IDs are never reused, even after deletion.
 
