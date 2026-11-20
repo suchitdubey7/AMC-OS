@@ -159,13 +159,17 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | BA-001 | Business capability map | Draft | WP2 / Step 2 |
 | BA-002 | AMC operating model and department hierarchy | Draft | WP2 / Step 3 |
 | BA-003 | Domain dictionary (glossary with IDs) | Draft | WP2 / Step 3 |
-| BA-004 | End-to-end business workflows (WF-001…WF-032; WF-029/030 cards in PRD-002, WF-031 in PRD-003, WF-032 in PRD-004) | Draft | WP2 / Step 4 |
+| BA-004 | End-to-end business workflows (WF-001…WF-034; WF-029/030 cards in PRD-002, WF-031 in PRD-003, WF-032 in PRD-004, WF-033 in PRD-009, WF-034 in PRD-008) | Draft | WP2 / Step 4 |
 | BA-005 | User roles, permissions and segregation of duties | Draft | WP2 / Step 5 |
 | PRD-001 | Platform Administration (D01) — product requirements | Draft | WP2 / Step 6 |
 | PRD-002 | Product and Scheme Management (D02) — product requirements | Draft | WP2 / Step 6 |
 | PRD-003 | Investment Management (D03) — product requirements | Draft | WP2 / Step 7 |
 | PRD-004 | Portfolio Management (D04) — product requirements | Draft | WP2 / Step 7 |
 | PRD-005 | Order Management System (D05) — product requirements | Draft | WP2 / Step 7 |
+| PRD-006 | Trading and Execution (D06) — product requirements | Draft | WP2 / Step 8 |
+| PRD-007 | Settlement Management (D07) — product requirements | Draft | WP2 / Step 8 |
+| PRD-008 | Compliance Management (D08) — product requirements | Draft | WP2 / Step 8 |
+| PRD-009 | Risk Management (D09) — product requirements | Draft | WP2 / Step 8 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
