@@ -191,7 +191,7 @@ The approval actions of BA-004, with the permission name in PRD-000's `domain.ob
 | `distribution.commission_run.approve` | CAP-D14-011 | WF-013 | Distributor Manager | Finance Officer or CFO; payment by two signatories | SOD-07 |
 | `platform.role_grant.approve` | CAP-D01-004 | WF-020 | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant); in small-team mode also an Information Security Officer before the grant takes effect (a Compliance Officer for a grant to the only one) | SOD-05, SOD-16 |
 | `platform.access.recertify` | CAP-D01-002 | WF-020 | Role owner (department head) | — (review; reported to DEP-16) | SOD-13 |
-| `platform.config.approve` | CAP-D01-008 | WF-021 | Technology Administrator or setting owner | Checker from the department that owns the setting; plus Compliance Officer for a regulatory parameter | SOD-12 |
+| `platform.config.approve` | CAP-D01-008 | WF-021 | Technology Administrator or setting owner | Checker from the department that owns the setting; plus Compliance Officer for a regulatory parameter; switching small-team mode on: Information Security Officer **and** Compliance Officer (D-21) | SOD-12, SOD-16 |
 | `platform.breakglass.approve` | CAP-D01-005 | WF-022 | Platform Operator | Tenant Administrator | SOD-09, SOD-15 |
 | `platform.tenant.activate` | CAP-D01-001 | WF-019 | Platform Operator | Tenant Administrator | SOD-15 |
 
