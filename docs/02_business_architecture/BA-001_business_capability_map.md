@@ -460,7 +460,7 @@ Some capability names appear in more than one domain in the brief. Each has exac
 | C2 | The `master` schema (security, issuer, counterparty, benchmark data — DA-000 Ch 2) has no owning domain in GOV-001 §3. Proposed: D16 Master data management (CAP-D16-004) **[DES]** | EA-003 (Step 11); GOV-001 table change is the owner's |
 | C3 | DA-000 puts corporate actions, trades, contract notes and SSIs in the `settlement` schema, but the brief places corporate-action processing in D12 and trade confirmation in D06 | EA-003 (Step 11), DA-001 (Step 15) |
 | C4 | PRD-000 Ch 9 has a Portfolio Agent and a Product Intelligence Agent that the brief's D17 list does not name; the brief's Dealing assistant and Risk assistant are not in PRD-000 (GOV-006 §2 point 5). This map follows the brief; the two PRD-000 agents are not placed yet | AIML-001 (Step 26) |
-| C5 | PRD-000 FR-11-13 describes AMC OS computing unit allotments, which conflicts with owner decision Q2 (mirror the RTA) | PRD-013 (Step 9) |
+| C5 | PRD-000 FR-11-13 describes AMC OS computing unit allotments, which conflicts with owner decision Q2 (mirror the RTA) | Closed by PRD-013 (Step 9a, FR-D13-013 unit allotment check) |
 | C6 | `CAP-Dxx-nnn` capability IDs are not in GOV-001 §4 (Q12) | Owner |
 | C7 | Brief §22 Deliverable 2 asks for the "systems" of the operating model. No GOV-006 step yet lists which current systems (spreadsheets, vendor products) each capability replaces; PS-001 objective O2 measures this. Proposed: add it to BA-002 (Step 3) | Owner (Q14) |
 

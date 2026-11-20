@@ -108,7 +108,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 | BRL-D13-004 (BR-11-4) | Consent and purpose limitation recorded for each processing purpose | **[REG — DPDP Act 2023 and Rules 2025; VAL dates]** ([S6]) |
 | BRL-D13-005 | The RTA's record is authoritative. A check difference creates a break in D12; it never changes the mirror | **[DES]** (owner decision Q2) |
 | BRL-D13-006 | A mirrored field is changed only by an RTA feed. AMC-side changes go to the RTA as requests | **[DES]**; open C2 (Q47) |
-| BRL-D13-007 | Cut-offs, payout deadlines, service levels, complaint deadlines, tolerances and nominee limits are versioned parameters; AMC OS ships the values only after Compliance confirms them (WF-021, SOD-12) | **[DES]** |
+| BRL-D13-007 | Cut-offs, payout deadlines, service levels, complaint deadlines, tolerances and nominee limits are versioned tenant configuration approved through WF-021; AMC OS ships no values (regulatory parameters checked by Compliance, SOD-12) | **[DES]** |
 | BRL-D13-008 | AI never changes investor data, starts a transaction, sends a reply or closes a complaint (ADR-0008; SOD-10) | **[DES]** |
 | BRL-D13-009 | Investor personal data leaves AMC OS only as a masked export, or as an unmasked export with reason and approval (BA-005 §3 export rules) | **[DES]** |
 | BRL-D13-010 | A complaint is closed only by a human with a resolution note; a SCORES complaint is treated as closed only when SEBI closes it on SCORES ([S4]) | **[DES]**; **[VAL]** |
@@ -117,7 +117,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 
 **Regulatory note.** These facts were opened through web search on 21 Nov 2026. They predate the SEBI (Mutual Funds) Regulations, 2026 (BA-002), so which still apply, and in what consolidated form, is **[VAL]** (REG-001, Step 25). Nothing below is hard-coded; each becomes a parameter that Compliance confirms (BRL-D13-007).
 
-- Redemption proceeds within three working days of redemption (five for schemes with at least 80% in permitted overseas investments); IDCW within seven working days of the record date; AMFI lists exceptional situations; interest at 15% a year on delays, borne by the AMC — SEBI circular SEBI/HO/IMD/IMD-I DOF2/P/CIR/2022/161 of 25 Nov 2022 [S1], [S2] **[REG; VAL current form]**.
+- Redemption proceeds within three working days of redemption (the five-day figure for schemes with at least 80% overseas was not found in [S1]; it may come from AMFI's list of exceptional situations — **[VAL]**); IDCW within seven working days of the record date; AMFI lists exceptional situations; interest at 15% a year on delays, borne by the AMC — SEBI circular SEBI/HO/IMD/IMD-I DOF2/P/CIR/2022/161 of 25 Nov 2022 [S1], [S2] **[REG; VAL current form]**.
 - Cut-offs (AMFI summary): 3:00 p.m. for most schemes; 1:30 p.m. for purchases in liquid and overnight schemes; from 1 Feb 2021 the purchase NAV depends on the funds being available before the cut-off [S3] **[VAL]**.
 - SCORES (circular of 20 Sep 2023, in force 4 Dec 2023): the entity files an ATR within 21 calendar days; the complainant may ask for a first review by the designated body and then a second review by SEBI; after that, ODR [S4] **[VAL — secondary source]**. Smart ODR portal from 2023; investors normally go to the entity first, then SCORES, then ODR [S5] **[VAL — secondary source]**.
 - DPDP Rules 2025 notified 14 Nov 2025 with an 18-month phased start; rights requests answered within at most 90 days; breach notice to affected persons without delay [S6] **[REG; VAL exact dates per rule]**.
@@ -222,7 +222,7 @@ From BA-005 §3 (D13 column) and §4, narrowed to capabilities (BA-005 §7 C2). 
 | CAP-D13-015 complaint reply and closure | Investor Service Executive | Investor Service Supervisor; SCORES ATR by Grievance Officer† (C3) |
 | CAP-D13-013 templates and regulatory communications | Investor Service Executive | Investor Service Supervisor; Compliance Officer for regulatory notices† |
 | CAP-D13-013 (.1) consent and rights requests; breach notices | Investor Service Executive | Data Protection Officer† (C3) |
-| PII export (BRL-D13-009) | Any role with E | Investor Service Supervisor or Compliance Officer |
+| PII export (BRL-D13-009) | Any role with E | Investor Service Supervisor or Compliance Officer † |
 
 **Rights added beyond BA-005 §3 (†):** Compliance Officer approval on reprocessing (PRD-000 Module 11 point 13 "MC + Compliance") and regulatory notices, and unmask for investigations; the **Grievance Officer** and **Data Protection Officer** authorities named in PRD-000 Module 11 point 4, which BA-005 §4 does not have (C3, Q48). PRD-000 Module 11 point 3 also lists "Sales / RMs (read, masked)", but BA-005 §3 gives RMs no D13 right; this PRD follows BA-005 — RMs see investor data only as D14 aggregates (C4).
 
@@ -297,7 +297,7 @@ Within PRD-000 C8 and [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md
 | C1 | Who sends the redemption, SWP and IDCW payout file — the RTA, or AMC OS to the AMC's bank (with two signatories, CAP-D12-009)? BA-004 WF-011 marks it **[ASSUMPTION]** — owner question Q46 in [LOOP_STATE.md](../../LOOP_STATE.md) | Owner (Q46); pilot discovery |
 | C2 | May AMC staff correct a mirrored field (for example a typing error in an address) in AMC OS, or only by request to the RTA? Default: only through the RTA — owner question Q47 | Owner (Q47) |
 | C3 | Grievance Officer and Data Protection Officer are in PRD-000 but not in BA-005; who holds them — owner question Q48 | Owner (Q48); next BA-005 revision |
-| C4 | PRD-000 gives Sales / RMs masked read of investor data; BA-005 gives none; Compliance approval and unmask rights added (†) | Next BA-005 revision |
+| C4 | PRD-000 gives Sales / RMs masked read of investor data; BA-005 gives none; Compliance approval, unmask rights and the PII-export checker added (†) | Next BA-005 revision |
 | C5 | Does AMC OS send investor communications itself (email, SMS, WhatsApp) or prepare them for the RTA or the AMC's provider? — owner question Q49 | Owner (Q49); INT-001 (Step 14) |
 | C6 | Tables listed in §10 are missing from DDL-000; `investor_txn.state` meaning in mirror mode | DA-001 / DDL (Steps 15–16) |
 | C7 | All timelines, cut-offs, tolerances, nominee limits, service levels and complaint deadlines **[VAL]** / **[ASSUMPTION]**; which pre-2026 circulars still apply | REG-001 (Step 25); pilot discovery |

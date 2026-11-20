@@ -95,7 +95,7 @@ flowchart LR
 | 5 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
 | 6 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
 | 7 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |
-| 8 🔄 in review (branch `wp2-step08-prd-trading-settlement-compliance-risk`) | PRD-006 Trading & Execution, PRD-007 Settlement (split), PRD-008 Compliance, PRD-009 Risk | 4 | 6 |
+| 8 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-006 Trading & Execution, PRD-007 Settlement (split), PRD-008 Compliance, PRD-009 Risk | 4 | 6 |
 | 9 🔄 part 9a in review (branch `wp2-step09a-prd-accounting-nav-ops-investor`: PRD-010…PRD-013); 9b (PRD-014…PRD-017, PRD-000 Superseded) next | PRD-010 Accounting, PRD-011 Valuation & NAV, PRD-012 Fund Ops, PRD-013 Investor, PRD-014 Distribution, PRD-015 Finance, PRD-016 Data, PRD-017 AI; PRD-000 marked Superseded | 4 | 6 |
 | **Stage B — architecture** | | | |
 | 10 | EA-001 system context; EA-002 layered architecture incl. 12 frontend workspaces; ADRs for identity provider, Redis, cloud/region | 5, 13 | Stage A |
