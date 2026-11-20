@@ -2,11 +2,11 @@
 id: PS-001
 title: AMC OS Project Charter
 status: Draft
-version: 0.2
+version: 0.3
 owner: Product Manager
 approver: Project owner / sponsor
 work_package: WP1
-last_updated: 2026-11-19
+last_updated: 2026-11-20
 ---
 
 # PS-001 — AMC OS Project Charter
@@ -86,7 +86,7 @@ Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 | Pricing basis | Platform fee per module + AUM-tiered fee; dedicated deployment priced on infrastructure + support |
 | Land-and-expand | Enter via a high-pain module (compliance, risk, distribution analytics, data platform), expand to front-to-back |
 | Unit economics | Gross margin target set after the first pilot, once hosting and support costs are measured |
-| Pilot | One design-partner AMC from month 18–22, with a parallel run before go-live |
+| Pilot | One design-partner AMC starting about month 15–18, so that a parallel run of at least 3 months ends and the pilot goes live by month 24 (owner decision D-12, 20 Nov 2026) |
 
 ## 7. Deployment models
 
@@ -106,11 +106,11 @@ Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 | Automation | Reconciliation auto-match ≥ 95%; MIS turnaround from days to same day |
 | Audit | 100% of approvals, overrides and financial state changes in the hash-chained audit log |
 | Delivery | Each work package and build increment passes its gates without waivers on T1 items |
-| Commercial | Pilot signed; then 3–5 paying AMCs |
+| Commercial | Pilot signed; then 3–5 paying AMCs by month 36, counting the pilot AMC (owner decision D-12) |
 
 ## 9. Roadmap baseline
 
-The master prompt's 24-month programme (months 1–3 documentation … months 22–24 pilot and rollout) is adopted as the planning baseline. It is not a guaranteed deadline, and correctness is never traded for schedule. The v0.9 PRD's 30-month, 10-phase roadmap is retired in favour of this baseline in WP2.
+The master prompt's 24-month programme (months 1–3 documentation … months 22–24 pilot and rollout) is adopted as the planning baseline. It is not a guaranteed deadline, and correctness is never traded for schedule. The v0.9 PRD's 30-month, 10-phase roadmap is retired in favour of this baseline in WP2. Owner decision D-12 (20 Nov 2026): go-live by month 24 takes priority, so the pilot starts earlier than the brief's months 22–24 — about month 15–18 — and its parallel run ends by month 24.
 
 ## 10. Key risks
 
