@@ -94,7 +94,7 @@ flowchart LR
 | 4 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
 | 5 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
 | 6 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
-| 7 | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |
+| 7 🔄 in review (branch `wp2-step07-prd-investment-portfolio-oms`) | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |
 | 8 | PRD-006 Trading & Execution, PRD-007 Settlement (split), PRD-008 Compliance, PRD-009 Risk | 4 | 6 |
 | 9 | PRD-010 Accounting, PRD-011 Valuation & NAV, PRD-012 Fund Ops, PRD-013 Investor, PRD-014 Distribution, PRD-015 Finance, PRD-016 Data, PRD-017 AI; PRD-000 marked Superseded | 4 | 6 |
 | **Stage B — architecture** | | | |

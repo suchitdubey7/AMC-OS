@@ -48,7 +48,7 @@ Each workflow has a card and, where it helps, a Mermaid diagram.
 
 ## 2. Workflow register
 
-v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 also contains **W6b Trade settlement**, which GOV-001 did not count; it becomes **WF-018**. New workflows for D01, D06 and D07 are **WF-019…WF-028** **[DES]**. WF-029 and WF-030 (D02) were added by PRD-002 (Step 6), which holds their cards (PRD-002 §6.2–§6.3). IDs are never reused.
+v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 also contains **W6b Trade settlement**, which GOV-001 did not count; it becomes **WF-018**. New workflows for D01, D06 and D07 are **WF-019…WF-028** **[DES]**. WF-029 and WF-030 (D02) were added by PRD-002 (Step 6), which holds their cards (PRD-002 §6.2–§6.3); WF-031 (D03) and WF-032 (D04) were added by PRD-003 and PRD-004 (Step 7), which hold their cards (§6.2 of each). IDs are never reused.
 
 | WF | Workflow | v0.9 source | Main domains | Accountable department | BA-002 process |
 | --- | --- | --- | --- | --- | --- |
@@ -82,6 +82,8 @@ v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 al
 | WF-028 | Settlement instruction (SSI) and bank-detail change | **new** | D07 | DEP-06 Fund operations and settlement | P5 (supporting) |
 | WF-029 | Scheme change (fundamental and non-fundamental) — card in [PRD-002](../03_product_requirements/PRD-002_product_and_scheme_management.md) §6.2 | PRD-000 Module 01 point 6 | D02 | DEP-13 Products and marketing | P1 (supporting) |
 | WF-030 | Scheme merger, winding-up and maturity — card in PRD-002 §6.3 | **new** | D02 | DEP-13 Products and marketing | P1 (supporting) |
+| WF-031 | Investment policy review — card in [PRD-003](../03_product_requirements/PRD-003_investment_management.md) §6.2 | **new** | D03 | DEP-02 / DEP-03 (CIO) | P2 (supporting) |
+| WF-032 | Performance measurement and attribution — card in [PRD-004](../03_product_requirements/PRD-004_portfolio_management.md) §6.2 | **new** | D04 | DEP-11 Risk management | P3 (supporting) |
 
 ```mermaid
 flowchart LR
@@ -1015,8 +1017,8 @@ Every domain appears in at least one workflow (checked by script; see §6). Doma
 | --- | --- | --- |
 | D01 | WF-019, WF-020, WF-021, WF-022, WF-026 (calendar master) | — |
 | D02 | WF-001, WF-011, WF-029, WF-030 | — (WF-029 and WF-030 added by PRD-002, Step 6) |
-| D03 | WF-002, WF-003 | Review of investment policy documents (CAP-D03-009 (.1)) → PRD-003 (Step 7) |
-| D04 | WF-001, WF-003, WF-006, WF-007, WF-009, WF-011, WF-018, WF-026, WF-027 | Performance attribution (CAP-D04-009, FE-10) → PRD-004 (Step 7) |
+| D03 | WF-002, WF-003, WF-031 | — (WF-031 added by PRD-003, Step 7) |
+| D04 | WF-001, WF-003, WF-006, WF-007, WF-009, WF-011, WF-018, WF-026, WF-027, WF-032 | — (WF-032 added by PRD-004, Step 7) |
 | D05 | WF-004, WF-005, WF-006, WF-024 | — |
 | D06 | WF-004, WF-023, WF-024, WF-025 | — |
 | D07 | WF-018, WF-023, WF-026, WF-027, WF-028 | — |
