@@ -70,6 +70,8 @@ Give Indian mutual fund AMCs one integrated, configurable operating platform, fr
 
 Reaching 3–5 *paying* AMCs by month 36 is tight unless sales to the second and later AMCs start well before pilot go-live. The 3–5 includes the pilot AMC (owner decision D-12).
 
+**Overlap to watch [ASSUMPTION — confirm: project owner].** A pilot that starts in months 15–18 overlaps the brief's later build increments (investor servicing and distribution in months 16–18; AI, analytics and external integrations in months 19–21, master prompt §19). The parallel run can begin only when the modules it covers and the pilot AMC's RTA, custodian and bank connections (PS-001 O7) are live, and it must begin by month 21 to end by month 24. The month-by-month plan is still a gap (GOV-006 §2, row 19).
+
 ## 6. What AMC OS is not
 
 Not an RTA of record (decision GOV-006 Q2: mirror the RTA), not a custodian, broker, exchange, bank or KYC registry, not an algorithmic execution engine, not the AMC's corporate ERP, and never an AI that approves or posts money. Detail: PS-001 §3.

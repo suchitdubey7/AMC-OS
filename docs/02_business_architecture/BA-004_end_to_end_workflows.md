@@ -14,7 +14,7 @@ last_updated: 2026-11-20
 
 This document lists the business workflows of AMC OS from start to finish: what starts each one, who does what, which capabilities ([BA-001](BA-001_business_capability_map.md)) and departments ([BA-002](BA-002_amc_operating_model.md)) take part, which outside party or system sits at each hand-off, where people must approve, what can go wrong, and what is recorded. It gives each workflow its permanent `WF-nnn` ID ([GOV-001 §4](../00_governance/GOV-001_document_control_and_identifiers.md#4-requirement-and-artefact-identifiers)).
 
-**Builds on Draft documents:** BA-001, BA-002, BA-003, PS-001, GOV-001, GOV-006 and PRD-000 v0.9 (Chapter 4, Chapter 3 Modules 04, 05 and 10, Chapter 6) — allowed by owner decision D-3 ([GOV-008 §2](../00_governance/GOV-008_build_loop.md#2-rules), rule 3). No document used here is Approved yet. Owner decisions D-8, D-12, D-14, D-15 and D-16 of 20 Nov 2026 ([LOOP_STATE.md](../../LOOP_STATE.md)) are applied where they touch a workflow.
+**Builds on Draft documents:** BA-001, BA-002, BA-003, PS-001, GOV-001, GOV-006 and PRD-000 v0.9 (Chapter 4, Chapter 3 Modules 04, 05 and 10, Chapter 6) — allowed by owner decision D-3 ([GOV-008 §2](../00_governance/GOV-008_build_loop.md#2-rules), rule 3). No document used here is Approved yet. Owner decisions D-7, D-8, D-14, D-15 and D-16 of 20 Nov 2026 ([LOOP_STATE.md](../../LOOP_STATE.md)) are applied where they touch a workflow.
 
 **What this document is not:** it does not define user roles and permissions (BA-005, Step 5), detailed requirements (PRD-001…PRD-017, Steps 6–9), event schemas or Temporal workflow designs (EA-007, Step 13), provider interfaces (INT-001, Step 14) or calculation methods (FE-01…FE-10, Steps 20–23). It adds **no new regulatory fact**. Every cut-off, deadline, threshold, settlement cycle or timeline a workflow depends on is a parameter held in versioned configuration; where PRD-000 already labels it, the label is carried over unchanged, and otherwise it is **[VAL]** until REG-001 (Step 25).
 
@@ -25,7 +25,7 @@ Each workflow has a card and, where it helps, a Mermaid diagram.
 | Card field | Meaning |
 | --- | --- |
 | Trigger | What starts the workflow |
-| Initiator | Who starts it — a role from PRD-000 §2.3 (re-keyed in BA-005), or "system" |
+| Initiator | Who starts it — a role from PRD-000 §2.3, or a named head of department taken from the PRD-000 diagrams and Chapter 6 (for example Head of Dealing), or "system". BA-005 (Step 5) re-keys them all |
 | Departments | **Accountable** department (BA-002 §3) first, then the other departments that act or approve |
 | Capabilities | Level-2 `CAP-` IDs used (BA-001); a level-3 item is written `(.m)` where it matters |
 | Hand-offs (outside) | The outside party or system at each hand-off (BA-002 §6). The interface is never specified here: "Confirm with <provider>" until INT-001 (Step 14) |
@@ -73,7 +73,7 @@ v0.9 workflows W1–W17 become WF-001–WF-017 as GOV-001 §4 states. PRD-000 al
 | WF-019 | Tenant onboarding and offboarding | **new** | D01 | DEP-15 Technology | — |
 | WF-020 | User access lifecycle (joiner, mover, leaver, recertification) | **new** | D01 | DEP-15 Technology | — |
 | WF-021 | Configuration change and promotion | **new** | D01 | DEP-15 Technology | — |
-| WF-022 | Break-glass support access | **new** | D01 | DEP-16 Information security | — |
+| WF-022 | Break-glass support access | **new** | D01 | DEP-15 Technology | — |
 | WF-023 | Broker empanelment and review | **new** | D06 | DEP-05 Dealing desk | P4 (supporting) |
 | WF-024 | Externally booked trade capture | **new** | D06 | DEP-05 Dealing desk | P4 |
 | WF-025 | Trade confirmation, execution reconciliation and trade exceptions | **new** | D06 | DEP-06 Fund operations and settlement | P4, P5 |
@@ -93,6 +93,7 @@ flowchart LR
     W05[WF-005 Pre-trade] --> W04
     W23[WF-023 Broker panel] --> W04
     W24[WF-024 External trades] --> W25
+    W24 --> W26
     W04 --> W25[WF-025 Confirmation and exec recon]
   end
   subgraph SET[Settle - D07]
@@ -127,7 +128,7 @@ The picture shows which workflow feeds which, not clock times.
 
 ## 3. Re-keyed workflows (from PRD-000 Chapter 4)
 
-The diagrams are carried over from PRD-000 Chapter 4 with only these changes: workflow references use `WF-` IDs, and role names are those of PRD-000 §2.3. Cards are new: they add departments, capabilities, outside hand-offs and approvals.
+The diagrams are carried over from PRD-000 Chapter 4 with these kinds of change, and no others: (1) workflow references use `WF-` IDs; (2) AI agents carry the D17 names of BA-001 (Research Agent → Research copilot, NAV Agent → NAV operations assistant, Reconciliation Agent → Reconciliation assistant, Copilot → Compliance copilot), and the Portfolio Agent is removed (WF-003, §5.2 C5); (3) investor and NFO steps say the RTA allots and AMC OS mirrors (owner decision Q2; WF-001, WF-010); (4) broker messages are generic because FIX per broker is an **[ASSUMPTION]** (WF-004); (5) trade confirmation hands off to D06 (WF-025) instead of settlement, and WF-018 starts after it (§5.2 C2). Cards are new: they add departments, capabilities, outside hand-offs and approvals.
 
 ### WF-001 — Scheme launch (NFO)
 
@@ -664,7 +665,7 @@ flowchart TD
 
 | Field | Detail |
 | --- | --- |
-| Trigger | Trade confirmed and matched to the contract note (WF-025) |
+| Trigger | Trade matched to its contract note (WF-025), or an externally booked trade confirmed by maker-checker against its evidence (WF-024) |
 | Initiator | System; Operations Analyst for exceptions |
 | Departments | **DEP-06**; DEP-07 (settlement journals) |
 | Capabilities | CAP-D07-004, CAP-D07-006, CAP-D07-007, CAP-D07-003, CAP-D10-003 (.3), CAP-D10-009, CAP-D10-010, CAP-D04-002 (.2) |
@@ -706,7 +707,7 @@ These workflows are proposed here; nothing in PRD-000 Chapter 4 describes them. 
 | Preconditions | Contract signed; isolation tier chosen (shared or dedicated cell, ADR-0003); subscription plan and modules recorded |
 | Final state | Onboarding: tenant `ACTIVE`, first Tenant Administrator signed in, organisation hierarchy and calendars set. Offboarding: tenant `OFFBOARDED`, data exported to the AMC and then deleted or retained as the contract and law require |
 | Approvals | Activation needs confirmation from both the platform operator and the AMC's Tenant Administrator. The platform operator never reads tenant business data during set-up (SOD-09) |
-| Exceptions | Identity connection test fails → stays in `SETUP`; no capacity in the chosen cell → new cell (EA-004); export not confirmed by the AMC → tenant stays `SUSPENDED` |
+| Exceptions | Identity connection test fails → stays in `SETUP`; no capacity in the chosen cell → new cell (EA-004); export not confirmed by the AMC → tenant stays `SUSPENDED` until the time limit in the contract **[ASSUMPTION]**, then `OFFBOARDED` with records kept as the law requires **[VAL]** |
 | Audit | Tenant record versions, plan and modules, placement, identity test results, activation confirmations, export and deletion evidence |
 | Source | **new** |
 
@@ -721,7 +722,7 @@ stateDiagram-v2
   SETUP --> ACTIVE: operator and Tenant Administrator both confirm
   ACTIVE --> SUSPENDED: notice of exit (read-only)
   SUSPENDED --> SUSPENDED: data export delivered
-  SUSPENDED --> OFFBOARDED: AMC confirms export; delete or retain per contract and law
+  SUSPENDED --> OFFBOARDED: AMC confirms export, or the contract time limit passes; delete or retain per contract and law
   OFFBOARDED --> [*]
 ```
 
@@ -757,7 +758,8 @@ flowchart TD
   R[Recertification due] --> S[Role owner certifies or revokes each grant]
   S --> T{Done by due date?}
   T -- no --> U[Escalate to DEP-16]
-  T -- yes --> I
+  T -- yes, kept --> I
+  T -- yes, revoked --> V[Role removed]
 ```
 
 Recertification frequency is a tenant setting **[ASSUMPTION]** — confirm: DEP-16 of the pilot AMC.
@@ -797,7 +799,7 @@ flowchart LR
 | --- | --- |
 | Trigger | A support incident that cannot be solved without seeing a tenant's business data |
 | Initiator | Platform Operator (vendor support or SRE staff) |
-| Departments | **DEP-16** (sets the approval policy); DEP-15 (Tenant Administrator approves) |
+| Departments | **DEP-15** (accountable for CAP-D01-005, BA-002 §4; its Tenant Administrator approves); DEP-16 (sets the approval policy and reviews every use) |
 | Capabilities | CAP-D01-005 (.4), CAP-D01-003, CAP-D01-010 |
 | Hand-offs (outside) | The vendor's support team (outside the tenant) |
 | Preconditions | Incident record exists; the request states scope (which data) and duration |
@@ -859,7 +861,7 @@ Review frequency and evaluation criteria (execution quality, service, errors) ar
 | Capabilities | CAP-D06-007, CAP-D05-010, CAP-D08-006, CAP-D12-010 |
 | Hand-offs (outside) | Source evidence from the issuer, registrar, exchange or counterparty (allotment advice, deal confirmation) |
 | Preconditions | Supporting document attached; security exists in the master |
-| Final state | Trade `CONFIRMED`, linked to its evidence, and handed to settlement (WF-026, WF-018) and accounting |
+| Final state | Trade `CONFIRMED`, linked to its evidence. A type that has a broker contract note goes to WF-025 for matching first; a type without one (for example IPO allotment, inter-scheme transfer, repo/TREPS — which types have one is **[ASSUMPTION]**, confirm: DEP-06 of the pilot AMC) is confirmed by the checker against its evidence and goes straight to settlement (WF-026, WF-018) and accounting |
 | Approvals | Maker-checker on every entry (FR-05-01) |
 | Exceptions | Checker rejects → back to maker; pre-trade check BLOCK (where the type requires a check) → WF-005 override path |
 | Audit | Entry, evidence, checker decision, compliance result |
@@ -874,7 +876,9 @@ flowchart LR
   B -- no --> D{Checker approves?}
   D -- no --> A
   D -- yes --> E[Trade CONFIRMED]
-  E --> F[To settlement WF-026 / WF-018 and accounting]
+  E --> G{Broker contract note for this type?}
+  G -- yes --> H[Match in WF-025]
+  G -- no --> F[To settlement WF-026 / WF-018 and accounting]
 ```
 
 ### WF-025 — Trade confirmation, execution reconciliation and trade exceptions
@@ -922,7 +926,7 @@ flowchart TD
 | Preconditions | Settlement calendar loaded (one holiday source, BA-001 §4); trades matched (WF-025, WF-024) |
 | Final state | For each settlement date: obligations known per scheme, counterparty and date; scheme bank accounts funded; payments confirmed |
 | Approvals | Payment instructions released by maker-checker (CAP-D12-009); the number of authorisers per payment is the AMC's bank mandate **[ASSUMPTION]** |
-| Exceptions | Funding shortfall in a scheme → alert to Operations and the Fund Manager; payment not confirmed by the bank → WF-027 if it causes a settlement fail |
+| Exceptions | Funding shortfall in a scheme → alert to Operations and the Fund Manager; payment release stays blocked until the Fund Manager's funding decision is made and the funding check passes (which funding options a scheme may use is regulatory and scheme policy **[VAL]**); payment not confirmed by the bank → WF-027 if it causes a settlement fail |
 | Audit | Obligations per date, funding check, payment instructions, bank confirmations |
 | Source | **new** (CAP-D07-001, CAP-D07-002 are **new** in BA-001). Settlement cycles per instrument are **[REG — settlement cycles set by SEBI/exchanges; VAL current cycle and MF applicability]** (PRD-000 FR-05-04); net settlement of funds is **[REG — implementation details VAL]** (FR-05-09) |
 
@@ -935,9 +939,10 @@ flowchart LR
   D --> F[Funding check vs scheme bank balance and cash ladder]
   E --> F
   F --> G{Shortfall?}
-  G -- yes --> H[Alert Ops and FM]
+  G -- yes --> H[Alert Ops and FM; payment release blocked]
+  H --> H2[FM funding decision: sell, use other funding per scheme policy, or defer the trade]
+  H2 --> F
   G -- no --> I[Pay-in / pay-out schedule; payment instructions - maker-checker]
-  H --> I
   I --> J[Payment tracking: bank confirmation]
   J --> K[Status to settlement WF-018 and accounting]
 ```
@@ -1007,8 +1012,8 @@ Every domain appears in at least one workflow (checked by script; see §6). Doma
 | Domain | Workflows | Gap |
 | --- | --- | --- |
 | D01 | WF-019, WF-020, WF-021, WF-022, WF-026 (calendar master) | — |
-| D02 | WF-001, WF-011 | Scheme changes, merger and winding-up (CAP-D02-009, CAP-D02-010) have no workflow yet → PRD-002 (Step 6) |
-| D03 | WF-002, WF-003 | Investment policy review (CAP-D03-009) → PRD-003 (Step 7) |
+| D02 | WF-001, WF-011 | Scheme changes (CAP-D02-010) and merger, winding-up and maturity (CAP-D02-009 (.2), (.3)) have no workflow yet → PRD-002 (Step 6) |
+| D03 | WF-002, WF-003 | Review of investment policy documents (CAP-D03-009 (.1)) → PRD-003 (Step 7) |
 | D04 | WF-001, WF-003, WF-006, WF-007, WF-009, WF-011, WF-018, WF-026, WF-027 | Performance attribution (CAP-D04-009, FE-10) → PRD-004 (Step 7) |
 | D05 | WF-004, WF-005, WF-006, WF-024 | — |
 | D06 | WF-004, WF-023, WF-024, WF-025 | — |
@@ -1037,6 +1042,8 @@ BA-002 §7 processes P1–P12 each map to at least one workflow (§2 register); 
 | C5 | PRD-000 W3 names a "Portfolio Agent" that is not in the brief's D17 list | AIML-001 (Step 26) — same as BA-001 §5 C4 |
 | C6 | D09 Risk and D15 Finance have no end-to-end workflow in PRD-000; BA-002 P13 has no workflow | PRD-009 (Step 8), PRD-015 (Step 9) |
 | C7 | Approval thresholds, delegated authority, recertification and review frequencies, tolerances and escalation limits named in the cards are tenant configuration with no values yet **[ASSUMPTION]** | Pilot discovery; BA-005 (Step 5) for who approves |
+| C8 | QA-001 still limits end-to-end workflow tests to WF-001…WF-017; BA-004 defines WF-001…WF-028, including the control workflows WF-020, WF-022 and WF-028 | Next QA-001 revision |
+| C9 | BA-003 TERM-078 calls SSI "Standing Settlement Instructions" and maps it to CAP-D07-002; BA-001 and BA-004 use "standard settlement instruction" under CAP-D07-004 (.2) | Next BA-003 revision |
 
 ## 6. How this document was checked
 
