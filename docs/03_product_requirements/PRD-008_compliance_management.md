@@ -55,10 +55,10 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 
 | ID (was) | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
-| FR-D08-001 (FR-06-01) **(changed)** | M | CAP-D08-001 (.1) | **Regulatory rule registry:** each regulation item recorded with source, document title, reference, publication date, effective date, domain, system control, responsible department, validation requirement and verification status (the 10 fields of PRD-000). *Changed:* the further fields the master prompt §9 asks for (applicable entity, scheme or activity, business interpretation, required control, implemented rule and version, test case, responsible owner) are added by REG-001 (Step 25); the seed content is PRD-000 Appendix A |
+| FR-D08-001 (FR-06-01) **(changed)** | M | CAP-D08-001 (.1) | **Regulatory rule registry:** each regulation item recorded with source, document title, reference, publication date, effective date, domain, system control, responsible department, validation requirement and verification status (the 10 fields of PRD-000). *Changed:* the further fields the master prompt §9 asks for (applicable entity, scheme or activity, business interpretation, required control, implemented rule and version, test case, approval status, responsible owner) are added by REG-001 (Step 25); the seed content is PRD-000 Appendix A |
 | FR-D08-002 (FR-06-02) | M | CAP-D08-001 (.2) | **Rule definition language:** rules are written in a typed, declarative language, not free code: *scope* (schemes or categories), *measure* (for example an issuer's exposure divided by net assets), *grouping* (issuer, group, sector, rating, instrument), *operator and threshold* (parameters by effective date), *severity* (BLOCK / WARN / INFO), *timing* (pre / post / both), *cure period* for passive breaches |
 | FR-D08-003 (FR-06-03) | M | CAP-D08-003 (.1) | **Scheme-level restrictions:** from the scheme mandate (PRD-002 FR-D02-007) and the SID |
-| FR-D08-004 (FR-06-04) | M | CAP-D08-004 (.1)…(.3), CAP-D08-005 (.1) | **Concentration rules:** single issuer, issuer group, sector, single security, top-N, related party (sponsor group), unlisted and unrated securities, derivatives exposure, overseas, REIT / InvIT, units of other mutual funds **[REG — investment restrictions under the SEBI (Mutual Funds) Regulations 2026 (§13 R1); VAL all thresholds]** |
+| FR-D08-004 (FR-06-04) **(changed)** | M | CAP-D08-004 (.1)…(.3), CAP-D08-005 (.1) | **Concentration rules:** single issuer, issuer group, sector, single security, top-N, related party (sponsor group), unlisted and unrated securities, derivatives exposure, overseas, REIT / InvIT, units of other mutual funds **[REG — investment restrictions under the SEBI (Mutual Funds) Regulations 2026 (§13 C1; sources R7, R8); VAL all thresholds]**. *Changed:* PRD-000 label read "[REG — Seventh Schedule-type investment restrictions under MF Regulations 2026; VAL all thresholds]"; the schedule number is dropped until REG-001 maps the clauses |
 | FR-D08-005 (FR-06-05) | M | CAP-D08-005 (.2) | **Credit-rating restrictions:** rating-based limits; downgrade triggers; segregated-portfolio (side-pocket) eligibility on a credit event **[REG — VAL]** |
 | FR-D08-006 (FR-06-06) | M | CAP-D08-005 (.3) | **Liquidity restrictions:** minimum liquid assets per category; liquidity-stress-test outputs from D09 (CAP-D09-003 (.3)) used as rule inputs **[REG — VAL]** |
 | FR-D08-007 (FR-06-07) | M | CAP-D08-003 (.2) | **Investment mandate checks:** asset-allocation bands; category-defining minimums (for example the large-cap minimum of a large-cap fund) |
@@ -76,11 +76,11 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | --- | --- | --- | --- |
 | FR-D08-015 | M | CAP-D08-002 (.1), (.2) | **Internal (house) restrictions:** house limits proposed from the investment policy (PRD-003 FR-D03-012, FR-D03-016; WF-031) arrive as rule-change requests and are handled by WF-034 like any rule; each links to an internal-policy register item (source `INTERNAL_POLICY` in DDL-000 `compliance.regulation`); a rejection is returned to the CIO with the reason |
 | FR-D08-016 | M | CAP-D08-005 (.4) | **Derivative limits:** rules on derivative positions (gross and net exposure, hedging and portfolio-rebalancing positions) with measures defined in the rule language; which positions count as hedges, and every value, are **[REG — VAL]** |
-| FR-D08-017 | M | CAP-D08-008 (.1)…(.3) | **Regulatory monitoring:** new circulars and regulation changes are tracked from the sources listed in REG-001; each gets an impact assessment (affected register items, rules, schemes, effective date) and, where needed, rule-change requests; the Compliance copilot may draft the summary, the register entry and the rule change, never approve or activate them (WF-034, BRL-D08-007) |
+| FR-D08-017 | M | CAP-D08-008 (.1)…(.3) | **Regulatory monitoring:** new circulars and regulation changes are tracked from the sources listed in REG-001; each gets an impact assessment (affected register items, rules, schemes, effective date) and, where needed, rule-change requests; the Compliance copilot may draft the summary, the register entry and the rule change, never approve or activate them (WF-034, BRL-D08-007). The interpretation of a new or changed regulation or circular is reviewed by the Legal Officer (ROLE-21) or outside counsel before any rule is authored from it: the master prompt §9 says "Regulatory interpretation must be reviewed by qualified compliance and legal professionals" **[DES]**; who does it is open point C9 |
 | FR-D08-018 | M | CAP-D08-001 (.4) | **Effective dating and scheduled activation:** an approved rule version takes effect from the start of the business day of its effective date (BRL-D08-004); two approved versions of the same rule never overlap in time (DDL-000 exclusion constraint); a mid-day switch is only by the emergency path of BRL-D08-004 |
 | FR-D08-019 | M | CAP-D08-009 (.2) | **Breach severity and notification:** an active breach (caused by the AMC's own trade) is raised to high severity and notified at once to the CCO and the CIO; a passive breach goes to the scheme's fund manager as owner with the cure deadline (WF-006) |
 | FR-D08-020 | M | CAP-D08-010 (.1), (.2) | **Breach investigation record:** root cause, contributing orders and price or flow events, and the active / passive classification; a change of classification needs a Compliance Officer other than the one who made the first classification (SOD-01) |
-| FR-D08-021 | M | CAP-D08-001 (.3) | **Internal risk limits hosted for D09:** risk limits are rules of class `INTERNAL_RISK` in the same engine (PRD-000 BR-07-3); they follow the WF-034 lifecycle, but the approver is the CRO (PRD-000 Module 07 point 13) instead of the CCO. BA-005 §3 gives the Risk Manager only R on D08, so the author and approver rights for this class are open point C3 |
+| FR-D08-021 | M | CAP-D08-001 (.3) | **Internal risk limits hosted for D09:** risk limits are rules of class `INTERNAL_RISK` in the same engine (PRD-000 BR-07-3); they follow the WF-034 lifecycle, but the approver is the Risk officer (CRO) approval authority held with ROLE-10 Risk Manager (BA-005 §4; PRD-000 Module 07 point 13) instead of the CCO. BA-005 §3 gives the Risk Manager only R on D08, so the author and approver rights for this class are open point C3 |
 | FR-D08-022 | M | CAP-D08-003 (.2), CAP-D08-001 (.3) | **Mandate rules compiled from the scheme:** when a scheme's mandate is approved or changed (PRD-002 FR-D02-007; WF-001, WF-029), D08 compiles it into rule versions of class `MANDATE` in `DRAFT`; they are tested and approved through WF-034 before use; a scheme cannot open its NFO without an approved rule pack (PRD-002 FR-D02-024) |
 | FR-D08-023 | M | CAP-D08-006 (.2), CAP-D08-007 (.1) | **What-if and headroom service:** D04 proposals and what-ifs are checked with the same rules as orders (check kind `WHAT_IF`, PRD-004 FR-D04-007, FR-D04-011); D08 reports the headroom to each limit per scheme for D04 alerts (PRD-004 FR-D04-016). What-if results are evidence but never count as a pre-trade pass for an order |
 | FR-D08-024 | M | CAP-D08-011 (.3) | **Override record:** a pre-trade override covers one order version and the named BLOCK results only; it carries a mandatory reason and two approvals by distinct people, the CCO and the CIO or their delegates (SOD-04); it is stored as evidence and listed in the monthly Trustee report. D05 requests the override and acts on the outcome (PRD-005 FR-D05-005, BRL-D05-007); D08 holds the record and the approval permission — proposed answer to PRD-005 open point C6 (§13 C4) |
@@ -163,12 +163,12 @@ stateDiagram-v2
 | --- | --- |
 | Trigger | A new or changed regulation or circular (CAP-D08-008); a house-limit request from D03 (WF-031, FR-D03-016); a mandate change from D02 (WF-001, WF-029); an internal risk-limit request from D09; a defect found in a rule |
 | Initiator | Compliance Officer (ROLE-09); system for compiled mandate rules (FR-D08-022) |
-| Departments | **DEP-09 Compliance** — accountable for CAP-D08-001 and CAP-D08-008 (BA-002 §4); DEP-02 / DEP-03 (CIO, house limits and mandates), DEP-11 (internal risk limits), DEP-13 (mandate source) |
+| Departments | **DEP-09 Compliance** — accountable for CAP-D08-001 and CAP-D08-008 (BA-002 §4); DEP-10 Legal (interpretation review); DEP-02 / DEP-03 (CIO, house limits and mandates), DEP-11 (internal risk limits), DEP-13 (mandate source) |
 | Capabilities | CAP-D08-008, CAP-D08-001, CAP-D08-002, CAP-D08-003, CAP-D08-004, CAP-D08-005, CAP-D08-012, CAP-D17-005 |
 | Hand-offs (outside) | SEBI, AMFI and other publishers as sources of circulars (read only; source list and channel in REG-001, Step 25 — confirm with each source) |
 | Preconditions | Register item exists for the source (or is created in this workflow) |
 | Final state | Rule version `APPROVED` and scheduled for its effective date, or `REJECTED` with reason returned to the requester; register item updated with the implemented rule and version |
-| Approvals | Author ≠ approver; approval needs passing tests (SOD-08). Approver: the CCO (PRD-000 Module 06 point 13; BA-005 §4 `compliance.rule.approve` says "another Compliance Officer" — open point C2); CRO for `INTERNAL_RISK` rules (FR-D08-021, open point C3); emergency mid-day activation needs an additional maker-checker approval (BRL-D08-004) |
+| Approvals | Interpretation of a new or changed regulation or circular reviewed by the Legal Officer (ROLE-21) or outside counsel before the rule is authored (master prompt §9: "Regulatory interpretation must be reviewed by qualified compliance and legal professionals"; open point C9). Author ≠ approver; approval needs passing tests (SOD-08). Approver: the CCO (PRD-000 Module 06 point 13; BA-005 §4 `compliance.rule.approve` says "another Compliance Officer" — open point C2); Risk officer (CRO) for `INTERNAL_RISK` rules (FR-D08-021, open point C3); emergency mid-day activation needs an additional maker-checker approval (BRL-D08-004) |
 | Exceptions | Tests fail → back to author; back-test shows new breaches on current portfolios → impact note sent to the CIO and fund managers before approval, effective date may be moved; regulation effective before the rule can be approved → interim manual control recorded in the register and reported to the CCO **[DES]** |
 | Audit | Register item versions, impact assessment, copilot drafts and who adopted them, rule diff, test cases and results, back-test result, approval, effective date |
 | Source | **new** (BA-004 §5.1 D08 gap: CAP-D08-001, CAP-D08-008) |
@@ -179,12 +179,13 @@ flowchart TD
   B --> C[Impact assessment: rules, schemes, effective date]
   C --> D{Rule change needed?}
   D -- no --> E[Register item closed as no change, with reason]
-  D -- yes --> F[Author writes new rule version in DRAFT; copilot draft adopted only by author]
+  D -- yes --> LR[Legal review of the interpretation: Legal Officer or outside counsel]
+  LR --> F[Author writes new rule version in DRAFT; copilot draft adopted only by author]
   F --> G[Golden tests and back-test]
   G --> H{Tests pass?}
   H -- no --> F
   H -- yes --> I[TESTED; impact note to CIO and fund managers if new breaches]
-  I --> J{Approver: CCO, or CRO for INTERNAL_RISK; not the author}
+  I --> J{Approver: CCO, or Risk officer - CRO - for INTERNAL_RISK; not the author}
   J -- reject --> K[REJECTED; reason to requester]
   J -- approve --> L[APPROVED; effective from start of business day]
   L --> M[Register item updated with rule and version; evidence stored]
@@ -196,15 +197,17 @@ From BA-005 §3 (D08 column) and §4, narrowed to each capability (BA-005 §7 C2
 
 | Capability | Maker | Checker(s) |
 | --- | --- | --- |
-| CAP-D08-001 Rule registry, rule versions | Compliance Officer (author) | CCO (`compliance.rule.approve`; tests must pass, SOD-08) — open point C2; CRO for `INTERNAL_RISK` rules — open point C3 |
+| CAP-D08-001 Rule registry, rule versions | Compliance Officer (author) | CCO (`compliance.rule.approve`; tests must pass, SOD-08) — open point C2; Risk officer (CRO) for `INTERNAL_RISK` rules — open point C3 |
 | CAP-D08-002 Internal restrictions | CIO proposes (WF-031); Compliance Officer authors | As CAP-D08-001 |
 | CAP-D08-003 … CAP-D08-005 Scheme, issuer and exposure rules | Compliance Officer; system compiles mandate rules | As CAP-D08-001 |
 | CAP-D08-006, -007 Pre- and post-trade checks | System | — |
-| CAP-D08-008 Regulatory monitoring | Compliance Officer; AI agent identity drafts only (ROLE-26, SOD-10) | — (an impact assessment closed as "no change" is checked by a second Compliance Officer **[DES]**) |
+| CAP-D08-008 Regulatory monitoring | Compliance Officer; AI agent identity drafts only (ROLE-26, SOD-10) | Legal Officer (ROLE-21) or outside counsel reviews the interpretation of a new or changed regulation before a rule is authored† (master prompt §9); an impact assessment closed as "no change" is checked by a second Compliance Officer **[DES]** |
 | CAP-D08-009, -010 Breach detection and investigation | System detects; Compliance Officer investigates | Second Compliance Officer for a change of classification (FR-D08-020) |
 | CAP-D08-011 Corrective actions | Fund Manager (cure plan, "S cure plan") | Compliance Officer (`compliance.breach.approve_plan`); regularisation: CCO **and** CEO (`compliance.breach.regularise`); pre-trade override: CCO **and** CIO (`compliance.pretrade.override`, SOD-04); temporary exemption: CCO **[DES]** |
 | CAP-D08-012 Evidence management | System; Compliance Officer builds packs | — (read: Auditor, Trustee) |
 | CAP-D08-013 Compliance reporting | Compliance Officer | CCO (`compliance.report.approve`) |
+
+**Right added beyond BA-005 §3 (†):** BA-005 gives the Legal Officer (ROLE-21) only R on D08; this PRD adds the interpretation review in WF-034 **[DES]** (open point C9).
 
 ## 8. User stories and acceptance criteria
 
@@ -267,14 +270,15 @@ Within PRD-000 C8 and ADR-0008 (read and propose only): the **Compliance copilot
 
 | # | Point | Where closed |
 | --- | --- | --- |
-| C1 | Every limit value, cure period, liquidity and derivative rule, report format and due date is **[VAL]**. Checked on 20 Nov 2026: the SEBI (Mutual Funds) Regulations 2026 were notified in January 2026 and apply from 1 Apr 2026 [R7][R8]; the Master Circular for Mutual Funds is dated 20 Mar 2026 and SEBI publishes its offsite-inspection formats [R9][R10]. Their clauses are not mapped here | REG-001 (Step 25) |
-| C2 | Rule approver: PRD-000 Module 06 point 13 says the CCO; BA-005 §4 `compliance.rule.approve` says "another Compliance Officer". This PRD uses the CCO | Owner (Q-list in LOOP_STATE.md); next BA-005 revision |
-| C3 | Internal risk limits (`INTERNAL_RISK`): PRD-000 BR-07-3 and Module 07 point 13 put them in the D08 engine with CRO approval; BA-005 §3 gives the Risk Manager only R on D08. Who authors and who approves this rule class needs confirming | Owner; PRD-009; next BA-005 revision |
+| C1 | Every limit value, cure period, liquidity and derivative rule, report format and due date is **[VAL]**. Checked on 20 Nov 2026: the SEBI (Mutual Funds) Regulations 2026 were notified in January 2026 and apply from 1 Apr 2026 [R7][R8] (secondary sources); the Master Circular for Mutual Funds is dated 20 Mar 2026 and SEBI publishes its offsite-inspection formats [R9][R10]. Their clauses are not mapped here | REG-001 (Step 25) |
+| C2 | Rule approver: PRD-000 Module 06 point 13 says the CCO; BA-005 §4 `compliance.rule.approve` says "another Compliance Officer". This PRD uses the CCO | Owner question Q26 in [LOOP_STATE.md](../../LOOP_STATE.md); next BA-005 revision |
+| C3 | Internal risk limits (`INTERNAL_RISK`): PRD-000 BR-07-3 and Module 07 point 13 put them in the D08 engine with approval by the Risk officer (CRO); BA-005 §3 gives the Risk Manager only R on D08. Who authors and who approves this rule class needs confirming | Owner question Q27 in LOOP_STATE.md; PRD-009; next BA-005 revision |
 | C4 | PRD-005 C6 (override permission): proposed here that D08 owns the override record and the approval (`compliance.pretrade.override` under CAP-D08-011, as BA-005 §4), and CAP-D05-010 (.3) is the D05 side (request and act on the result) | EA-003 (Step 11) |
 | C5 | DDL-000 `rule_class` has no value for house (internal investment) limits; they could be `MANDATE`, `INTERNAL_RISK` or a new class | DA-001 / DDL (Steps 15–16) |
-| C6 | Who approves a temporary exemption and how long it may last (FR-D08-011, §7 uses the CCO **[DES]**) **[ASSUMPTION — confirm: CCO of the pilot AMC]** | Pilot discovery |
+| C6 | Who approves a temporary exemption and how long it may last (FR-D08-011, §7 uses the CCO **[DES]**) **[ASSUMPTION]** | Owner question Q28 in LOOP_STATE.md; pilot discovery |
 | C7 | Which breaches SEBI must be told about, and how (BA-004 WF-014 hand-off **[VAL]**) | REG-001 (Step 25) |
 | C8 | Back-test window N (FR-D08-013) and the time by which the post-trade run must start (§9) **[ASSUMPTION]** | Pilot discovery |
+| C9 | Legal review of regulatory interpretation (WF-034, §7 †): whether the in-house Legal Officer or outside counsel does it; the right is not in BA-005 §3 (Legal Officer: R on D08) | Owner question Q29 in LOOP_STATE.md; next BA-005 revision; REG-001 (Step 25) |
 
 ## Sources
 
@@ -286,8 +290,8 @@ Within PRD-000 C8 and ADR-0008 (read and propose only): the **Compliance copilot
 | R4 | [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3, §4, §5 | Rights, approvers, SoD |
 | R5 | [PRD-002](PRD-002_product_and_scheme_management.md), [PRD-003](PRD-003_investment_management.md), [PRD-004](PRD-004_portfolio_management.md), [PRD-005](PRD-005_order_management.md) | Mandate, house limits, what-if and headroom, overrides |
 | R6 | DDL-000 v0.9 `compliance` schema (`database/ddl/DDL-000_core_schema_v0.9.sql`) | Rule statuses, breach states, check kinds |
-| R7 | [SEBI notifies Mutual Funds Regulations, 2026 — Taxmann](https://www.taxmann.com/post/blog/sebi-notifies-mutual-funds-regulations-2026) (accessed 20 Nov 2026) | Regulations notified January 2026 |
-| R8 | [New MF rules from April 1 — Business Standard, 16 Jan 2026](https://www.business-standard.com/markets/mutual-fund/new-mf-rules-from-april-1-sebi-allows-performance-linked-expense-charging-126011601076_1.html) (accessed 20 Nov 2026) | Effective 1 Apr 2026 |
+| R7 | [SEBI notifies Mutual Funds Regulations, 2026 — Taxmann](https://www.taxmann.com/post/blog/sebi-notifies-mutual-funds-regulations-2026) (accessed 20 Nov 2026) — secondary source | Regulations notified January 2026 |
+| R8 | [New MF rules from April 1 — Business Standard, 16 Jan 2026](https://www.business-standard.com/markets/mutual-fund/new-mf-rules-from-april-1-sebi-allows-performance-linked-expense-charging-126011601076_1.html) (accessed 20 Nov 2026) — secondary source | Effective 1 Apr 2026 |
 | R9 | [Offsite inspection formats, Master Circular for Mutual Funds as on 20 Mar 2026 — SEBI PDF](https://www.sebi.gov.in/sebi_data/commondocs/mar-2026/Offsite%20Inspection%20formats%20Master%20Circular%20for%20Mutual%20Funds%20as%20on%20March%2020%202026_p.pdf) (accessed 20 Nov 2026) | Master Circular date; formats exist |
 | R10 | [SEBI issues updated Master Circular for Mutual Funds — Taxmann](https://www.taxmann.com/post/blog/sebi-issues-updated-master-circular-for-mutual-funds/) (accessed 20 Nov 2026) | Master Circular (secondary) |
 | R11 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, D-18 | Building on Drafts; SoD waivers |

@@ -31,7 +31,7 @@ This document states what AMC OS must do between the moment an approved order is
 | FR-04-09, FR-04-10, FR-04-11 | FR-D06-001, FR-D06-002, FR-D06-003 | Left by PRD-005 §2 for this document (PRD-005 C5) |
 | FR-05-01, FR-05-02, FR-05-03 | FR-D06-004, FR-D06-005, FR-D06-006 | BA-001 places trade capture and confirmation in D06 (CAP-D06-007, CAP-D06-003) |
 | FR-05-07 | FR-D06-007 | Trade-by-trade execution reconciliation; broker statements and bills stay D12 (BA-001 §4) |
-| FR-05-11 **(split)** | FR-D06-008 (broker part) | Brokers' empanelment status and limits here (CAP-D06-001); custodians, banks, clearing corporations, debt counterparties and SSIs go to D07 (PRD-007, CAP-D07-004 (.2)) and the counterparty golden record to D16 (CAP-D16-004) |
+| FR-05-11 **(split)** | FR-D06-008 (broker part) | D06 keeps only the broker part: brokers' empanelment status and limits (CAP-D06-001). SSIs go to D07 (PRD-007, CAP-D07-004 (.2)). Empanelment status and limits of non-broker counterparties (custodians, banks, clearing corporations, debt and repo counterparties): **[DES]** proposal — the counterparty record and its empanelment status sit with the counterparty master (D16 CAP-D16-004; owner of `master` open, BA-001 §5 C2); counterparty exposure limits are measured by D09 (CAP-D09-005) and enforced as D08 rules (CAP-D08-005). Confirmed in EA-003 (Step 11). (open point C15) |
 | FR-05-04 … FR-05-06, FR-05-08, FR-05-09 | — | D07 (PRD-007) |
 | FR-05-10 | — | Corporate actions are D12 (CAP-D12-007), re-keyed in PRD-012 (Step 9) |
 | FR-10-02 (broker connectivity) | — | **Referenced only**; Module 10 is re-keyed in PRD-012 (Step 9). FR-D06-013 and FR-D06-014 state the D06 need |
@@ -63,7 +63,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 
 | ID (was) | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
-| FR-D06-001 (FR-04-09) | M | CAP-D06-002 (.1), (.2) | **Execution capture:** fills with price, quantity, time, exchange and broker trade/execution ID; partial executions accumulate against the order or block. Each fill is stored once, keyed by broker and broker execution ID (idempotent; DDL-000 `execution.fill`) |
+| FR-D06-001 (FR-04-09) | M | CAP-D06-002 (.1), (.2) | **Execution capture:** fills with price, quantity, time, exchange and broker trade/execution ID; partial executions accumulate against the order or block. Each fill is stored once: the service detects a duplicate by broker and broker execution ID, whatever its `executed_at` (idempotent). DDL-000 `execution.fill` does not yet enforce this on its own (open point C16) |
 | FR-D06-002 (FR-04-10) | M | CAP-D06-004 (.1), (.2) | **Post-trade allocation:** allocate block fills to schemes pro-rata to the intent recorded in D05 (FR-D05-007), or by a documented rule; one average price per scheme; deviations need Head of Dealing **and** Compliance Officer approval (`execution.allocation.approve_deviation`). **[REG — fair allocation among schemes; VAL exact clause]** |
 | FR-D06-003 (FR-04-11) | M | CAP-D06-003 (.1) | **Trade confirmation:** match the broker contract note to the allocations; send the status to settlement (D07) and to the order (D05) |
 | FR-D06-004 (FR-05-01) | M | CAP-D06-007 (.1) | **Trade capture:** trades from executed and allocated orders; also externally booked trades (primary market, IPO allotments, inter-scheme transfers, repo / TREPS) by controlled entry with maker-checker and evidence (WF-024, `execution.trade.approve_external`) |
@@ -101,7 +101,7 @@ stateDiagram-v2
   ALLOCATION_DEVIATION --> CAPTURED: deviation approved
   CAPTURED --> CHECKER_PENDING: external trade
   CHECKER_PENDING --> CONFIRMED: checker approves; no contract note for the type
-  CHECKER_PENDING --> AWAITING_CONTRACT_NOTE: checker approves; type has a contract note
+  CHECKER_PENDING --> AWAITING_CONTRACT_NOTE: checker approves; type has a contract note (changed from WF-024)
   CAPTURED --> AWAITING_CONTRACT_NOTE
   AWAITING_CONTRACT_NOTE --> CONFIRMED: matched within tolerance
   AWAITING_CONTRACT_NOTE --> BREAK: mismatch or unreadable note
@@ -112,7 +112,7 @@ stateDiagram-v2
   REVERSED --> [*]
 ```
 
-A reversed trade is replaced by a new trade that starts at `CAPTURED` (BRL-D06-004). Fills themselves have no state: a broker bust or correction is a new adjustment fill linked to the original (DA-000 Ch 1 principle 3; Ch 7, execution row) **[DES]**.
+The transition `CHECKER_PENDING → AWAITING_CONTRACT_NOTE` is **(changed from WF-024)**: WF-024 marks such a trade `CONFIRMED` before matching (open point C17). A reversed trade is replaced by a new trade that starts at `CAPTURED` (BRL-D06-004). Fills themselves have no state: a broker bust or correction is a new adjustment fill linked to the original (DA-000 Ch 1 principle 3; Ch 7, execution row) **[DES]**.
 
 ## 5. Business rules
 
@@ -180,7 +180,7 @@ Definition of done: as PRD-000 Chapter 5. The 99% target in AC-US-D06-002-1 is P
 | --- | --- | --- |
 | Broker reject | Recorded with reason; order moves to `REJECTED_BY_BROKER` in D05; no automatic re-send (FR-D06-021) | PRD-000 Module 04 point 14; WF-004 |
 | Connection drop with a broker | Reconnect and recover missed messages by sequence; order state in D05 unchanged until D06 reports | PRD-000 Module 04 point 14 |
-| Duplicate fill | Ignored by broker execution ID (idempotent) and logged | PRD-000 Module 04 point 14; DDL-000 `execution.fill` |
+| Duplicate fill | Ignored by broker and broker execution ID, whatever its `executed_at` (idempotent, checked by the service), and logged | PRD-000 Module 04 point 14; open point C16 |
 | Late fill after the order is `CANCELLED` | Stored, flagged and put in the break queue and the exception queue (CAP-D12-008); not allocated until resolved | PRD-000 Module 04 point 14 |
 | Broker bust or correction of a fill | Adjustment fill linked to the original; allocation and confirmation re-run | DA-000 Ch 7 (execution row) |
 | Contract note mismatch or unreadable | Break; not auto-affirmed (FR-D06-006, -014) | PRD-000 Module 05 point 18; WF-025 |
@@ -193,7 +193,7 @@ Definition of done: as PRD-000 Chapter 5. The 99% target in AC-US-D06-002-1 is P
 
 | Exists in DDL-000 | Not yet in DDL-000 (for DA-001 / DDL, Steps 15–16) **[DES]** |
 | --- | --- |
-| `execution.fill` (insert-only, monthly partitions, unique on broker and broker execution ID, `raw_message_ref` pointer to the raw archive). Related, owned elsewhere: `trading.block_allocation` (D05 schema, holds `allocated_quantity` and `average_price`), `settlement.trade` (D07 schema, holds charges and the settlement status) | Raw broker message archive; broker record, limits and brokerage rate schedule versions; broker evaluations; allocation results owned by D06; contract notes and match results; trade record with the §4.3 states; trade break queue; external-trade evidence links; charges rate table |
+| `execution.fill` (insert-only, monthly partitions, `UNIQUE (tenant_id, executed_at, broker_code, broker_exec_id)` — this does **not** stop a repeated report with a different `executed_at` or in another partition being stored twice, so duplicate detection is not yet in place in the database (C16); `raw_message_ref` pointer to the raw archive). Related, owned elsewhere: `trading.block_allocation` (D05 schema, holds `allocated_quantity` and `average_price`), `settlement.trade` (D07 schema, holds charges and the settlement status) | Raw broker message archive; broker record, limits and brokerage rate schedule versions; broker evaluations; allocation results owned by D06; contract notes and match results; trade record with the §4.3 states; trade break queue; external-trade evidence links; charges rate table |
 
 **Allocation results and trade records (PRD-005 C9; BA-001 §5 C3)** **[DES proposal]:** D06 owns post-trade allocation results and the trade record in `execution`; D05 records only the order state it learns from D06 events; D07 receives confirmed trades by event and keeps its own settlement record. Today DDL-000 puts allocation results in `trading.block_allocation` and the trade with charges in `settlement.trade`, which would need D06 to write other domains' schemas (AGENTS.md §2.3). Confirmation is left to EA-003 (Step 11) and DA-001 (Step 15) (open points C3, C4).
 
@@ -227,8 +227,8 @@ Within PRD-000 C8 and ADR-0008 (read and propose only):
 | C3 | DA-000 and DDL-000 keep trades and charges in `settlement.trade` (D07 schema) while BA-001 gives trade lifecycle and confirmation to D06 (BA-001 §5 C3, BA-004 §5.2 C2) | EA-003 (Step 11), DA-001 (Step 15) |
 | C4 | Where allocation results live and who writes them (PRD-005 C9): §10 proposes D06 in `execution`, with D05 updated by events | EA-003 (Step 11), DA-001 (Step 15) |
 | C5 | Re-route after `REJECTED_BY_BROKER`: D06 side settled here (FR-D06-021); whether D05 creates a new order or a new order version stays PRD-005 C4 | PRD-005 revision or DA-001 |
-| C6 | Allocation rounding rule when pro-rata quantities are not whole lots or shares (who gets the remainder) **[ASSUMPTION]** | Owner question; pilot discovery (Head of Dealing, Compliance) |
-| C7 | Who owns the statutory charges rate table (BRL-D06-003) — D06, D10 or reference data in D16 — and the matching tolerances **[ASSUMPTION]** | EA-003 (Step 11); values: pilot discovery |
+| C6 | Allocation rounding rule when pro-rata quantities are not whole lots or shares (who gets the remainder) **[ASSUMPTION]** | Owner question Q22 in [LOOP_STATE.md](../../LOOP_STATE.md); pilot discovery (Head of Dealing, Compliance) |
+| C7 | Who owns the statutory charges rate table (BRL-D06-003) — D06, D10 or reference data in D16 — who updates it when rates change, and the matching tolerances **[ASSUMPTION]** | Owner question Q23 in [LOOP_STATE.md](../../LOOP_STATE.md); EA-003 (Step 11); values: pilot discovery |
 | C8 | Broker evaluation criteria and review frequency, broker limits and brokerage schedules (FR-D06-008…010) **[ASSUMPTION]** | Pilot discovery (Head of Dealing) |
 | C9 | Order, fill and contract-note protocols and formats per broker (FR-D06-013, -014) | INT-001 (Step 14) — confirm with each broker |
 | C10 | Trade states (§4.3) are proposed; not in PRD-000 or DDL-000 | DA-001 / DDL (Steps 15–16) |
@@ -236,6 +236,9 @@ Within PRD-000 C8 and ADR-0008 (read and propose only):
 | C12 | No performance figure exists for fill capture, matching or reconciliation; the 99% auto-affirm target (AC-US-D06-002-1) is PRD-000's figure | Pilot discovery; next PRD-006 revision |
 | C13 | Reference price and measure for execution-quality review (FR-D06-012) **[ASSUMPTION]** | Pilot discovery |
 | C14 | Which externally booked trade types have a broker contract note (BA-004 WF-024) **[ASSUMPTION]** | Pilot discovery (DEP-06) |
+| C15 | FR-05-11 split: Empanelment status and limits of non-broker counterparties (custodians, banks, clearing corporations, debt and repo counterparties): **[DES]** proposal — the counterparty record and its empanelment status sit with the counterparty master (D16 CAP-D16-004; owner of `master` open, BA-001 §5 C2); counterparty exposure limits are measured by D09 (CAP-D09-005) and enforced as D08 rules (CAP-D08-005). Confirmed in EA-003 (Step 11). | EA-003 (Step 11); PRD-007 states the same proposal |
+| C16 | Duplicate fills: DDL-000 `execution.fill` is unique on `(tenant_id, executed_at, broker_code, broker_exec_id)`, so the same report with a different `executed_at` (or in another monthly partition) would be stored twice. A dedup key independent of `executed_at` is needed (for example a separate dedup key table); until then the service check of FR-D06-001 is the only control | DA-001 / DDL (Steps 15–16) |
+| C17 | **(changed from WF-024)** §4.3 sends an external trade whose type has a contract note from `CHECKER_PENDING` to `AWAITING_CONTRACT_NOTE`, so it is `CONFIRMED` only after matching; BA-004 WF-024 marks it `CONFIRMED` before matching in WF-025 | Next BA-004 revision |
 
 ## Sources
 

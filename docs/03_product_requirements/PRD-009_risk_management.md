@@ -28,14 +28,14 @@ This document states what AMC OS must do to measure every material risk in every
 
 | PRD-000 v0.9 | Here | Note |
 | --- | --- | --- |
-| FR-07-01 … FR-07-11 | FR-D09-001 … FR-D09-011 | Same order and wording; capability references added |
+| FR-07-01 … FR-07-11 | FR-D09-001 … FR-D09-011 | Same order; capability references added. Wording kept for FR-D09-001, -002, -004…-007, -011. **Wording extended** **[DES]** for: FR-D09-003 (investor concentration taken from the D13 RTA mirror; pointer to the §5 note and sources); FR-D09-008 (counterparty records from CAP-D16-004, broker panel from D06); FR-D09-009 (the **[IND]** label on the historical scenario names, added here, and the rule that scenarios come only from the approved library, FR-D09-017); FR-D09-010 (what-if on a D04 proposed trade or a D05 draft order; results labelled "what-if" and never stored as official daily risk) |
 | BR-07-1 … BR-07-4 | BRL-D09-001 … BRL-D09-004 | Labels added where PRD-000 had none |
 | Module 07 point 7 stories (CRO liquidity stress; FM PV01 of a proposed trade) | US-D09-001, US-D09-002 | Acceptance criteria are new **[DES]** |
-| Module 07 point 18 acceptance criteria | AC-US-D09-003-1 (reference bond), AC-US-D09-004-1 (model without validation) | Placed on two new stories |
+| Module 07 point 18 acceptance criteria | AC-US-D09-003-1 (reference bond), AC-US-D09-004-1 (model without validation) | Placed on US-D09-003 (was US-RSK-02) and on the new story US-D09-004 |
 | Ch 5 US-RSK-01 (CRO daily liquidity stress results) and US-RSK-02 (Risk Manager reference-tested formulas) | US-D09-001 (**merged** with the Module 07 point 7 CRO story) and US-D09-003 | US-RSK-01's criterion ("every scheme has a stress result within 30 min of NAV approval") is carried by AC-US-D09-001-1 together with NFR-PERF-012; US-RSK-02 has no own criterion ("See Module 07 AC") |
 | Module 07 point 13 approvals | BRL-D09-002 (models), BRL-D09-008 (scenario library), BRL-D09-005 (limits and thresholds) | Risk-limit changes: PRD-000 says "CRO + Risk Committee evidence" (open point C3) |
 | Module 07 points 14, 15, 17 | §9 exceptions, NFR-AUD-009, NFR-PERF-012, NFR-PERF-013 | |
-| — | FR-D09-012 … FR-D09-020, BRL-D09-005 … 009, US-D09-003 … 009, WF-033 | **New** **[DES]** |
+| — | FR-D09-012 … FR-D09-020, BRL-D09-005 … 009, US-D09-004 … 009, WF-033 | **New** **[DES]** |
 
 ## 3. Business requirements
 
@@ -171,7 +171,7 @@ Priority: **C** critical (release-blocking), **O** optional — as PRD-000 Chapt
 
 | ID | Story | Pri | Acceptance criteria (Given / When / Then) |
 | --- | --- | --- | --- |
-| US-D09-001 (was Module 07 point 7; US-RSK-01) | As the Risk officer, I want liquidity-stress results for every open-ended scheme from each daily run, so that I can act before a redemption wave | C | **AC-US-D09-001-1** (new **[DES]**) Given the daily run for D has finished, when the Risk officer opens the liquidity view, then every open-ended scheme shows a stress result for D with its scenario and methodology versions, or is listed as stale with the reason. |
+| US-D09-001 (was Module 07 point 7; US-RSK-01) | As the Risk officer, I want liquidity-stress results for every open-ended scheme from each daily run, so that I can act before a redemption wave | C | **AC-US-D09-001-1** (from US-RSK-01, with **[DES]** detail) Given the NAV for D is approved, when 30 minutes have passed (NFR-PERF-012), then every open-ended scheme has a liquidity stress result for D stored with its scenario and methodology versions. A scheme without a result for D fails this criterion: it raises an alert to the Risk Manager and the Risk officer, and its last good result is shown as stale with the reason (BRL-D09-006) — showing stale is required behaviour, not a pass. |
 | US-D09-002 (was Module 07 point 7) | As an FM, I want the PV01 of my proposed trade before I place it, so that I stay within duration bands | C | **AC-US-D09-002-1** (new **[DES]**) Given a proposed trade on my scheme, when I run a what-if, then PV01 and modified duration before and after are returned within NFR-PERF-013 and marked "what-if". |
 | US-D09-003 (was US-RSK-02) | As the Risk officer, I want the formula library proven on known values | C | **AC-US-D09-003-1** (was Module 07 point 18) Given a reference bond with known modified duration, when the engine computes it, then the result matches to 6 decimal places. |
 | US-D09-004 | As the Risk officer, I want no unvalidated model in use | C | **AC-US-D09-004-1** (was Module 07 point 18) Given a model version without validator sign-off, when activation is attempted, then it is refused. |
@@ -226,14 +226,14 @@ Within PRD-000 C8 and ADR-0008 (read and propose only). The **Risk assistant** (
 | # | Point | Where closed |
 | --- | --- | --- |
 | C1 | Liquidity stress-test methodology, frequency and disclosure; riskometer methodology; tracking-difference disclosure; which pre-2026 circulars still apply under the 2026 Regulations **[VAL]** | REG-001 (Step 25); FE-05 (Step 22) |
-| C2 | Escalation path after the Risk officer: whether a separate Risk Management Committee exists (BA-002 §2 marks it **[VAL]**) or escalation goes to the board | REG-001 (Step 25); pilot discovery |
-| C3 | Whether a risk-limit change needs a Risk Committee record in addition to Risk officer approval (PRD-000 Module 07 point 13) | Pilot discovery |
-| C4 | PRD-000 names a "Model Validator (independent)" role that BA-005 does not have; who validates models in a small AMC (another Risk Manager, the data-science team or an outside firm) **[ASSUMPTION]** | Next BA-005 revision; AIML-002 (Step 26) |
+| C2 | Escalation path after the Risk officer: whether a separate Risk Management Committee exists (BA-002 §2 marks it **[VAL]**) or escalation goes to the board — owner question Q31 in [LOOP_STATE.md](../../LOOP_STATE.md) | Owner (Q31); REG-001 (Step 25) |
+| C3 | Whether a risk-limit change needs a Risk Committee record in addition to Risk officer approval (PRD-000 Module 07 point 13) — owner question Q32 | Owner (Q32); pilot discovery |
+| C4 | PRD-000 names a "Model Validator (independent)" role that BA-005 does not have; who validates models in a small AMC (another Risk Manager, the data-science team or an outside firm) **[ASSUMPTION]** — owner question Q30 | Owner (Q30); next BA-005 revision; AIML-002 (Step 26) |
 | C5 | Fund Manager and CIO rights added in §7 (†) are not in BA-005 §3 | Next BA-005 revision |
 | C6 | Alert thresholds, escalation times, attribution tolerance and the liquidity assumptions (% of average daily volume) **[ASSUMPTION]** | Pilot discovery; FE-05 (Step 22) |
 | C7 | `risk` schema has no tables in DDL-000 | DA-001 / DDL (Steps 15–16) |
 | C8 | BA-004 register gets WF-033 (row added in this step); the full card lives here until BA-004's next revision | Next BA-004 revision |
-| C9 | BA-002 §3 gives DEP-11 operational and enterprise risk, but the brief's D09 list and BA-001 have no capability for them (risk register, incidents, risk and control self-assessment) | Owner; next BA-001 revision |
+| C9 | BA-002 §3 gives DEP-11 operational and enterprise risk, but the brief's D09 list and BA-001 have no capability for them (risk register, incidents, risk and control self-assessment) — owner question Q33 | Owner (Q33); next BA-001 revision |
 
 ## Sources
 

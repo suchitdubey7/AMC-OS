@@ -1,12 +1,14 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-20 (see commit time)
-**Chain tip:** `wp2-step07-prd-investment-portfolio-oms`
+**Updated:** 2026-11-20 20:40 IST
+**Chain tip:** `wp2-step08-prd-trading-settlement-compliance-risk`
 
 ## Next action
 
-**Step 8** on a new branch `wp2-step08-prd-trading-settlement-compliance-risk` from the chain tip: PRD-006 Trading and Execution (D06), PRD-007 Settlement (D07, split from PRD-000 Module 05), PRD-008 Compliance (D08) and PRD-009 Risk (D09), GOV-006 §3. Re-key PRD-000 FR-04-09…11 (left by PRD-005 §2), Module 05, Module 06 and Module 07; re-key the Module 04 allocation acceptance criterion; check PRD-005 open points C4 (amended order version and re-route after broker reject), C5 (FR-04-09…11, zero lost fills, raw FIX archive), C9 (who writes post-trade allocation results); give D09 its daily risk run and risk-alert workflow (BA-004 §5.1 C6); continue numbering (next free: WF-033, NFR-PERF-007, NFR-AUD-006, NFR-RET-003, NFR-SEC-004, NFR-SCAL-003).
+**Step 9** on a new branch `wp2-step09-prd-accounting-to-ai` from the chain tip: PRD-010 Fund Accounting (D10), PRD-011 Valuation and NAV (D11), PRD-012 Fund Operations (D12), PRD-013 Investor Management (D13), PRD-014 Distribution (D14), PRD-015 Finance (D15), PRD-016 Data (D16), PRD-017 AI (D17); mark PRD-000 Superseded (GOV-006 §3). Step 9 is large: if one run cannot finish it with review, split it into 9a (PRD-010…013) and 9b (PRD-014…017 + PRD-000 Superseded) and record the split here. Carry over from Step 8: re-key Module 05 FR-05-10 and BR-05-3 (corporate actions → PRD-012) and FR-10-02, -03, -06, -08 (left by PRD-006/PRD-007); D15 workflow and BA-002 P13 (BA-004 §5.2 C6); fair valuation workflow (BA-004 §5.1 D11); D13 gaps (BA-004 §5.1). Next free numbers: WF-035, NFR-PERF-014, NFR-AUD-010, NFR-RET-004, NFR-SEC-004, NFR-SCAL-003 (NFR-PERF-009 is unused, never reused).
+
+Done in the Step 8 run (20 Nov 2026, scheduled): PRD-006 Trading and Execution (FR-04-09…11 and D06 parts of Module 05 re-keyed + new FRs), PRD-007 Settlement (D07 parts of Module 05 re-keyed + new FRs; net settlement per SEBI circular of 5 Nov 2026), PRD-008 Compliance (Module 06 re-keyed; WF-034 rule change lifecycle with legal review), PRD-009 Risk (Module 07 re-keyed; WF-033 daily risk run and alerts). PRD-005 open points C4, C5, C6, C9 updated.
 
 After that: Steps 9, 10, … in GOV-006 order. The repository is still public until the owner switches it (D-6).
 
@@ -44,7 +46,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 10:57 IST, build loop, CR-0001 gate PASS) |
 | 9 | `wp2-step06-prd-platform-product` | Step 6: PRD-001 Platform Administration (D01), PRD-002 Product and Scheme Management (D02); WF-029, WF-030 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 6 Minor, 3 Nits — 8 fixed, Nit 9 (commit trailer) left; round 1 had 2 Major, both fixed) | pass | yes (20 Nov 12:43 IST, build loop, CR-0001 gate PASS) |
 | 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005, PRD-001, BA-004 WF-020 and GOV-001 §4 | Round 5: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 5 Nits — all fixed except Nit 9 (version bumps, accepted Draft practice) and Nit 10 (trailer)) | pass | yes (20 Nov 2026, merged on the owner's instruction in chat — GOV-001 §4 row, outside the CR-0001 G2 exception) |
-| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 (D03), PRD-004 (D04), PRD-005 (D05); WF-031, WF-032 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 4 Minor, 2 Nits — all fixed except Nit 6 (trailer); round 1 had 1 Major, fixed) | see gate | see gate |
+| 11 | `wp2-step07-prd-investment-portfolio-oms` | Step 7: PRD-003 (D03), PRD-004 (D04), PRD-005 (D05); WF-031, WF-032 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 4 Minor, 2 Nits — all fixed except Nit 6 (trailer); round 1 had 1 Major, fixed) | pass | yes (20 Nov 13:13 IST, build loop, CR-0001 gate PASS) |
 
 ## Owner decisions used by the loop
 
@@ -88,3 +90,15 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | --- | --- | --- | --- |
 | Q20 | Subscription to AMC OS: which usage measures should be metered (for example named users, schemes, API calls, storage), and when a subscription lapses or is downgraded, should the module become read-only or hidden? | Step 6 (PRD-001 FR-D01-027, FR-D01-028) | Metering of counts only, list to be decided; data never deleted; lapsed module read-only |
 | Q21 | When an AMC leaves: in what format do we hand over its data, how long does it have to take it, and how long do we keep records afterwards? | Step 6 (PRD-001 FR-D01-004) | Open, documented formats with checksums; time limit and retention as in the contract and law (REG-001) |
+| Q22 | When a block fill is split between schemes and the shares do not divide evenly, who gets the leftover shares (for example the largest scheme, rotation, or a rule set by the Head of Dealing)? | Step 8 (PRD-006 C6) | Pilot discovery; rule recorded as tenant configuration |
+| Q23 | Should AMC OS keep its own table of trade charges (STT, stamp duty, GST, exchange fees) to check brokers' contract notes, and who updates it when rates change? | Step 8 (PRD-006 C7) | Versioned charges table kept (PRD-000 BR-05-4); which domain owns it and who updates it open |
+| Q24 | When a trade fails to settle and there is a penalty, does the scheme pay it or the AMC? | Step 8 (PRD-007 C5) | [VAL]; no default — the penalty is tracked but not charged to either until decided |
+| Q25 | Above what amount should a settlement instruction need a second person to approve it? | Step 8 (PRD-007 C7) | Tenant setting; value from pilot discovery |
+| Q26 | Who approves a new or changed compliance rule: only the CCO, or any other Compliance Officer? | Step 8 (PRD-008 C2) | CCO (PRD-000) |
+| Q27 | Internal risk limits: should the Risk team write them and the Risk officer (CRO) approve them inside the compliance rule engine? | Step 8 (PRD-008 C3) | Yes (PRD-000 BR-07-3); author rights open |
+| Q28 | Who can grant a temporary exemption from a limit, and what is the longest it may last? | Step 8 (PRD-008 C6) | CCO; maximum length set in pilot discovery |
+| Q29 | Who checks the legal reading of a new SEBI rule before we build it: the AMC's own Legal Officer, or outside lawyers? | Step 8 (PRD-008 C9) | Legal Officer or outside counsel, as the AMC chooses |
+| Q30 | Who should check a risk model before it is used: another risk person, the data team, or an outside firm? | Step 8 (PRD-009 C4) | A validator who did not build the model (PRD-000 "independent") |
+| Q31 | If the Risk officer does not act on a risk alert, who should it go to next: a Risk Committee or the board? | Step 8 (PRD-009 C2) | Escalation target is tenant configuration |
+| Q32 | Does changing a risk limit need only the Risk officer's approval, or also a Risk Committee record? | Step 8 (PRD-009 C3) | Risk officer approval; committee record open |
+| Q33 | Should the Risk department also track operational and enterprise risk (risk register, incidents) in AMC OS, even though the brief does not list it? | Step 8 (PRD-009 C9) | Not in scope until decided |
