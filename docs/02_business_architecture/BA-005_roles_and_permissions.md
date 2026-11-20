@@ -41,7 +41,7 @@ Action letters are those of PRD-000 Chapter 6: **R** read · **C** create · **U
 
 ## 2. Role catalogue
 
-Role IDs `ROLE-nn` are proposed here **[DES]** so that permissions, workflows and tests can point to a role. They are not yet in the GOV-001 §4 identifier table (owner question Q17 in [LOOP_STATE.md](../../LOOP_STATE.md)). ROLE-01…ROLE-20 are the 18 business roles and 2 platform roles of PRD-000 §2.3, in the same order; ROLE-21…ROLE-27 are new.
+Role IDs `ROLE-nn` are proposed here **[DES]** so that permissions, workflows and tests can point to a role. They are not yet in the GOV-001 §4 identifier table (owner question Q17 in [LOOP_STATE.md](../../LOOP_STATE.md)). ROLE-01…ROLE-18 are the 18 business roles of PRD-000 §2.3 in the same order; ROLE-19 and ROLE-20 are its two platform roles; ROLE-21…ROLE-27 are new.
 
 | ID | Role | Usual department (BA-002 §3) | Purpose | Source |
 | --- | --- | --- | --- | --- |
@@ -91,15 +91,15 @@ The table re-keys the PRD-000 Chapter 6 matrix from its 14 columns to the 17 dom
 
 | Role | D01 | D02 | D03 | D04 | D05 | D06 | D07 | D08 | D09 | D10 | D11 | D12 | D13 | D14 | D15 | D16 | D17 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| CEO | — | R A(material) | R | R | R | R | R | R A(regularise) | R | R | R A(material correction) | R | R masked | R | R E | R (certified) | R use |
-| COO | — | R | R | R | R | R | R A J E | R | R | R A(reopen with CFO) | R A J | R A J E | R masked | R | R E | R (certified) | R use |
-| CIO | — | R A(mandate) | R C U A J | R A | R A J O(with CCO) | R A J O(with CCO) | R | R | R | R | R | R | — | — | R | R (certified) | R use |
-| CFO | — | R A(fees) | — | R | R | R | R | R | R | R A(period) | R | R | R masked | R A(commission) | R C U A E | R (certified) | R use |
-| CTO | R A(tech config) | R | — | — | — | — | R (tech) | — | — | — | — | R (tech) | — | — | R | R A (tech config)† | R X(config) |
-| Fund Manager | — | R | R C(recommend) | R C U own | R C U S own | R C U S own | R own | R own; S cure plan | R own | R own | R own | R own | — | — | R own | R (certified, own scope)† | R use |
+| CEO | — | R A(material) | R | R | R | R | R | R A(regularise) | R | R | R A(material correction) | R | R masked | R | R E | R (certified)† | R use |
+| COO | — | R | R | R | R | R | R A J E | R | R | R A(reopen with CFO) | R A J | R A J E | R masked | R | R E | R (certified)† | R use |
+| CIO | — | R A(mandate) | R C U A J | R A | R A J O(with CCO) | R† | R | R | R | R | R | R | — | — | R | R (certified)† | R use |
+| CFO | — | R A(fees) | — | R | R | R | R | R | R | R A(period) | R | R | R masked | R A(commission) | R C U A E | R (certified)† | R use |
+| CTO | R A(tech config) | R | — | — | — | — | R (tech) | — | — | — | — | R (tech) | — | — | R | R A(tech config)† | R X(config) |
+| Fund Manager | — | R | R C(recommend) | R C U own | R C U S own | R own† | R own | R own; S cure plan | R own | R own | R own | R own | — | — | R own | R (certified, own scope)† | R use |
 | Research Analyst | — | R | R C U S own | R | — | — | — | R | R | — | — | — | — | — | — | R (certified, own scope)† | R use |
 | Dealer | — | R | R | R | R U (route, block, allocate) | R C U S (route, block, allocate, external trades)† | R | R results | — | — | — | R | — | — | — | R (certified, own scope)† | R use |
-| Compliance Officer | — | R A J | R C U (restricted list) A | R | R O(with 2nd approver) | R O(with 2nd approver) | R | R C U S A J | R | R | R A(correction) | R | R masked E(audit) | R A(due diligence) | R | R (certified, own scope)† | R use, R logs |
+| Compliance Officer | — | R A J | R C U (restricted list) A | R | R O(with 2nd approver) | R† | R | R C U S A J | R | R | R A(correction) | R | R masked E(audit) | R A(due diligence) | R | R (certified, own scope)† | R use, R logs |
 | Risk Manager | — | R | R | R | R | R | R | R | R C U S A(CRO) | R | R | R | — | — | R | R (certified, own scope)† | R use |
 | Fund Accountant | — | R | — | R | R | R | R | R | R | R C S (A senior) | R C S (A Head FA) | R | R masked | — | R | R (certified, own scope)† | R use |
 | Operations Analyst | — | R | R | R | R | R C U S (confirmation, breaks, external trades)† | R C U S (A manager) | R | — | R | R | R C U S (A manager) | R masked | R | — | R (certified, own scope)† | R use |
@@ -116,24 +116,30 @@ The table re-keys the PRD-000 Chapter 6 matrix from its 14 columns to the 17 dom
 | --- | --- | --- | --- | --- |
 | Dealer | D06 | R U (route, block, allocate) | R C U S (route, block, allocate, external trades) | Dealer is a maker for externally booked trades (WF-024) |
 | Operations Analyst | D06 | R | R C U S (confirmation, breaks, external trades) | DEP-06 is accountable for trade confirmation and execution reconciliation (BA-002 §4; WF-025) and is a maker in WF-024 |
-| CTO | D16 | — (no column) | R A (tech config) | Same as the CTO's D01 right |
+| Fund Manager | D06 | R C U S own (copied from Orders) | R own | Execution is the dealer's job; create/submit rights on execution would weaken SOD-03 |
+| CIO | D06 | R A J O(with CCO) (copied from Orders) | R | Approval and override act on the order (D05); there is no execution-level approval or override |
+| Compliance Officer | D06 | R O(with 2nd approver) (copied from Orders) | R | As for the CIO: the compliance override acts on the order in D05 (WF-005) |
+| CEO, COO, CIO, CFO | D16 | — (no column) | R (certified) | Read certified datasets and metrics (CAP-D16-007, CAP-D16-012) |
+| CTO | D16 | — (no column) | R A(tech config) | Same as the CTO's D01 right |
 | Technology Administrator | D16 | — (no column) | C U S (pipelines, connections) | Same as the Technology Administrator's connection rights in D07/D12 |
 | Auditor | D16 | — (no column) | R E | Same as the Auditor's rights elsewhere |
-| All other business roles | D16 | — (no column) | R (certified, own scope) or R (certified) | Read certified datasets and metrics within the role's own scope (CAP-D16-007, CAP-D16-012); no change rights |
+| All other business roles | D16 | — (no column) | R (certified, own scope) | Read certified datasets and metrics within the role's own scope (CAP-D16-007, CAP-D16-012); no change rights |
 
 **New roles (not in the PRD-000 matrix)** **[DES]**:
 
 | Role | Rights |
 | --- | --- |
-| ROLE-19 Tenant Administrator | D01: R A J (approves role grants, configuration on the technical side, tenant activation, break-glass requests). No business-domain rights unless also given a business role, subject to SoD |
+| ROLE-19 Tenant Administrator | D01: R A J (approves role grants, configuration on the technical side, tenant activation, break-glass requests). Holds no business role and no other role (SOD-16). The first Tenant Administrator is named by the AMC at onboarding and confirmed in WF-019; later Tenant Administrator grants are approved by another Tenant Administrator (SOD-16), so an AMC needs at least two **[DES]** |
 | ROLE-20 Platform Operator | Platform level only: X on tenants, cells and releases; **no** right on any tenant's business data. Break-glass access only through WF-022 (SOD-09) |
 | ROLE-21 Legal Officer | D02: R A J (scheme documents, with Compliance); D08: R; D01: — ; other domains: R where a document under review needs it **[ASSUMPTION]** |
 | ROLE-22 Information Security Officer | D01: R, recertification review, access-policy configuration (A); audit log: R E; D17: R logs. No business-data change rights |
-| ROLE-23 Data Steward | D16: R C U S (master data, data quality rules, metric drafts); metric certification needs a checker from the metric's business owner (CAP-D16-012) |
+| ROLE-23 Data Steward | D16: R C U S (master data, data quality rules, metric drafts); metric certification needs a checker from the metric's business owner (CAP-D16-012) **[DES]** |
 | ROLE-24 Finance Officer | D14: R A J (checker of commission runs, SOD-07); D07: A J (checker of settlement-instruction and bank-detail changes, SOD-06); D15: R C U S |
 | ROLE-25 Trustee (read-only) | R on supervisory reports and evidence packs (CAP-D08-012 (.2), CAP-D09-012 (.3), CAP-D15-009 (.4)); investor personal data masked; nothing else |
-| ROLE-26 AI agent identity | Only the read tools the AI gateway allows, always inside the calling user's scope (CAP-D17-001 (.2)); **never** A, O, post, publish or execute in any domain (SOD-10) |
+| ROLE-26 AI agent identity | The read tools the AI gateway allows, plus tools that create **proposals or drafts** (for example proposed orders, proposed matches, draft register entries, draft replies — PRD-000 §9.3) that enter the owning domain's normal human approval workflow (ADR-0008 decision 3); always inside the calling user's scope (CAP-D17-001 (.2)); **never** A, O, post, publish or execute in any domain (SOD-10) |
 | ROLE-27 Service account | Only the API operations its integration needs; never A or O **[DES]**; owner named for each account; reviewed in every recertification (WF-020) |
+
+**Market-abuse oversight.** BA-002 §2 records **[REG]** (secondary source) that the CEO/MD and the CCO are responsible for the AMC's mechanism against market abuse, including review of recorded communications and dealing-room access logs. Where those logs are held in AMC OS (for example dealing-desk access in the audit log), the CEO and the Compliance Officer with the CCO authority get read access to them **[DES]**. Which of these records AMC OS holds at all is open (§7 C6).
 
 **Personal data and exports** (from PRD-000 Chapter 6, unchanged): investor personal data is masked by role; an Investor Service Executive may unmask with a recorded reason; every export is watermarked with user and time; personal-data exports need a reason and approval; a bulk export above a threshold raises an alert (the threshold is tenant configuration **[ASSUMPTION]**).
 
@@ -153,7 +159,7 @@ PRD-000 and BA-004 name approvers such as "Head of Fund Accounting" or "Operatio
 | Chief Compliance Officer (CCO) | ROLE-09 Compliance Officer | DEP-09 | CCO in SOD-04 | WF-005, WF-014, WF-016 |
 | Risk officer | ROLE-10 Risk Manager | DEP-11 | "A(CRO)" | Risk report approval |
 | Committee member | Any role + membership | Investment or Valuation Committee | — | WF-002, fair values (WF-007) |
-| Bank-mandate signatory | As named in the AMC's bank mandate | DEP-06, DEP-14 | "two bank-mandate signatories" (SOD-07) | WF-011, WF-013, WF-026 |
+| Bank-mandate signatory | As named in the AMC's bank mandate; how many must sign each payment is **[ASSUMPTION]** (BA-004 WF-026) | DEP-06, DEP-14 | "two bank-mandate signatories" (SOD-07) | WF-011, WF-013, WF-026 |
 
 The approval actions of BA-004, with the permission name in PRD-000's `domain.object.action` style (the domain part uses the owning schema from GOV-001 §3). Final API permission names are set with the OpenAPI contracts (Step 24).
 
@@ -161,15 +167,15 @@ The approval actions of BA-004, with the permission name in PRD-000's `domain.ob
 | --- | --- | --- | --- | --- | --- |
 | `product.scheme.approve` | CAP-D02-008 | WF-001 | Product Manager | Head of Products, then Compliance Officer; trustee evidence attached | SOD-01 |
 | `investment.universe.approve` | CAP-D03-007 | WF-002 | Research Analyst | Head of Research, or Investment Committee vote | SOD-01 |
-| `trading.order.approve` | CAP-D05-003 | WF-004 | Fund Manager | CIO (above the order threshold, tenant configuration **[ASSUMPTION]**) | SOD-01, SOD-03 |
+| `trading.order.approve` | CAP-D05-003 | WF-004 | Fund Manager | CIO (above the order threshold, tenant configuration **[ASSUMPTION]**) | SOD-01 (SOD-03 applies when the dealer takes the order, not here) |
 | `execution.allocation.approve_deviation` | CAP-D06-004 | WF-004 | Dealer | Head of Dealing **and** Compliance Officer | SOD-01 |
 | `compliance.pretrade.override` | CAP-D08-011 | WF-005 | Fund Manager (requests) | CCO **and** CIO (or delegates) | SOD-04 |
 | `execution.trade.approve_external` | CAP-D06-007 | WF-024 | Dealer or Operations Analyst | A second Dealer, or the Operations Manager **[DES]** | SOD-01 |
 | `execution.trade.correct` | CAP-D06-008 | WF-025 | Dealer or Operations Analyst | Head of Dealing **[DES]** | SOD-01 |
 | `execution.broker.approve` | CAP-D06-001 | WF-023 | Head of Dealing | Body named in the AMC's broker policy **[ASSUMPTION]** (BA-004 WF-023) | SOD-14 |
 | `settlement.ssi.approve` | CAP-D07-004 | WF-028 | Operations Analyst | Finance Officer or Operations Manager, after call-back | SOD-06 |
-| `settlement.payment.release` | CAP-D07-003, CAP-D12-009 | WF-026 | Operations Analyst | Bank-mandate signatories | SOD-01 |
-| `settlement.fail.cancel` | CAP-D07-008 | WF-027 | Operations Analyst | Operations Manager | SOD-01 |
+| `settlement.payment.release` | CAP-D07-003, CAP-D12-009 | WF-026 | Operations Analyst | Bank-mandate signatories (number **[ASSUMPTION]**) | SOD-01 |
+| `settlement.fail.cancel` | CAP-D07-008, CAP-D12-009 | WF-027 | Operations Analyst | Operations Manager | SOD-01 |
 | `valuation.price.override` | CAP-D11-002 | WF-007 | Fund Accountant | Senior Fund Accountant | SOD-01 |
 | `nav.run.approve` | CAP-D11-012 | WF-007 | Fund Accountant (preparer) | Head of Fund Accounting | SOD-01, SOD-02 |
 | `nav.correction.approve` | CAP-D11-014 | WF-017 | Fund Accountant or Compliance Officer | Head of Fund Accounting, Compliance Officer **and** CEO | SOD-01 |
@@ -180,9 +186,9 @@ The approval actions of BA-004, with the permission name in PRD-000's `domain.ob
 | `compliance.report.approve` | CAP-D08-013 | WF-016 | Compliance Officer | CCO | SOD-01 |
 | `compliance.rule.approve` | CAP-D08-001 | (rule lifecycle, PRD-008 Step 8) | Compliance Officer (author) | Another Compliance Officer; tests must pass | SOD-08 |
 | `operations.break.force_match` | CAP-D12-009 | WF-015 | Operations Analyst | Operations Manager | SOD-01 |
-| `investor.payout.release` | CAP-D12-009 | WF-011 | Operations Analyst | Two authorisers (bank-mandate signatories) | SOD-01 |
+| `operations.payout.release` | CAP-D12-009 | WF-011 | Operations Analyst | Two authorisers (bank-mandate signatories) | SOD-01 |
 | `distribution.commission_run.approve` | CAP-D14-011 | WF-013 | Distributor Manager | Finance Officer or CFO; payment by two signatories | SOD-07 |
-| `platform.role_grant.approve` | CAP-D01-004 | WF-020 | Technology Administrator | Tenant Administrator | SOD-05 |
+| `platform.role_grant.approve` | CAP-D01-004 | WF-020 | Technology Administrator | Tenant Administrator (another Tenant Administrator for a Tenant Administrator grant) | SOD-05, SOD-16 |
 | `platform.access.recertify` | CAP-D01-002 | WF-020 | Role owner (department head) | — (review; reported to DEP-16) | SOD-13 |
 | `platform.config.approve` | CAP-D01-008 | WF-021 | Technology Administrator or setting owner | Checker from the department that owns the setting; plus Compliance Officer for a regulatory parameter | SOD-12 |
 | `platform.breakglass.approve` | CAP-D01-005 | WF-022 | Platform Operator | Tenant Administrator | SOD-09, SOD-15 |
@@ -190,7 +196,7 @@ The approval actions of BA-004, with the permission name in PRD-000's `domain.ob
 
 ## 5. Segregation-of-duties rules
 
-SOD-01…SOD-11 are carried over from PRD-000 Chapter 6 unchanged (labels included). SOD-12…SOD-15 are new **[DES]**, written for the BA-004 workflows that PRD-000 did not have.
+SOD-01…SOD-11 are carried over from PRD-000 Chapter 6 unchanged (labels included). SOD-12…SOD-16 are new **[DES]**, written for the BA-004 workflows that PRD-000 did not have.
 
 | ID | Rule | Checked when | Source |
 | --- | --- | --- | --- |
@@ -209,14 +215,16 @@ SOD-01…SOD-11 are carried over from PRD-000 Chapter 6 unchanged (labels includ
 | SOD-13 | Nobody certifies their own access in a recertification | WF-020 | **new** (BA-004 WF-020) |
 | SOD-14 | The person who proposes a broker (Head of Dealing) is not the only approver of its empanelment | WF-023 | **new** (BA-004 WF-023) |
 | SOD-15 | A platform operator can never be the checker for a tenant action; tenant activation and break-glass access need confirmation by the tenant's own Tenant Administrator | WF-019, WF-022 | **new** (BA-004 WF-019, WF-022) |
+| SOD-16 | Nobody approves a role grant, scope change or approval authority for themselves; a grant of the Tenant Administrator role is approved by another Tenant Administrator and reported to the Information Security Officer; the Tenant Administrator holds no other role | WF-020; role grant | **new** (review STEP-05 round 1) |
 
-**Conflicting role pairs** checked at grant time and by the SOD-11 nightly scan (from SOD-02, SOD-03, SOD-05, SOD-10):
+**Conflicting role pairs** checked at grant time and by the SOD-11 nightly scan (from SOD-02, SOD-03, SOD-05, SOD-09, SOD-10, SOD-16):
 
 | Role A | Cannot also hold | Rule |
 | --- | --- | --- |
 | A Fund Accountant with the Head of Fund Accounting authority (NAV approver) | Dealer, Fund Manager | SOD-02 |
 | Fund Manager | Dealer (for the same schemes), unless the tenant switches SOD-03 off | SOD-03 |
-| Technology Administrator | Any business role (ROLE-01…ROLE-16) | SOD-05 |
+| Technology Administrator | Any other role (ROLE-01…ROLE-16, ROLE-18, ROLE-19, ROLE-21…ROLE-25) | SOD-05 (PRD-000: no business roles; extended to the new roles and to Tenant Administrator so one person cannot both make and approve role grants) |
+| Tenant Administrator | Any other role | SOD-16 |
 | AI agent identity | Any approval authority | SOD-10 |
 | Platform Operator | Any role inside a tenant | SOD-09, SOD-15 |
 
@@ -239,10 +247,11 @@ PRD-000 says only that SOD-03 can be switched off by the tenant. Whether any oth
 | # | Point | Where it is closed |
 | --- | --- | --- |
 | C1 | `ROLE-nn` IDs are not in GOV-001 §4 | Owner (Q17) |
-| C2 | PRD-000 Chapter 6 has 14 columns, not 17 domains; D06/D07/D12 share columns, D16 has none. The re-keying in §3 copies the shared column into each domain; per-capability rights inside a domain are set in the per-domain PRDs | PRD-001…PRD-017 (Steps 6–9) |
-| C3 | A small new AMC (owner decision D-11: new AMCs first) may have too few people to keep every SoD rule (for example a two-person accounting team cannot have separate preparer, senior and head). How AMC OS should support very small teams without weakening SOD-01 is open | Pilot discovery; owner (Q18) |
+| C2 | PRD-000 Chapter 6 has 14 columns, not 17 domains; D06/D07/D12 share columns, D16 has none. The re-keying in §3 copies the shared column into each domain (with the D06 corrections marked †). **This differs from BA-001 §7**, which says BA-005 groups permissions by capability: here only the approval permissions in §4 carry `CAP-` IDs; rights per capability inside each domain are set in the per-domain PRDs | PRD-001…PRD-017 (Steps 6–9) |
+| C3 | A small new AMC (owner decision D-11: new AMCs first) may have too few people to keep every SoD rule (SOD-16 alone needs two Tenant Administrators) (for example a two-person accounting team cannot have separate preparer, senior and head). How AMC OS should support very small teams without weakening SOD-01 is open | Pilot discovery; owner (Q18) |
 | C4 | PRD-000 SOD-09 is labelled "CSCRF alignment VAL"; BA-002 §2 notes CSCRF obligations depend on whether an AMC is a Qualified RE | REG-001, SEC-001 (Step 25) |
 | C5 | BA-003 has no terms for "role", "scope" or "approval authority" | Next BA-003 revision |
+| C6 | Which market-abuse records (recorded communications, dealing-room access logs) AMC OS holds, as opposed to the AMC's telephony or physical-access systems | SEC-001, REG-001 (Step 25); pilot discovery |
 
 ## 8. How this document was checked
 
