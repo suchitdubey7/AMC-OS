@@ -1,8 +1,8 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-20 about 13:30 IST
-**Chain tip:** `wp2-step05b-owner-answers` (main updated into it; merged on owner instruction)
+**Updated:** 2026-11-20 about 13:00 IST
+**Chain tip:** `wp2-step05b-owner-answers` (main updated into it; to be merged on the owner's instruction in chat, 20 Nov 2026)
 
 ## Next action
 
@@ -41,7 +41,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 7 | `wp2-step04-workflows` | Step 4: BA-004 end-to-end workflows WF-001…WF-028 (17 re-keyed, W6b → WF-018, 10 new for D01/D06/D07); D-12 pilot timing in PS-001/PS-002 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — 13 fixed, 1 left) | pass | yes (20 Nov 08:39 IST, build loop, CR-0001 gate PASS) |
 | 8 | `wp2-step05-roles-permissions` | Step 5: BA-005 roles (27), re-keyed permission matrix (17 domains), approval authorities, SOD-01…SOD-16 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 2 Nits — all fixed; round 1 had 4 Major, all fixed) | pass | yes (20 Nov 10:57 IST, build loop, CR-0001 gate PASS) |
 | 9 | `wp2-step06-prd-platform-product` | Step 6: PRD-001 Platform Administration (D01), PRD-002 Product and Scheme Management (D02); WF-029, WF-030 added to BA-004 register | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 6 Minor, 3 Nits — 8 fixed, Nit 9 (commit trailer) left; round 1 had 2 Major, both fixed) | pass | yes (20 Nov 12:43 IST, build loop, CR-0001 gate PASS) |
-| 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005 and GOV-001 §4 | Round 3 (see reviews/STEP-05b_round*.md) | see push | on owner instruction in chat (20 Nov 2026): adds a row to the GOV-001 §4 identifier table, outside the CR-0001 G2 exception |
+| 10 | `wp2-step05b-owner-answers` | Owner answers Q17–Q19 and follow-ups (D-17 to D-25) applied to BA-005 and GOV-001 §4 | Round 5 (see reviews/STEP-05b_round*.md) | see push | on owner instruction in chat (20 Nov 2026): adds a row to the GOV-001 §4 identifier table, outside the CR-0001 G2 exception |
 
 ## Owner decisions used by the loop
 
@@ -77,7 +77,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | Branch | Why |
 | --- | --- |
-| — | Nothing waiting. `wp2-step05b-owner-answers` (GOV-001 §4 `ROLE-nn` row, outside the CR-0001 G2 exception) was merged on the owner's instruction in chat, 20 Nov 2026. Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
+| `wp2-step05b-owner-answers` |  (GOV-001 §4 `ROLE-nn` row, outside the CR-0001 G2 exception) is to be merged on the owner's instruction in chat, 20 Nov 2026 (not by the loop's gate). Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
 
 ## Questions for owner (open)
 
