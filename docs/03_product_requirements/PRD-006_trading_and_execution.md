@@ -147,11 +147,11 @@ From BA-005 §3 (D06 column) and §4, narrowed to each capability (BA-005 §7 C2
 | Capability | Maker | Checker(s) |
 | --- | --- | --- |
 | CAP-D06-001 Broker management | Dealer — Head of Dealing proposes (WF-023) | Body named in the AMC's broker policy **[ASSUMPTION]** (`execution.broker.approve`, SOD-14); limits and rate schedules: a second person per maker-checker **[DES]** |
-| CAP-D06-003 Trade-charges table (BRL-D06-003) | Operations Analyst† | Compliance Officer† (D-29) |
-| CAP-D06-004 Allocation remainder rule (BRL-D06-008) | Head of Dealing† (D-28) | A second person per maker-checker **[DES]** |
 | CAP-D06-002 Execution management | System (fills); Dealer (blocks at the desk) | — |
 | CAP-D06-003 Trade confirmation | System; Operations Analyst (confirmation) | — (force-match follows WF-015: Operations Manager) |
+| CAP-D06-003 Trade confirmation — trade-charges table (BRL-D06-003) | Operations Analyst† | Compliance Officer† (D-29) |
 | CAP-D06-004 Trade allocation | System allocates; Dealer requests a deviation | Head of Dealing **and** Compliance Officer (`execution.allocation.approve_deviation`) |
+| CAP-D06-004 Trade allocation — remainder rule (BRL-D06-008) | Head of Dealing† (D-28) | A second person per maker-checker **[DES]** |
 | CAP-D06-005 Execution reconciliation | System; Operations Analyst works breaks | — |
 | CAP-D06-006 Broker communication | System | — |
 | CAP-D06-007 Trade lifecycle; external trades | Dealer or Operations Analyst | A second Dealer, or the Operations Manager (`execution.trade.approve_external`) |

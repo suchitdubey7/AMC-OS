@@ -195,7 +195,7 @@ From BA-005 §3 (D12 column) and §4, narrowed to each capability. Checker ≠ m
 | CAP-D12-002 (.2) sweep / TREPS instruction | Operations Analyst, on the Fund Manager's recorded decision | Operations Manager |
 | CAP-D12-003 definitions | Operations Analyst; Fund Accountant for D10/D11 sets† | Owning department's checker and Operations Manager (`operations.recon_definition.approve`†) |
 | CAP-D12-003 (.3), CAP-D12-009 force-match | Operations Analyst; Fund Accountant and Investor Service Executive in their own sets† | Operations Manager (`operations.break.force_match`) |
-| CAP-D12-009 write-off | Operations Analyst | Operations Manager (`operations.break.write_off`†); above a tenant-set amount also Fund Accounting (Head of Fund Accounting†) (D-50) |
+| CAP-D12-009 write-off | Operations Analyst | Operations Manager (`operations.break.write_off`†); above a tenant-set amount also Fund Accounting (D-50; the Head of Fund Accounting as the approver is **[DES]**†) |
 | CAP-D12-009 D12 payout release | Operations Analyst | Two bank-mandate signatories (`operations.payout.release`) |
 | CAP-D12-002 (.3), FR-D12-025 connections | Technology Administrator | Operations Manager (`operations.connection.approve`†) |
 | CAP-D12-004 … -006 reconciliation | System (FE-07); Operations Analyst works breaks | as force-match / write-off |

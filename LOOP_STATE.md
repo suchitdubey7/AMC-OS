@@ -144,6 +144,20 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-74 (OD-11) | Fund Accounting and NAV Operations are two separate workspaces (master prompt §5 L1); the AI assistant is built into every workspace | 2026-11-21 |
 | D-75 (OD-12) | Emergency switch-off of AI (agent, tool or all AI for an AMC) by one authorised person; switching back on needs two people | 2026-11-21 |
 
+## BA-005 changes waiting for its next revision (review STEP-09d round 1, finding 11)
+
+The owner decisions D-28…D-59 add or narrow rights that BA-005 does not yet have. The PRDs mark them with † and defer them to the next BA-005 revision. Pick all of them up together:
+
+- BA-005 §4 `compliance.rule.approve` says "another Compliance Officer"; D-32 says only the CCO approves (PRD-008 §7, C2).
+- PRD-006 §7: trade-charges table (Operations Analyst maker, Compliance Officer checker, D-29); allocation remainder rule set by the Head of Dealing (D-28).
+- PRD-007 C6: `settlement.instruction.approve`, `settlement.instruction.cancel`, `settlement.fail.write_off`, `settlement.fail.record_cause` (D-30, D-31).
+- PRD-008 §7, C3, C9: Risk team writes and CRO approves internal limits (D-33); CCO grants exemptions (D-34); Legal Officer or outside counsel per AMC (D-35).
+- PRD-009 §7: model validation by anyone independent (D-36); escalation path (D-37); CRO limit change with Risk Committee minute (D-38).
+- PRD-010 C3: reopening a closed month by CFO and Head of Fund Accounting (D-42); BA-005 §3 still gives the COO a reopen role.
+- PRD-011 §7, PRD-012 §7: Head of Fund Accounting accepts custodian NAV (D-44); break write-off above a tenant amount (D-50).
+- PRD-013 C3, PRD-016 §7: Grievance Officer and Data Protection Officer roles (D-54, Q61).
+- PRD-015, PRD-016, PRD-017 C6: Finance approval of commission (D-56); metric definition sign-offs (D-59); AI release approvals (D-60) and emergency switch-off (D-75).
+
 ## Waiting for owner (cannot be auto-merged)
 
 | Branch | Why |
@@ -154,4 +168,5 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| — | None open (all answered by 21 Nov 2026) | — | — |
+| Q61 | Owner decision D-54 says "DPO proposed with the Compliance Officer". Does this mean (a) the Compliance Officer is suggested as the DPO, or (b) the AMC names a separate DPO, chosen together with the Compliance Officer? It matters for segregation of duties on access to personal data (PRD-016 CAP-D16-009) | Step 9d review (STEP-09d round 1, finding 10) | (a) — the Compliance Officer is suggested as DPO, marked [ASSUMPTION] in PRD-013 and PRD-016 |
+| Q62 | Owner decision D-66 says PRD-000 gets a "fully re-keyed" note. In fact some parts of PRD-000 are not yet re-keyed (common rules C1–C8, two Ch 9 agents, some Ch 7 rows, Ch 8, Ch 10, Appendix A); they move in later steps (architecture, integrations, regulatory registry). Is it fine that the note lists these remaining parts instead of saying "fully re-keyed"? | Step 9d review (STEP-09d round 1, finding 5) | Yes — the note lists what is still left in PRD-000 |

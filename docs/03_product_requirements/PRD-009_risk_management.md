@@ -162,7 +162,7 @@ From BA-005 §3 (D09 column) and §4, narrowed to each capability (BA-005 §7 C2
 | CAP-D09-012 reports | Risk Manager prepares | Risk officer (BRL-D09-009); Trustee reads CAP-D09-012 (.3) (BA-005 ROLE-25) |
 | CAP-D09-013 thresholds | Risk Manager proposes | Risk officer, through WF-021 (BRL-D09-005) |
 | Internal risk limit values (`INTERNAL_RISK`, in D08) | Risk Manager writes (D-33) | CRO, with the Risk Committee minute reference attached (D-38) |
-| Alert escalation path | Risk Manager proposes | Risk officer, through WF-021 (tenant setting, D-37) |
+| Alert escalation path | Risk Manager proposes **[DES]** | Risk officer, through WF-021 **[DES]**; the path itself is a tenant setting (D-37) |
 | CAP-D09-013 alert acknowledgement and closure | Alert owner (Fund Manager of the scheme)† | — (Risk officer sees escalations) |
 
 **Rights added beyond BA-005 §3 (†):** the BA-005 D09 cells for the Fund Manager and CIO are "R own" and "R"; this PRD adds running a what-if for their own schemes (US-D09-002) and acknowledging and closing alerts on their own schemes (FR-D09-014) **[DES]** (open point C5).

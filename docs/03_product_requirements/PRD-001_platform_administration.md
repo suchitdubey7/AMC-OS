@@ -96,7 +96,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 
 - **FR-D01-026 (M) Plan and module entitlements.** Each tenant has a subscription plan and a list of entitled modules (domains or features), effective-dated. Entitlements decide which domains, APIs and screens are switched on for the tenant.
 - **FR-D01-027 (S) Usage metering.** AMC OS counts agreed usage measures per tenant per period and shows them to the Tenant Administrator. The measures counted are users, schemes, API calls and storage (owner decision D-26). Metering counts only; it never reads business content.
-- **FR-D01-028 (S) Plan changes and renewals.** Upgrades, downgrades and renewals take effect on a stated date. A downgrade or lapse never deletes data; a lapsed or downgraded module becomes read-only — its data can still be viewed and exported but not changed (owner decision D-26).
+- **FR-D01-028 (S) Plan changes and renewals.** Upgrades, downgrades and renewals take effect on a stated date. A downgrade or lapse never deletes data; a lapsed or downgraded module becomes read-only — its data can still be viewed but not changed (owner decision D-26); it can also be exported **[DES]**.
 
 ### 4.7 Organization hierarchy (CAP-D01-007) — BR-D01-007
 
@@ -146,7 +146,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 | BRL-D01-007 | A configuration version applies only from its effective date after approval; past versions are never edited | PRD-000 C4 **[DES]** |
 | BRL-D01-008 | Audit events are never updated or deleted | PRD-000 C2, Chapter 7 |
 | BRL-D01-009 | An AI agent identity can never hold an approval authority or an approve, override, post, publish or execute permission | SOD-10; master prompt §3.1 |
-| BRL-D01-010 | A subscription downgrade, lapse or offboarding never deletes data before the export is confirmed (or the contract time limit passes) and the legal retention period is respected | Owner decisions D-26, D-27; retention **[VAL]** |
+| BRL-D01-010 | A subscription downgrade or lapse never deletes data; the affected modules become read-only (D-26). On offboarding, data is exported in documented open formats with checksums, and the collection period and retention after exit follow the contract and the law (D-27) | Owner decisions D-26, D-27; retention **[VAL]** |
 
 ## 6. Workflows
 

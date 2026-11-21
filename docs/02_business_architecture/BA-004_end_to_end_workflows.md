@@ -359,7 +359,7 @@ flowchart LR
 | Audit | Run record, every component, validation results, approver, publication acknowledgments |
 | Source | W7 |
 
-**Variant for outsourced fund accounting (owner decision D-16).** Where the custodian calculates the NAV, AMC OS does not replace that calculation: it receives the custodian's NAV and components, recalculates independently, and reconciles the two (CAP-D11-015, through CAP-D12-003). Differences become breaks. Who approves and publishes in this arrangement (the AMC on the custodian's figure, or the custodian under the AMC's oversight) varies by contract **[ASSUMPTION]** — confirm: Product Manager, pilot discovery.
+**Variant for outsourced fund accounting (owner decision D-16).** Where the custodian calculates the NAV, AMC OS does not replace that calculation: it receives the custodian's NAV and components, recalculates independently, and reconciles the two (CAP-D11-015, through CAP-D12-003). Differences become breaks. The AMC accepts the custodian's NAV in AMC OS after these checks; who submits it to AMFI (the AMC or the custodian) is a tenant setting (owner decision D-44; PRD-011).
 
 ```mermaid
 flowchart TD
@@ -478,13 +478,13 @@ sequenceDiagram
 | Initiator | Investor or distributor |
 | Departments | **DEP-08**; DEP-06 (scheme cash and payout), DEP-07 (payables), DEP-02 / DEP-03 (cash ladder) |
 | Capabilities | CAP-D13-005, CAP-D13-011, CAP-D13-016, CAP-D02-006 (.2), CAP-D11-013, CAP-D10-010, CAP-D04-002 (.4), CAP-D12-002 (.2), CAP-D12-009 |
-| Hand-offs (outside) | RTA (request, time-stamp, computation); bank (payout) |
+| Hand-offs (outside) | RTA (request, time-stamp, computation, payout file — owner decision D-52); bank (payout) |
 | Preconditions | Units free of lock-in and lien; KYC not on hold |
 | Final state | Units extinguished; payout `PAID` within the regulatory timeline **[VAL]** |
-| Approvals | Payout file released by two authorisers (CAP-D12-009) |
+| Approvals | The payout file is prepared and sent by the RTA, not by AMC OS (owner decision D-52); AMC OS tracks and checks the payout (CAP-D12-009, PRD-013 FR-D13-020) |
 | Exceptions | Units not available → `REJECTED` with reason; bank failure → `PAYOUT_FAILED`, bank-detail check, re-initiate; timeline missed → delay-interest calculation **[VAL]** |
 | Audit | Request, cut-off applied, NAV used, load and tax, payout file, bank result |
-| Source | W11. Under mirror mode (Q2) the RTA computes the redemption; AMC OS recomputes as a check. Whether the payout file goes from AMC OS to the AMC's bank or is sent by the RTA is **[ASSUMPTION]** — confirm: Product Manager, pilot discovery. TDS for NRI investors is **[VAL]** |
+| Source | W11. Under mirror mode (Q2) the RTA computes the redemption; AMC OS recomputes as a check. The RTA sends the payout file; AMC OS tracks and checks it (owner decision D-52). TDS for NRI investors is **[VAL]** |
 
 ```mermaid
 flowchart TD
@@ -687,7 +687,7 @@ flowchart TD
 | Hand-offs (outside) | Custodian (instructions out; acknowledgment, matched, settled or failed status in). The custodian deals with the clearing corporation and depository **[ASSUMPTION]** — confirm with each custodian |
 | Preconditions | Valid SSI for the counterparty (WF-028); settlement date from the calendar (WF-026) |
 | Final state | `SETTLED`; holdings and cash final; accounting events posted |
-| Approvals | None for straight-through instructions; re-instruction after a fail follows WF-027 |
+| Approvals | Every instruction, system-generated or manual, needs a second approver before it is sent; no amount threshold (owner decision D-31; PRD-007 FR-D07-017, BRL-D07-007); re-instruction after a fail follows WF-027 |
 | Exceptions | `FAILED` or `PARTIALLY_SETTLED` → WF-027 |
 | Audit | Instruction, every status message, journals posted |
 | Source | W6b. Status sequence from PRD-000 FR-05-05: `PENDING_INSTRUCTION → INSTRUCTED → ACKNOWLEDGED → MATCHED → SETTLED / PARTIALLY_SETTLED / FAILED`. PRD-000 put contract-note matching in this workflow; it moves to WF-025 because BA-001 places trade confirmation in D06 (§5, C3) |
@@ -722,11 +722,11 @@ These workflows are proposed here; nothing in PRD-000 Chapter 4 describes them. 
 | Preconditions | Contract signed; isolation tier chosen (shared or dedicated cell, ADR-0003); subscription plan and modules recorded |
 | Final state | Onboarding: tenant `ACTIVE`, first Tenant Administrator signed in, organisation hierarchy and calendars set. Offboarding: tenant `OFFBOARDED`, data exported to the AMC and then deleted or retained as the contract and law require |
 | Approvals | Activation needs confirmation from both the platform operator and the AMC's Tenant Administrator. The platform operator never reads tenant business data during set-up (SOD-09) |
-| Exceptions | Identity connection test fails → stays in `SETUP`; no capacity in the chosen cell → new cell (EA-004); export not confirmed by the AMC → tenant stays `SUSPENDED` until the time limit in the contract **[ASSUMPTION]**, then `OFFBOARDED` with records kept as the law requires **[VAL]** |
+| Exceptions | Identity connection test fails → stays in `SETUP`; no capacity in the chosen cell → new cell (EA-004); export not confirmed by the AMC → tenant stays `SUSPENDED` until the collection period in the contract ends (owner decision D-27), then `OFFBOARDED` with records kept as the law requires **[VAL]** |
 | Audit | Tenant record versions, plan and modules, placement, identity test results, activation confirmations, export and deletion evidence |
 | Source | **new** |
 
-The organisation hierarchy starts from the BA-002 reference model (departments DEP-01…DEP-19) as an editable template; the AMC changes it to match its own structure (BA-002 §3). Export format, the time the AMC has to take its data, and how long records are kept after exit are **[ASSUMPTION]** — confirm: project owner (contract terms) and REG-001 (record-retention rules, **[VAL]**).
+The organisation hierarchy starts from the BA-002 reference model (departments DEP-01…DEP-19) as an editable template; the AMC changes it to match its own structure (BA-002 §3). On exit the data is exported in documented open formats with checksums; the collection period and how long records are kept after exit follow the contract and the law (owner decision D-27; PRD-001 FR-D01-004). Legal retention periods are confirmed in REG-001 **[VAL]**.
 
 ```mermaid
 stateDiagram-v2
