@@ -38,7 +38,7 @@ This document states what AMC OS must do to let people in every department ask q
 | Ch 9 §9.2 model requirements | FR-D17-018, FR-D17-013 | Kept; **[VAL]** carried |
 | Ch 9 §9.3 agents (11) | §4.3 table: 9 agents placed under CAP-D17-002, -003, -005, -007 … -012 | Names follow BA-001 (BA-004 §3 rule 2). **Not placed:** Portfolio Agent, Product Intelligence Agent (C4) |
 | Ch 9 §9.4 release gates | FR-D17-020, NFR-SEC-005, NFR-PERF-027, WF-043 | **(changed)**: "AI Governance Committee sign-off" replaced by named WF-043 checkers until the committee is defined (Q54) |
-| — | FR-D17-009 … FR-D17-027 (except as above), BRL-D17-005 … 012, US-D17-003 … 012, WF-043 | **New** **[DES]**; Dealing assistant and Risk assistant new (brief) |
+| — | FR-D17-009 … FR-D17-027 (except as above), BRL-D17-005, -006, -008, -009, -011, -012, US-D17-003 … 012, WF-043 | **New** **[DES]**; Dealing assistant and Risk assistant new (brief) |
 
 ## 3. Business requirements
 
