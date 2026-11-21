@@ -198,6 +198,24 @@ sequenceDiagram
 | OD-11 | Workspaces: owner's 12 or the master prompt's 12 experiences (C10) | EA-104 | Project owner |
 | OD-12 | Emergency disable of AI by one person (exception to maker-checker) | SEC-100 §7 | Project owner + CISO |
 
+### 7.1 Owner decisions taken 21 Nov 2026 (recorded in LOOP_STATE.md D-59 to D-75)
+
+| # | Decision |
+| --- | --- |
+| OD-1 | Option C: connect to existing systems first; AMC OS runs its own engines area by area where the AMC chooses |
+| OD-2 | Accounting/NAV: AMC OS where the AMC does it in-house; external with checks where outsourced to the custodian |
+| OD-3 | 20–50 AMCs is design capacity; commercial target stays 3–5 by month 36 |
+| OD-4 | India-region private model endpoints only, zero retention, no training on AMC data; provider chosen later |
+| OD-5, OD-6 | Gateway and policy-engine products evaluated in GOV-006 Step 10 (cloud AWS Mumbai and sign-in now decided) |
+| OD-7 | Kafka later; database-backed outbox first |
+| OD-8 | No external AI tools via MCP in release 1 |
+| OD-9 | Portfolio and Product Intelligence agents in a later release; Product Intelligence becomes the D02 agent |
+| OD-10 | One shared agent definition list + per-AMC switch-on |
+| OD-11 | Fund Accounting and NAV Operations are two workspaces; AI assistant inside every workspace |
+| OD-12 | Emergency AI switch-off by one person; switching back on needs two |
+
+These decisions settle direction only. The documents in this set are still Draft; Step 10 onward updates them.
+
 ## 8. Dependencies
 
 | This proposal needs | From | Status |
