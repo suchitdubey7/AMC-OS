@@ -99,7 +99,7 @@ flowchart LR
 | 9 ✅ merged to `main` 21 Nov 2026 by the build loop (CR-0001; Draft): 9a (PRD-010…PRD-013), 9b (PRD-014, PRD-015), 9c (PRD-016, PRD-017; PRD-000 re-keying note), 9d (owner answers D-26…D-66 applied); PRD-000 stays Draft per D-66 | PRD-010 Accounting, PRD-011 Valuation & NAV, PRD-012 Fund Ops, PRD-013 Investor, PRD-014 Distribution, PRD-015 Finance, PRD-016 Data, PRD-017 AI; PRD-000 re-keying note — stays Draft until a replacement is Approved (D-66) | 4 | 6 |
 | **Stage B — architecture** | | | |
 | 10 🔄 in review (branch `wp3-step10-system-context`: EA-001, EA-002; ADR-0016 identity, ADR-0017 cache, ADR-0018 cloud and regions, ADR-0019 gateway and policy engine evaluation — ADRs are owner-only, so the owner merges) | EA-001 system context; EA-002 layered architecture incl. 12 frontend workspaces; ADRs for identity provider, Redis, cloud/region | 5, 13 | Stage A |
-| 11 | EA-003 domain boundaries & service catalogue; configuration-over-customisation design | 3.6, 5 | 10 |
+| 11 🔄 in review (branch `wp3-step11-service-catalogue`: EA-003 service catalogue, EA-008 configuration over customisation; stacked on Step 10) | EA-003 domain boundaries & service catalogue; configuration-over-customisation design | 3.6, 5 | 10 |
 | 12 | EA-004 deployment & cell architecture; EA-005 multi-tenant; EA-006 control plane / data plane | 6 | 10 |
 | 13 | EA-007 event architecture + `contracts/events/` catalogue (all events, v1 schemas); Temporal workflow designs | 5 L4 | 11 |
 | 14 | INT-001 integration architecture + one spec per provider with all 14 fields (confirmed facts only) | 10 | 11 |

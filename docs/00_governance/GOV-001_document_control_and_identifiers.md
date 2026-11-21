@@ -180,6 +180,8 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | PRD-017 | AI and Decision Intelligence (D17) — product requirements (WF-043 card) | Draft | WP2 / Step 9 |
 | EA-001 | System context | Draft | WP3 / Step 10 |
 | EA-002 | Layered enterprise architecture and the 12 role workspaces | Draft | WP3 / Step 10 |
+| EA-003 | Domain boundaries and service catalogue (22 modules, tiers, ownership decisions) | Draft | WP3 / Step 11 |
+| EA-008 | Configuration over customisation | Draft | WP3 / Step 11 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
