@@ -6,6 +6,8 @@
 
 ## Next action
 
+**Owner answers 21 Nov 2026 (D-26 to D-58, Q20–Q52, multiple choice in chat):** apply them to the affected PRDs (PRD-001, PRD-006…PRD-015) as a small fix step before the next new step, and replace the matching [ASSUMPTION]/open points.
+
 **Step 9c** on a new branch `wp2-step09c-prd-data-ai` from the chain tip: PRD-016 Data (D16; take over FR-D03-001/-002 security and issuer records, PRD-003 C3; place the `master` schema, BA-001 §5 C2), PRD-017 AI (D17; brief's Dealing assistant and Risk assistant, BA-001 §5 C4); PRD-000: the step says "mark Superseded", but GOV-001 §1 allows Superseded only when replaced by an Approved document and merge gate G3 needs every changed document to stay Draft — so record in PRD-000's body that it is fully re-keyed and ask the owner (do not change its status). Step 9 was split again on 21 Nov 2026: 9b did PRD-014 and PRD-015 only. Next free numbers: WF-041, NFR-PERF-025, NFR-AUD-016, NFR-RET-007, NFR-SEC-005, NFR-SCAL-004, NFR-PRIV-004, owner question Q53 (NFR-PERF-009 is unused, never reused).
 
 Done in the Step 9b run (21 Nov 2026, scheduled): PRD-014 Distribution Management (Module 12 re-keyed; channel management, sales incentives, segmentation, sales forecasting; regulatory incentive lines; WF-039 distributor empanelment and registration monitoring; WF-013 run-state additions), PRD-015 Finance and Management Reporting (Module 13 re-keyed; expense management, multi-year planning, management period close and restatement; WF-040 monthly management reporting close — closes BA-004 §5.2 C6 and BA-002 P13 gap). Review round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits); all fixed except Nit 14 (commit trailer `Co-Authored-By: Claude`, as the loop prompt requires) and Minor 9 in part (the primary SEBI circulars of 27 Nov 2025 and 7 Jan 2026 were not opened; the 1 Mar 2026 start date rests on one press source, labelled [VAL]).
@@ -86,6 +88,39 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-23 | Small-team mode: a grant to the AMC's only Information Security Officer is reviewed by a Compliance Officer | 2026-11-20 |
 | D-24 | Small-team mode: the ISO pre-effect review is blocking (a rejection stops the grant) | 2026-11-20 |
 | D-25 | Small-team mode: when an AMC is no longer small, the mode is switched off when a grace period ends (length set in pilot discovery), and Tenant Administrators then give up their business roles | 2026-11-20 |
+| D-26 (Q20) | Lapsed or downgraded module becomes read-only; data never deleted; metering counts users, schemes, API calls and storage | 2026-11-21 |
+| D-27 (Q21) | Exit: documented open export formats with checksums; collection period and retention per contract and law | 2026-11-21 |
+| D-28 (Q22) | Leftover shares from uneven block splits: rule set by the Head of Dealing per tenant, recorded and audited | 2026-11-21 |
+| D-29 (Q23) | Keep a versioned trade-charges table (STT, stamp duty, GST, exchange fees); Operations updates it, Compliance checks (maker-checker) | 2026-11-21 |
+| D-30 (Q24) | Settlement-failure penalty: AMC pays if caused by the AMC, otherwise the scheme; Compliance records the cause [VAL — Compliance to confirm against SEBI rules] | 2026-11-21 |
+| D-31 (Q25) | Every settlement instruction needs a second approver (no amount threshold) | 2026-11-21 |
+| D-32 (Q26) | Compliance rules: a Compliance Officer drafts, only the CCO approves | 2026-11-21 |
+| D-33 (Q27) | Internal risk limits: Risk team writes, CRO approves, inside the rule engine | 2026-11-21 |
+| D-34 (Q28) | Limit exemptions: granted by the CCO; maximum length is a tenant setting | 2026-11-21 |
+| D-35 (Q29) | Legal reading of new SEBI rules: the AMC chooses its Legal Officer or outside counsel | 2026-11-21 |
+| D-36 (Q30) | Risk models: validated by anyone who did not build them (inside or outside the AMC) | 2026-11-21 |
+| D-37 (Q31) | Unactioned risk alerts: escalation path set per tenant (suggested default CEO, then Risk Committee) | 2026-11-21 |
+| D-38 (Q32) | Risk-limit change: CRO approves in AMC OS with the Risk Committee minute reference attached | 2026-11-21 |
+| D-39 (Q33) | Operational / enterprise risk register: later release, not release 1 | 2026-11-21 |
+| D-40 (Q34) | Custodian-run accounting: load custodian books daily and recheck key items (accruals, unit capital, NAV); no full shadow ledger | 2026-11-21 |
+| D-41 (Q35) | Manual journals: Senior Fund Accountant approves (maker ≠ checker); above a tenant-set amount the Head of Fund Accounting also approves | 2026-11-21 |
+| D-42 (Q36) | Reopening a closed month: CFO and Head of Fund Accounting | 2026-11-21 |
+| D-43 (Q37) | Ageing of receivables/payables: age bands are tenant settings; write-off by maker-checker manual journal | 2026-11-21 |
+| D-44 (Q38) | Custodian-calculated NAV: the AMC accepts it in AMC OS after checks; who submits to AMFI is set per tenant | 2026-11-21 |
+| D-45 (Q39) | Fair value: always a recorded Valuation Committee decision; no delegate | 2026-11-21 |
+| D-46 (Q40) | Price and NAV tolerances, materiality and alerts: set by each AMC; AMC OS ships no values | 2026-11-21 |
+| D-47 (Q41) | Swing pricing: not in release 1 (a swung NAV is blocked) | 2026-11-21 |
+| D-48 (Q42) | Operations day close: no override while a critical item is open | 2026-11-21 |
+| D-49 (Q43) | Voluntary corporate actions: Fund Manager decides; missed deadline escalates to CIO; nothing elected automatically | 2026-11-21 |
+| D-50 (Q44) | Reconciliation-break write-off: Operations Manager (maker-checker); above a tenant-set amount Fund Accounting also approves | 2026-11-21 |
+| D-51 (Q45) | Scheme expense payments: paid outside AMC OS for now; AMC OS records and checks them | 2026-11-21 |
+| D-52 (Q46) | Payout files (redemption, SWP, IDCW): sent by the RTA; AMC OS tracks and checks | 2026-11-21 |
+| D-53 (Q47) | Wrong investor details: fixed only through the RTA; flagged in AMC OS until corrected | 2026-11-21 |
+| D-54 (Q48) | Grievance Officer and DPO: named person per AMC; DPO proposed with the Compliance Officer | 2026-11-21 |
+| D-55 (Q49) | Investor messages: AMC OS prepares, consent-checks and tracks; the RTA or the AMC's provider sends | 2026-11-21 |
+| D-56 (Q50) | Distributor commission paid = AMC OS calculation, checked against the RTA figure, approved by Finance | 2026-11-21 |
+| D-57 (Q51) | Commission in the books, by type: trail commission is a scheme expense inside TER; amounts paid outside TER (e.g. SIP upfront) are an AMC company cost [VAL — Compliance to confirm current SEBI rules] | 2026-11-21 |
+| D-58 (Q52) | Budgets and multi-year plans are made in AMC OS | 2026-11-21 |
 
 ## Waiting for owner (cannot be auto-merged)
 
@@ -97,36 +132,4 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| Q20 | Subscription to AMC OS: which usage measures should be metered (for example named users, schemes, API calls, storage), and when a subscription lapses or is downgraded, should the module become read-only or hidden? | Step 6 (PRD-001 FR-D01-027, FR-D01-028) | Metering of counts only, list to be decided; data never deleted; lapsed module read-only |
-| Q21 | When an AMC leaves: in what format do we hand over its data, how long does it have to take it, and how long do we keep records afterwards? | Step 6 (PRD-001 FR-D01-004) | Open, documented formats with checksums; time limit and retention as in the contract and law (REG-001) |
-| Q22 | When a block fill is split between schemes and the shares do not divide evenly, who gets the leftover shares (for example the largest scheme, rotation, or a rule set by the Head of Dealing)? | Step 8 (PRD-006 C6) | Pilot discovery; rule recorded as tenant configuration |
-| Q23 | Should AMC OS keep its own table of trade charges (STT, stamp duty, GST, exchange fees) to check brokers' contract notes, and who updates it when rates change? | Step 8 (PRD-006 C7) | Versioned charges table kept (PRD-000 BR-05-4); which domain owns it and who updates it open |
-| Q24 | When a trade fails to settle and there is a penalty, does the scheme pay it or the AMC? | Step 8 (PRD-007 C5) | [VAL]; no default — the penalty is tracked but not charged to either until decided |
-| Q25 | Above what amount should a settlement instruction need a second person to approve it? | Step 8 (PRD-007 C7) | Tenant setting; value from pilot discovery |
-| Q26 | Who approves a new or changed compliance rule: only the CCO, or any other Compliance Officer? | Step 8 (PRD-008 C2) | CCO (PRD-000) |
-| Q27 | Internal risk limits: should the Risk team write them and the Risk officer (CRO) approve them inside the compliance rule engine? | Step 8 (PRD-008 C3) | Yes (PRD-000 BR-07-3); author rights open |
-| Q28 | Who can grant a temporary exemption from a limit, and what is the longest it may last? | Step 8 (PRD-008 C6) | CCO; maximum length set in pilot discovery |
-| Q29 | Who checks the legal reading of a new SEBI rule before we build it: the AMC's own Legal Officer, or outside lawyers? | Step 8 (PRD-008 C9) | Legal Officer or outside counsel, as the AMC chooses |
-| Q30 | Who should check a risk model before it is used: another risk person, the data team, or an outside firm? | Step 8 (PRD-009 C4) | A validator who did not build the model (PRD-000 "independent") |
-| Q31 | If the Risk officer does not act on a risk alert, who should it go to next: a Risk Committee or the board? | Step 8 (PRD-009 C2) | Escalation target is tenant configuration |
-| Q32 | Does changing a risk limit need only the Risk officer's approval, or also a Risk Committee record? | Step 8 (PRD-009 C3) | Risk officer approval; committee record open |
-| Q33 | Should the Risk department also track operational and enterprise risk (risk register, incidents) in AMC OS, even though the brief does not list it? | Step 8 (PRD-009 C9) | Not in scope until decided |
-| Q34 | When the custodian does a scheme's fund accounting, should AMC OS only load the custodian's books and recheck the key items (accruals, unit capital, NAV), or keep a full second set of books and compare every day? | Step 9a (PRD-010 C6) | Load custodian trial balance and ledger daily, recompute accruals and unit capital, reconcile; no full shadow ledger |
-| Q35 | Who approves a manual journal entry: any Senior Fund Accountant, or above some amount also the Head of Fund Accounting? | Step 9a (PRD-010 C7) | Senior Fund Accountant, maker ≠ checker; any amount limit is a tenant setting |
-| Q36 | Who approves reopening a closed accounting month: CFO with Head of Fund Accounting (BA-005 §4), or COO with CFO (BA-005 §3)? | Step 9a (PRD-010 C3) | CFO and Head of Fund Accounting |
-| Q37 | How old may an unpaid amount owed to or by a scheme get before it is flagged, and who may write it off? | Step 9a (PRD-010 C8) | Age bands are tenant settings; write-off is a manual journal under maker-checker |
-| Q38 | Where the custodian computes the NAV, who approves and publishes it: the AMC accepting it in AMC OS, or the custodian publishing while AMC OS only checks? | Step 9a (PRD-011) | AMC OS records the AMC's acceptance after reconciliation; who publishes is set per tenant |
-| Q39 | Who sits on the Valuation Committee, and may a named delegate approve an urgent fair value between meetings? | Step 9a (PRD-011) | Every fair value needs a recorded committee decision before use; no delegate |
-| Q40 | What values should the pilot AMC use for stale-price days, price tolerances, NAV tolerance, NAV materiality, custodian NAV reconciliation tolerance and deadline alerts? | Step 9a (PRD-011) | Tenant configuration; AMC OS ships no values |
-| Q41 | Should AMC OS support swing pricing in the first release? | Step 9a (PRD-011) | Not in the first release; a swung NAV is blocked |
-| Q42 | Can anyone (for example the COO, with a reason) close the operations day while a critical item is still open? | Step 9a (PRD-012) | No override |
-| Q43 | For a voluntary corporate action (rights, buyback, open offer), does the Fund Manager decide alone or does the CIO also approve, and what if nobody elects by the deadline? | Step 9a (PRD-012) | Fund Manager decides; missed deadline escalates to CIO; nothing is elected automatically |
-| Q44 | Who approves writing off a reconciliation break: the Operations Manager alone, or also Fund Accounting or Finance above some amount? | Step 9a (PRD-012) | Operations Manager by maker-checker; amount threshold is tenant configuration |
-| Q45 | Should scheme expense payments (audit fees, vendors) be released through AMC OS, or does Finance pay them outside it? | Step 9a (PRD-012) | Outside AMC OS for now |
-| Q46 | Who sends the payout file for redemptions, SWPs and IDCW: the RTA, or AMC OS to the AMC's bank? | Step 9a (PRD-013 C1) | AMC OS tracks payout status and checks amounts only |
-| Q47 | May AMC staff fix a wrong investor detail directly in AMC OS, or only by asking the RTA? | Step 9a (PRD-013 C2) | Only through the RTA; field flagged until the RTA corrects it |
-| Q48 | Who holds the Grievance Officer and Data Protection Officer authorities (not in BA-005)? | Step 9a (PRD-013 C3) | A named person chosen by the AMC; DPO proposed with the Compliance Officer |
-| Q49 | Should AMC OS send investor emails, SMS and WhatsApp messages itself, or only prepare them for the RTA or the AMC's provider? | Step 9a (PRD-013 C5) | Prepare, consent-check and track only |
-| Q50 | Distributor commission: should the amount actually paid be AMC OS's own calculation (checked against the RTA's figure), or the RTA's figure (checked by AMC OS, as we do for investor data)? | Step 9b (PRD-014 C1) | AMC OS calculates, compares with the RTA, Finance approves, AMC OS figure is paid |
-| Q51 | Distributor commission in the books: is it a scheme expense inside the TER, a cost of the AMC company, or both for different parts (for example SIP upfront paid by the AMC)? This decides how profit and "net yield" are shown | Step 9b (PRD-014 C2, PRD-015 C2) | Open; needs Compliance and Finance view |
-| Q52 | Budgets and multi-year plans: should the pilot AMC make them inside AMC OS, or keep its current planning tool and only load the figures? | Step 9b (PRD-015 C4) | Made in AMC OS |
+| — | None open (Q20–Q52 answered 21 Nov 2026, see D-26 to D-58) | — | — |
