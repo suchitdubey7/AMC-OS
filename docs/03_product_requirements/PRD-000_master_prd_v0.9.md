@@ -4,6 +4,8 @@ Nov 19, 2026 · @Suchit
 
 ## How to read this PRD
 
+> **Re-keying status (added 21 Nov 2026, build loop Step 9c).** Every module of Chapter 3, Chapter 4 (W1–W17, W6b), the Chapter 5 stories, the Chapter 6 matrix and the Chapter 9 agents are now re-keyed into the per-domain documents [PRD-001](PRD-001_platform_administration.md) … [PRD-017](PRD-017_ai_and_decision_intelligence.md), [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) and [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) (GOV-006 Steps 4–9). Read those documents for current requirements; this file is kept unchanged below as the v0.9 source. GOV-006 Step 9 says to mark this PRD "Superseded", but GOV-001 §1 allows Superseded only when a newer **Approved** document replaces it, and none is Approved yet; the status change is left to the project owner (owner question Q60).
+
 AMC OS is a multi-tenant, API-first operating system for Indian mutual fund AMCs, built around deterministic financial engines with AI kept strictly in an advisory role. This PRD is Deliverable One. Deliverable Two (Database Architecture) is a separate doc, with full PostgreSQL DDL delivered as a .sql file.
 
 **Version:** 0.9 draft for architecture review. **Regulatory baseline:** SEBI (Mutual Funds) Regulations, 2026 (in force from 1 April 2026) and the SEBI Master Circular for Mutual Funds dated 20 March 2026, plus later circulars listed in the Appendix.
