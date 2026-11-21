@@ -476,13 +476,13 @@ sequenceDiagram
 | --- | --- |
 | Trigger | Redemption request (at the RTA) |
 | Initiator | Investor or distributor |
-| Departments | **DEP-08**; DEP-06 (scheme cash and payout), DEP-07 (payables), DEP-02 / DEP-03 (cash ladder) |
+| Departments | **DEP-08**; DEP-06 (scheme cash; payout tracking), DEP-07 (payables), DEP-02 / DEP-03 (cash ladder) |
 | Capabilities | CAP-D13-005, CAP-D13-011, CAP-D13-016, CAP-D02-006 (.2), CAP-D11-013, CAP-D10-010, CAP-D04-002 (.4), CAP-D12-002 (.2) |
 | Hand-offs (outside) | RTA (request, time-stamp, computation, payout file — owner decision D-52); bank (payout) |
 | Preconditions | Units free of lock-in and lien; KYC not on hold |
 | Final state | Units extinguished; payout `PAID` within the regulatory timeline **[VAL]** |
 | Approvals | The payout file is prepared and sent by the RTA, not by AMC OS (owner decision D-52); AMC OS tracks and checks the payout (CAP-D13-016, CAP-D13-005 (.2); PRD-013 FR-D13-020) |
-| Exceptions | Units not available → `REJECTED` with reason; bank failure → `PAYOUT_FAILED`, bank-detail check, re-initiate; timeline missed → delay-interest calculation **[VAL]** |
+| Exceptions | Units not available → `REJECTED` with reason; bank failure → `PAYOUT_FAILED`; the RTA re-initiates; AMC OS records the exception and follows up (PRD-012 FR-D12-008, D-52); timeline missed → delay-interest calculation **[VAL]** |
 | Audit | Request, cut-off applied, NAV used, load and tax, payout file, bank result |
 | Source | W11. Under mirror mode (Q2) the RTA computes the redemption; AMC OS recomputes as a check. The RTA sends the payout file; AMC OS tracks and checks it (owner decision D-52). TDS for NRI investors is **[VAL]** |
 
@@ -495,7 +495,7 @@ flowchart TD
   E --> F[Redemption payable posted; cash ladder updated]
   F --> G[RTA sends payout file - D-52; AMC OS tracks]
   G --> H{Bank success?}
-  H -- no --> I[PAYOUT_FAILED: bank-detail check, re-initiate]
+  H -- no --> I[PAYOUT_FAILED: RTA re-initiates; AMC OS follows up]
   H -- yes --> J[PAID; timeline met? else delay-interest calc]
 ```
 
