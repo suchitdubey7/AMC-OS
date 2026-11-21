@@ -138,6 +138,8 @@ The canonical interface is AMC OS's own description of each kind of data that cr
 | Management figures | Finance | ERP (INT-017) | (none in v1) |
 | Sign-in and user changes | Identity | Identity providers (INT-015) | `USER_PROVISIONED`, `USER_DEPROVISIONED` |
 
+In release 1, events published after a load are delivered by each module's database outbox; Kafka can be added later without changing adapters (D-70). Positioning: AMC OS connects to the AMC's existing systems first (D-67), which is why most families above are loads from the system of record, not replacements of it.
+
 Every canonical record carries: tenant, source provider and adapter version, raw-landing object reference and checksum, provider reference, business date, received time, licence tag (I11) and data classification (PRD-016) **[DES]**.
 
 ## 4. Inbound files and messages
@@ -323,6 +325,7 @@ IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [DES]*
 | EA-007 G5 | Closed in design for every outbound channel of EA-007 §10.1, BA-004 and PRD-000 Ch 8 (RTA, AMFI, exchanges incl. MF platforms, AMC website, custodian, broker, bank): each spec states ack limit and status query as "Confirm with <provider>" with the manual check; the values themselves come at onboarding (G1) | — |
 | BA-004 WF-023 | Broker membership status from exchanges: INT-004/005 field 2 (g), Confirm with each exchange | Next BA-004 revision |
 | PRD-000 Ch 8 (NSE, BSE rows) | MF-platform confirmations and StAR MF payment / allotment files "out" are sent by the RTA by default; AMC OS sends them only if the AMC must (INT-004 field 2 e) **[ASSUMPTION]** | Pilot discovery; next PRD-013 revision |
+| EA-001 §4 rule 3, AIML-001 | AI model provider credential is per cell, not per tenant, as an exception (INT-016 field 4) because the vendor holds the AI contract | Next EA-001 revision; Step 26 |
 | BA-001, PRD-011 C9 | iNAV for ETFs: capability and owning module still open; INT-004/005 carry only the channel | Next BA-001 / PRD-011 revision |
 | PRD-011 FR-D11-001 | Price adapters sit in Valuation (EA-003 B9) — already listed in EA-003 §7 | Next PRD-011 revision |
 | SEC-001 | Fixed outbound addresses, certificate and key rotation, inbound endpoint hardening (§9) | Step 25 |
@@ -341,6 +344,7 @@ IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [DES]*
 | G5 | Emailed documents with human check in release 1 | Owner question Q79 |
 | G6 | Automated fetching of public website files (AMFI, exchanges, SEBI) — terms of use | Owner question Q80; REG-001 **[VAL]** |
 | G7 | Canonical schemas not yet written (`contracts/schemas/` is empty) | Step 15 |
+| G8 | MF Central (PRD-013): assumed to reach AMC OS only through the RTA feeds (INT-006/007) | Pilot discovery |
 
 ## Sources
 

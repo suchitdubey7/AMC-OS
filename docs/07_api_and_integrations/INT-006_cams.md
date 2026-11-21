@@ -18,7 +18,7 @@ Outside system X07 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 | # | Field | Content | Label |
 | --- | --- | --- | --- |
 | 1 | Provider | Computer Age Management Services Ltd (CAMS), SEBI-registered RTA, acting for the AMC under contract | [IND] |
-| 2 | Business purpose | **In:** investor and folio master, provisional and final transaction feeds, SIP and mandate data, units outstanding per plan, AUM, brokerage computation, payout and message status, complaints received by the RTA (Investor D13, Distribution D14, Operations reconciliation). **Out:** approved NAV and IDCW rates (NAV, Product), scheme master and set-up (Product, WF-001), correction requests for investor data (Investor; corrections are made only by the RTA, D-53), message requests where the RTA sends investor messages (D-55). Payout files are prepared and sent by the RTA, AMC OS only tracks and checks them (D-52) | [DES] |
+| 2 | Business purpose | **In:** investor and folio master, provisional and final transaction feeds, SIP and mandate data, units outstanding per plan, AUM, brokerage computation, payout and message status, complaints received by the RTA (Investor D13, Distribution D14, Operations reconciliation). **Out:** approved NAV and IDCW rates (NAV, Product), scheme master and set-up (Product, WF-001), correction requests for investor data (Investor; corrections are made only by the RTA, D-53), message requests where the RTA sends investor messages (D-55). Payout files are prepared and sent by the RTA, AMC OS only tracks and checks them (D-52). **MF Central** (the service platform run jointly by the RTAs, PRD-013): transactions and service requests received there reach AMC OS in this RTA's feed by default **[ASSUMPTION — Confirm with the RTA]** | [DES] |
 | 3 | Approved interface | Feeds and APIs per the AMC–CAMS agreement (PRD-000 Ch 8) — **Confirm with CAMS** for each feed: transport (file or API), layout, version, push or pull | Confirm |
 | 4 | Authentication | Per agreement (PRD-000 Ch 8 lists SFTP keys, API credentials and IP allow-listing as expected) — Confirm with CAMS; per tenant, fixed outbound addresses per cell (INT-001 S4) | Confirm |
 | 5 | Data contract | Canonical families: **investor, folio and transaction**; **KYC status** (as carried by the RTA); **distributor registration and brokerage**; **NAV publication record** (out); **scheme set-up** (out); **complaint**; **investor message request and delivery status** (INT-001 §3). Investor personal data is classified and never appears in events (NFR-SEC-007) | [DES] |
@@ -45,6 +45,7 @@ Outside system X07 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 3. How corrections and reversals appear in the transaction feed.
 4. How complaints and message delivery status are shared.
 5. Test environment and certification steps.
+6. Does any MF Central data reach the AMC other than through the RTA feed?
 
 ## Sources
 

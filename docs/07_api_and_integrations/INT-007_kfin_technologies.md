@@ -18,7 +18,7 @@ Outside system X07 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 | # | Field | Content | Label |
 | --- | --- | --- | --- |
 | 1 | Provider | KFin Technologies Ltd, SEBI-registered RTA, acting for the AMC under contract | [IND] |
-| 2 | Business purpose | Same as INT-006 field 2 (in: investor, folio, transactions, SIP, units outstanding, AUM, brokerage, payout and message status, complaints; out: NAV and IDCW, scheme set-up, correction requests, message requests). Payouts sent by the RTA (D-52); corrections only through the RTA (D-53) | [DES] |
+| 2 | Business purpose | Same as INT-006 field 2 (in: investor, folio, transactions, SIP, units outstanding, AUM, brokerage, payout and message status, complaints; out: NAV and IDCW, scheme set-up, correction requests, message requests). Payouts sent by the RTA (D-52); corrections only through the RTA (D-53). **MF Central** (the service platform run jointly by the RTAs, PRD-013): transactions and service requests received there reach AMC OS in this RTA's feed by default **[ASSUMPTION — Confirm with the RTA]** | [DES] |
 | 3 | Approved interface | Per the AMC–KFin agreement — **Confirm with KFin Technologies** for each feed | Confirm |
 | 4 | Authentication | Per agreement — Confirm with KFin Technologies; per tenant (INT-001 I7, S4) | Confirm |
 | 5 | Data contract | As INT-006 field 5 (same canonical families; separate adapter) | [DES] |
@@ -40,7 +40,7 @@ Outside system X07 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 
 ## 3. Confirm with KFin Technologies
 
-The same five points as INT-006 §3.
+The same six points as INT-006 §3.
 
 ## Sources
 
