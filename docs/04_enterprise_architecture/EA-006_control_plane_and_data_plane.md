@@ -173,6 +173,7 @@ sequenceDiagram
 | Readable only by the tenant | Encrypted with the production tenant's master key; the control plane holds only the ciphertext, the hash and the metadata. Whether the UAT cell may use the production tenant's key for encryption is a key-design point for SEC-001 (Step 25) **[DES]** |
 | Release compatibility | If production runs an older release that does not know a setting in the bundle, the bundle waits until production is upgraded (EA-008 §9) |
 | Production approval | The UAT approval is evidence, not the production approval: UAT users sign in through a different broker in a cell with looser change control, so production cannot rely on them. A promoted bundle therefore arrives in production as **Submitted**, and a production checker — holding the production grant and not the production user mapped to the UAT maker — must approve it before it can become effective. This applies to every K1 setting and every K2 rule set and is **not** a tenant setting (EA-008 §1 does not allow maker-checker to be removed) **[DES]** |
+| Matching scopes and people | UAT and production are separate tenant records, so a scheme-scoped value cannot carry a scheme UUID across: bundles name schemes by their scheme code, and production rejects the bundle if a named scheme does not exist there. Users are matched across the two brokers by their subject in the AMC's own identity provider (the same person signs in to both), which is how production knows who the UAT maker was. Details: EA-008 next revision and SEC-001 |
 | Signature meaning | The non-production cell's signature proves the bundle was not changed in transit; it does not prove approval. Which keys production trusts for bundles is an SEC-001 item (Step 25) |
 | Record | Each promotion is a `platform.config_promotion` row in both tenants (EA-008 §8) and a control-plane audit entry (CP-7) |
 | Expiry | The control plane deletes the ciphertext after delivery or after the promotion window **[ASSUMPTION — 7 days; confirm: SRE lead]** |
@@ -212,8 +213,9 @@ The filter is an allow-list in the cell agent and the telemetry collector: only 
 
 | Document | Change needed | When |
 | --- | --- | --- |
-| ADR-0021 (proposed, owner-only folder; not drafted in this step) | Control plane as a separate deployable with its own data store; pull model; release signing outside the control plane (CP-3, CP-8) | Owner; before INF-001 (Step 26) |
-| EA-008 §5, §11 G5 | Promotion row to point to EA-006 §4; G5 closed | Next EA-008 revision |
+| ADR-0021 (proposed, owner-only folder; not drafted in this step) | Control plane as a separate deployable with its own data store; pull model; release signing outside the control plane (CP-3, CP-8); support for the previous release's cell-agent protocol (EA-004 §8.2 rule 8) | Owner; before INF-001 (Step 26) |
+| EA-008 §5, §11 G5 | Promotion row to point to EA-006 §4; G5 closed; scheme-code scopes and user matching in bundles (§4) | Next EA-008 revision |
+| ADR-0003 §4 (owner-only) | "The control plane holds … configuration" to read: product-level items and opaque, tenant-encrypted promotion bundles only (§1.1, §4) | Owner |
 | PRD-001 FR-D01-035, FR-D01-046, FR-D01-047 | Point to EA-006 §4 and EA-004 §8 | Next PRD-001 revision |
 | SEC-001 | Key used to encrypt promotion bundles; cell identity certificates; release signing keys | Step 25 |
 | INF-001 | Control-plane infrastructure, cell agent, telemetry allow-list | Step 26 |

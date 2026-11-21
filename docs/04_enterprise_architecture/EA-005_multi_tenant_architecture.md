@@ -13,7 +13,7 @@ last_updated: 2026-11-21
 
 This document says how AMC OS keeps every AMC's data, users, AI context and audit trail apart while many AMCs share one product, and often one cell. It is master prompt §14 Stage B item 6 ("Multi-tenant architecture") and the design that PRD-001 FR-D01-005 points to. It turns the summary table in EA-002 §7 into a design per layer, and adds tenant context outside a user request (workers, events, workflows, scheduled jobs), the key hierarchy, the tenant lifecycle and the test list. Cells and deployment are [EA-004](EA-004_deployment_and_cell_architecture.md); the control plane is [EA-006](EA-006_control_plane_and_data_plane.md).
 
-**Builds on Draft documents:** ADR-0003, ADR-0008, ADR-0016, ADR-0017, ADR-0019, EA-001, EA-002, EA-003, EA-008, PRD-001, PRD-016, PRD-017, BA-004 (WF-019, WF-022), BA-005 (SOD-09, SOD-15), DA-000 Ch 6, DDL-000, DBT-000 — allowed by owner decision D-3. Nothing used here is Approved. Owner decisions used: D-5, D-8, D-26, D-27, D-61, D-62 ([LOOP_STATE.md](../../LOOP_STATE.md)).
+**Builds on Draft documents:** ADR-0003, ADR-0008, ADR-0016, ADR-0017, ADR-0019, EA-001, EA-002, EA-003, EA-008, PRD-001, PRD-016, PRD-017, BA-004 (WF-019, WF-022), BA-005 (SOD-09, SOD-15), DA-000 Ch 6, DDL-000, DBT-000 — allowed by owner decision D-3. Nothing used here is Approved. Owner decisions used: D-5, D-26, D-27, D-61, D-62 ([LOOP_STATE.md](../../LOOP_STATE.md)).
 
 **Status of every decision in this document:** **[DES]** — a design proposal for the owner (interim ARB). No new regulatory fact is stated; privacy points refer to PRD-001 NFR-PRIV-001 **[REG — VAL]**. Tenant isolation is a T1 subject: before this design becomes Approved it needs the paid external review of owner decision D-5.
 
@@ -62,7 +62,7 @@ Some cell tools must read or write a tenant's rows in **every** module schema. T
 | --- | --- | --- |
 | Tenant set-up seed (WF-019 `SETUP`) | Writes seed rows (roles, calendars, chart-of-accounts template, configuration defaults) | Each module's own seed function runs under **that module's** database role; the tool only calls them in order. No role writes another schema (EA-003 B1) |
 | Tenant export (migration, exit export FR-D01-004, D-27) | Reads every schema for one tenant | Each module's export function, under that module's role, with the tenant context set from the approved migration or exit record (tenant-scoped, two-sided confirmed). Read only |
-| Tenant import (migration target) | Writes every schema for one tenant | Each module's import function, under that module's role, with the tenant context set from the approved migration record. Imported rows pass the same insert checks as new rows (for example balanced journals) and keep their original IDs, timestamps and versions. **Audit rows** are imported through a separate insert-only import function of the audit owner that writes the rows and their original hashes unchanged and then re-verifies the chain end to end; it never recomputes hashes. This is a named exception to EA-003 T15 |
+| Tenant import (migration target) | Writes every schema for one tenant | Each module's import function, under that module's role, with the tenant context set from the approved migration record. Imported rows pass the same insert checks as new rows (for example balanced journals) and keep their original IDs, timestamps and versions. **Audit rows** are imported through a separate insert-only import function of the audit owner that writes the rows and their original hashes unchanged and then re-verifies the chain end to end; it never recomputes hashes. This is a named exception to EA-003 T15. Two points are **open** for DA-001 with ADR-0020: DDL-000's insert trigger `audit.tg_hash_chain` today always recomputes `prev_hash` and `row_hash`, so a verified import path is needed that does not weaken the trigger for normal writes; and the target cell's audit sequence must be advanced past the imported `event_seq` values before new audit rows are written, so the chain order holds (§10 G6) |
 | Per-tenant restore extract (EA-004 §9.3) | Reads a scratch copy | Runs only against the scratch cluster, with the scratch cluster's own migration-owner role; nothing is written to the live cell; the scratch cluster is destroyed afterwards |
 | Offboarding removal (§7) and migration-source removal (EA-004 §6 rule 7) | Removes a tenant's rows | Posted journals and audit rows are protected by immutability triggers (DDL-000; DBT-000 T3a, T3b), and must stay so for every other tenant. How one tenant's protected rows are removed without weakening those triggers is **open**: options are (a) a migration-owner procedure that removes rows for one tenant only, under two-sided approval, with the run itself audited; (b) partitioning protected tables also by tenant so a tenant's partitions can be detached and dropped; (c) keeping the rows and crypto-shredding personal data only, with the rows removed when backups expire. Chosen in DA-001 with ADR-0020 (§10 G6) |
 
@@ -162,7 +162,7 @@ The negative tests in DA-000 §6.10 (1–11) stay. Added for the parts this docu
 | 13 | Publish an event without `tenant_id`, and one whose `tenant_id` differs from the outbox row's tenant | Consumer refuses; alert raised |
 | 14 | Scheduled job entry for tenant A runs | Touches only tenant A rows (checked by row counts per tenant before and after) |
 | 15 | Inbound file arrives on tenant A's connection carrying tenant B's identifiers | Loaded only into tenant A or rejected; never into tenant B |
-| 16 | Break-glass login for tenant A queries tenant B rows, including after setting `app.tenant_id` to tenant B itself; and uses the login after expiry | 0 rows; login refused after expiry |
+| 16 | Break-glass login for tenant A queries tenant B rows, including after setting `app.tenant_id` to tenant B itself, directly and through every break-glass view; and uses the login after expiry | 0 rows; login refused after expiry |
 | 17 | Log search by a tenant A user | Returns only tenant A lines |
 | 18 | Telemetry sent to the control plane during a NAV run | Contains no prices, positions, investor data or prompts (EA-006 NFR-OBS-003) |
 | 19 | Per-tenant restore drill (EA-004 §9.3) | Extract contains only that tenant's rows; other tenants untouched |
@@ -178,6 +178,7 @@ Tests 1–6 (DBT-000 T1a–T1g) and test 11 (catalogue check) run in CI today; t
 | ADR-0020 (owner-only, to be drafted) | Record the system-worker tenant-context cases of §2 (event consumer, outbox relay, scheduler, ingestion, break-glass) and the platform data tools of §2.1 (seed, export, import incl. audit-chain import, restore extract, removal) as named exceptions to STD-001 §4 and EA-003 B1/T15; the per-grant break-glass login and its RLS policies (§6) | Before Steps 15–16; owner |
 | ADR-0003 (owner-only) | Revision for the tenant-isolation changes here (GOV-002 §2): break-glass without `BYPASSRLS`, tenant context for workers | Owner |
 | DA-000 §6.4 → DA-001 | Break-glass role without `BYPASSRLS` (§6.3) | DA-001, Step 15 |
+| DDL-000 → DA-001 / DDL | (1) `platform.apply_tenant_rls()` creates `tenant_isolation` for all roles (no `TO` clause); permissive policies combine with OR, so the break-glass login must be excluded from it (policy scoped to application roles, or a restrictive break-glass policy); break-glass views must be `security_invoker`. (2) Audit import path and sequence advance (§2.1). (3) Audit payloads (`before_state`, `after_state`) must not hold tenant-key ciphertext or keyed-hash values, so a tenant move or key destruction never makes audit rows unreadable or changes their hashes; personal data in audit diffs is referenced, not copied **[DES]** | Steps 15–16 |
 | DA-001 / DDL | Tenant-scoped schedule entries; tenant ID in Temporal workflow IDs; analytics isolation choice for ClickHouse | Steps 15–16 |
 | STD-001 | Tenant context as request-scoped value; no tenant parameter from callers; linter for session `SET` | STD-001 next revision |
 | QA-001 | Tests 12–21 | QA-001 next revision |
@@ -193,7 +194,7 @@ Tests 1–6 (DBT-000 T1a–T1g) and test 11 (catalogue check) run in CI today; t
 | G3 | Key rotation and key-administrator separation of duties | SEC-001 (Step 25) |
 | G4 | External review of the isolation design (T1, D-5) | Owner, before Approval |
 | G5 | Legal retention after exit | REG-001 (Step 25) **[VAL]** |
-| G6 | How one tenant's immutable rows (posted journals, audit) are removed at exit or after a migration without weakening the triggers (§2.1) | DA-001 (Step 15) with ADR-0020 |
+| G6 | How one tenant's immutable rows (posted journals, audit) are removed at exit or after a migration, and how audit rows are imported with their original hashes and sequence, without weakening the triggers (§2.1) | DA-001 (Step 15) with ADR-0020 |
 
 ## Sources
 
@@ -205,4 +206,4 @@ Tests 1–6 (DBT-000 T1a–T1g) and test 11 (catalogue check) run in CI today; t
 | S4 | [PRD-001](../03_product_requirements/PRD-001_platform_administration.md) FR-D01-001…-005; [PRD-016](../03_product_requirements/PRD-016_enterprise_data_platform.md) FR-D16-026 | Tenant record, lifecycle, analytics isolation |
 | S5 | [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-019, WF-022; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) ROLE-20, SOD-09 | Lifecycle, break-glass |
 | S6 | [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 6 | Context, keys, RLS, storage, pooling, backup, tests |
-| S7 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions | D-5, D-8, D-26, D-27, D-61, D-62 |
+| S7 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions | D-5, D-26, D-27, D-61, D-62 |
