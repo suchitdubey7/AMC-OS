@@ -24,8 +24,8 @@ Facts checked on 21 Nov 2026 (H = page opened; T = search-result title only):
 
 | Product | Fact | Source |
 | --- | --- | --- |
-| Kong Gateway | Community reports that free/open-source mode ended with version 3.10.0 (March 2025) and that open-source images were no longer published from 3.10.0; no official Kong statement seen | H: [Kong Nation thread](https://discuss.konghq.com/t/is-opensource-support-for-kong-ceased/13529), [GitHub discussion 14405](https://github.com/Kong/kong/discussions/14405) — community, secondary |
-| Envoy Gateway | Envoy-based gateway for the Kubernetes Gateway API; release 1.9 in 2026; general availability since 2024 | T: [v1.9 announcement](https://gateway.envoyproxy.io/news/releases/v1.9/), [CNCF "a year of GA", 11 Jun 2025](https://www.cncf.io/blog/2025/06/11/a-year-of-envoy-gateway-ga-building-growing-and-innovating-together/) |
+| Kong Gateway | Community reports that free/open-source mode ended with version 3.10.0 and that open-source images were no longer published from 3.10.0; no official Kong statement seen | H: [Kong Nation thread](https://discuss.konghq.com/t/is-opensource-support-for-kong-ceased/13529), [GitHub discussion 14405](https://github.com/Kong/kong/discussions/14405) — community, secondary |
+| Envoy Gateway | Envoy-based gateway for the Kubernetes Gateway API; v1.9 announced in 2026, with v1.10 shown as newer on the same site; general availability since 2024 | T: [v1.9 announcement](https://gateway.envoyproxy.io/news/releases/v1.9/), [CNCF "a year of GA", 11 Jun 2025](https://www.cncf.io/blog/2025/06/11/a-year-of-envoy-gateway-ga-building-growing-and-innovating-together/) |
 | Open Policy Agent (OPA) | 20 Aug 2025: OPA's creators and many Styra staff joined Apple; "OPA remains a CNCF graduated open source project and there are no changes to the project governance or licensing" | H: [OPA blog](https://openpolicyagent.org/blog/note-from-teemu-tim-and-torin-to-the-open-policy-agent-community-2dbbfe494371) |
 | Cedar | Open-source policy language from AWS (2023); joined the CNCF as a sandbox project (reported Jan 2026); AWS offers it as a managed service (Amazon Verified Permissions) | T: [AWS open-source blog](https://aws.amazon.com/blogs/opensource/cedar-joins-cncf-as-a-sandbox-project), [InfoQ, Jan 2026](https://www.infoq.com/news/2026/01/cedar-joins-cncf-sandbox), [AWS docs](https://docs.aws.amazon.com/verifiedpermissions/latest/userguide/terminology-differences-avp-cedar.html) |
 
@@ -43,7 +43,7 @@ Licence terms of every candidate must be re-read at approval **[VAL]**.
 9. Smallest operating footprint (master prompt §13).
 
 ## Decision (proposed)
-1. **Policy engine — leading candidate: OPA**, run as a library or sidecar next to the application so a decision needs no network hop to a shared service; policies in Rego, versioned in the repository, with unit tests and decision logs shipped to the audit store. **Alternative kept: Cedar** (in-process library), if the proof of concept shows simpler ABAC policies or better analysis tooling. A managed policy service is not chosen as default, because it adds a network call per decision and ties authorisation to one cloud.
+1. **Policy engine — leading candidate: OPA**, run as a sidecar next to the application (or as policies compiled to WebAssembly and evaluated in the Python process — to be proven, since OPA's own library form is Go and AMC OS is Python, ADR-0004), so a decision needs no network hop to a shared service; policies in Rego, versioned in the repository, with unit tests and decision logs shipped to the audit store. **Alternative kept: Cedar** (in-process evaluation from Python through a binding — to be proven), if the proof of concept shows simpler ABAC policies or better analysis tooling. A managed policy service is not chosen as default, because it adds a network call per decision and ties authorisation to one cloud.
 2. **API gateway — no leading product until the Kubernetes decision.** If Kubernetes is adopted (INF-001), **Envoy Gateway** is the leading candidate. If not, the shortlist is the cloud provider's managed gateway or a load balancer plus validation in the FastAPI application. **Kong is not recommended** while the status of its open-source edition is unclear (community reports above).
 3. **Separation of duties between them:** the gateway checks *who* (token) and *how much* (rate limits) and validates shape; the policy engine, called by the domain module, decides *may this user do this action on this object* (it needs object attributes the gateway does not have).
 4. Until the proof of concept ends, documents refer to "API gateway" and "policy engine" generically.
@@ -62,7 +62,7 @@ Licence terms of every candidate must be re-read at approval **[VAL]**.
 - Follow-up: proof of concept in the platform-foundation increment; INF-001 (Step 26) Kubernetes decision; SEC-001 (Step 25) maps policies to BA-005 rights and SoD rules.
 
 ## Validation
-Proof of concept: 20 representative BA-005 rights incl. SoD rules (e.g. maker ≠ checker) written in OPA and in Cedar; measure p95 decision latency; cross-tenant negative tests; ROLE-26 cannot get an approve decision; decision logs reach the audit store; gateway candidate passes criteria 1–4 in both regions.
+Proof of concept: 20 representative BA-005 rights incl. SoD rules (e.g. maker ≠ checker) written in OPA and in Cedar; prove how each is called from Python (sidecar, WebAssembly or binding); measure p95 decision latency; cross-tenant negative tests; ROLE-26 cannot get an approve decision; decision logs reach the audit store; gateway candidate passes criteria 1–4 in both regions.
 
 ## Change log
 | Date | Status | By | Note |

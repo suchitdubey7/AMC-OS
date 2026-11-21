@@ -42,7 +42,7 @@ This document opens the AMC OS box drawn in [EA-001](EA-001_system_context.md). 
 flowchart TB
   L1[L1 Experience\nReact + TypeScript · 12 role workspaces · design system\nAI assistant panel in every workspace]
   L2[L2 Identity and API management\nIdP broker · OIDC/SAML · MFA · API gateway · rate limits\nrequest validation · tenant from token · policy decisions · audit]
-  L3[L3 Domain services\nmodular monolith · 22 service modules · one schema each]
+  L3[L3 Domain services\nmodular monolith · 22 service modules · each writes only its own schema(s)]
   L4[L4 Workflow and events\nTemporal workflows · transactional outbox · idempotent consumers\nKafka later, when volumes need it]
   L5[L5 Financial engines\nFE-01 … FE-10 · deterministic · versioned]
   L6[(L6 Enterprise data\nPostgreSQL · ClickHouse · S3-compatible storage · pgvector · cache · Polars)]
@@ -80,6 +80,7 @@ sequenceDiagram
   participant G as API gateway (L2)
   participant P as Policy engine (L2)
   participant O as OMS module (L3)
+  participant M as Compliance module D08 (L3)
   participant C as Compliance engine FE-04 (L5)
   participant D as PostgreSQL (L6)
   U->>I: sign in (AMC IdP + MFA)
@@ -91,8 +92,10 @@ sequenceDiagram
   O->>P: allowed? (user grants, scheme, desk, action)
   P-->>O: allow (decision logged)
   O->>D: BEGIN; SET LOCAL tenant; insert order + outbox row; COMMIT
-  O->>C: pre-trade check (rule versions)
-  C-->>O: PASS / WARN / BLOCK
+  O->>M: pre-trade check API (order, scheme)
+  M->>C: run rule versions
+  C-->>M: PASS / WARN / BLOCK
+  M-->>O: result (compliance writes its own records)
   O-->>U: order with compliance result
 ```
 
@@ -113,13 +116,15 @@ The labels WS-01…WS-12 are working labels in this document; whether they becom
 | WS-03 | Dealers | ROLE-08 Dealer | D05, D06 | Order blotter, broker choice, fills, allocations, trade exceptions | Dealing assistant |
 | WS-04 | Compliance | ROLE-09 Compliance Officer (incl. CCO); ROLE-21 Legal Officer (document review) | D08, D02 (scheme documents) | Pre/post-trade results, breaches, rule versions, regulatory calendar and reports | Compliance copilot |
 | WS-05 | Risk | ROLE-10 Risk Manager (incl. CRO) | D09 | Daily risk run, limits, liquidity, alerts, model validation | Risk assistant |
-| WS-06 | Fund accounting | ROLE-11 Fund Accountant; Head of Fund Accounting; ROLE-04 CFO for period reopen (D-42) | D10 | Journals, accruals, sub-ledgers, trial balance, period close, custodian-book checks (D-40) | Reconciliation assistant (breaks); NAV operations assistant (read) |
+| WS-06 | Fund accounting | ROLE-11 Fund Accountant; Head of Fund Accounting†; ROLE-04 CFO for period reopen (D-42) | D10 | Journals, accruals, sub-ledgers, trial balance, period close, custodian-book checks (D-40) | Reconciliation assistant (breaks); NAV operations assistant (read) |
 | WS-07 | NAV operations | ROLE-11 Fund Accountant (NAV); ROLE-12 Operations Analyst | D11, D07, D12 | NAV runs and checklist, price exceptions, fair-value requests, settlement status, corporate actions, reconciliation breaks, operations day close | NAV operations assistant; Reconciliation assistant |
-| WS-08 | Investor servicing | ROLE-16 Investor Service Executive; Grievance Officer (D-54) | D13 | Investor view (RTA mirror), service requests, complaints, payout and message status | Investor service assistant |
+| WS-08 | Investor servicing | ROLE-16 Investor Service Executive; Grievance Officer† (D-54) | D13 | Investor view (RTA mirror), service requests, complaints, payout and message status | Investor service assistant |
 | WS-09 | Distribution | ROLE-14 Distributor Manager; ROLE-15 RM | D14 | Flows by distributor and region, SIP book, empanelment, commission runs | Distribution intelligence |
 | WS-10 | Finance | ROLE-04 CFO; ROLE-24 Finance Officer | D15, D14 (commission approval) | AMC P&L, TER use, expenses, budgets and plans, management close | CFO copilot |
-| WS-11 | Senior management | ROLE-01 CEO; ROLE-02 COO; ROLE-05 CTO; ROLE-25 Trustee (read-only supervisory views) | All (read) | AUM and flows, profitability, risk and compliance headlines, escalations, board and trustee packs | CEO copilot |
-| WS-12 | System administrators | ROLE-19 Tenant Administrator; ROLE-17 Technology Administrator; ROLE-22 Information Security Officer; ROLE-23 Data Steward; ROLE-18 Auditor (audit search) | D01, D16, D17 (assistant enablement), D02 (scheme set-up, §3.2) | Users and role grants, access reviews, configuration, connections health, master data, assistant switch-on and kill switch, audit search | Data Steward assistant (PRD-016 §12, proposal only); otherwise none — §7 G3 |
+| WS-11 | Senior management | ROLE-01 CEO; ROLE-02 COO; ROLE-25 Trustee (read-only supervisory views) | All (read) | AUM and flows, profitability, risk and compliance headlines, escalations, board and trustee packs | CEO copilot |
+| WS-12 | System administrators | ROLE-05 CTO; ROLE-19 Tenant Administrator; ROLE-17 Technology Administrator; ROLE-22 Information Security Officer; ROLE-23 Data Steward; ROLE-18 Auditor (audit search) | D01, D16, D17 (assistant enablement), D02 (scheme set-up, §3.2) | Users and role grants, access reviews, configuration, connections health, master data, assistant switch-on and kill switch, audit search | Data Steward assistant (PRD-016 §12, proposal only); otherwise none — §7 G3 |
+
+† Not yet a BA-005 role; added in the next BA-005 revision (LOOP_STATE "BA-005 changes waiting"; Q61 for the Data Protection Officer). The CFO's own workspace is WS-10; WS-06 only for period reopen. The CTO works in WS-12 (technical configuration approval) and can be given WS-11 views by grant.
 
 ### 3.2 Roles and domains without a named experience
 
@@ -180,7 +185,7 @@ The 22 services of master prompt §5 L3 are modules of one application (ADR-0002
 | Compliance | D08 | `compliance` | Reporting | D16 | `analytics` |
 | Risk | D09 | `risk` | AI | D17 | `ai` |
 
-Audit has no separate service in the master prompt list; it is part of platform core (D01 `audit`). Integration adapters are modules too (one per provider family), owned by the domain that uses the data (INT-001, Step 14).
+Audit has no separate service in the master prompt list; it is part of platform core, so the Tenant module owns two schemas (`platform`, `audit`), and D11 and D12 each span several schemas (GOV-001 §3). ADR-0002 says each package owns "exactly one" schema; its wording should be changed to "one or more schemas of its own domain" when the owner next edits ADR-0002 (owner-only file; listed in LOOP_STATE "Waiting for owner"). Integration adapters are modules too (one per provider family), owned by the domain that uses the data (INT-001, Step 14).
 
 ### 5.2 L4 Workflow and events
 
@@ -207,7 +212,7 @@ ADR-0007 applies (PostgreSQL record, ClickHouse analytics, S3-compatible storage
 | Human approval workflows | Anything an assistant drafts enters the owning domain's normal approval | ADR-0008 §3 |
 | AI audit logs | Prompt, tools called, sources, answer, user, assistant version | PRD-017 FR-D17-025 |
 | Kill switch | One authorised person can switch off an assistant, a tool or all AI for a tenant; switching back on needs two people (D-75) | PRD-017 |
-| Model provider | India-region private endpoints only, zero data retention, no training on AMC data; provider chosen later (D-61) | ADR-0018 §Consequences |
+| Model provider | India-region private endpoints only, zero data retention, no training on AMC data; provider chosen later (D-61) | ADR-0018 Decision 5 |
 | External AI clients | None in release 1 (no MCP access to AMC OS, D-72) | — |
 | Failure | AI down never stops financial processing | FR-D17-019 |
 
@@ -226,7 +231,7 @@ The agent runtime (the proposal's LangGraph ADR-0010) is not decided here; it is
 | Object storage | Per-tenant prefix or bucket and per-tenant KMS key | ADR-0003 §3 |
 | Caches | Tenant prefix on every key; client refuses unprefixed keys | ADR-0017 |
 | AI retrieval | Tenant filter applied by the platform | ADR-0008 §5 |
-| Logs | Every log line tagged with tenant; tenant-scoped log views | NFR-OBS-001 |
+| Logs | Every log line tagged with tenant; tenant-scoped log views | ADR-0003 §3; alerts NFR-OBS-001 |
 | Analytics | Tenant-partitioned tables and tenant-filtered semantic layer | PRD-016 FR-D16-026 |
 | Backups | Per-cell backups encrypted with cell keys; per-tenant restore designed in Step 12 | EA-004/EA-005 (Step 12) |
 | Support tools | No default operator access; break-glass only (WF-022) | SOD-09 |
@@ -251,7 +256,7 @@ Master prompt §13 asks for the smallest reliable set. Proposed **[DES]**:
 | OpenTelemetry, Prometheus, Grafana | Yes | Master prompt §13; ADR in INF-001 (Step 26) |
 | Docker | Yes | Master prompt §13 |
 | Kubernetes, Terraform | Open | INF-001 (Step 26); Kubernetes "when justified" (master prompt §13) |
-| Airflow or Dagster | Open | ADR-0007 leaves it to an ADR; DA-002 (Step 19) |
+| Airflow or Dagster | Open | ADR-0007 says "chosen in WP3 by ADR"; this document proposes moving the choice to DA-002 (Step 19, WP4), because it depends on the ingestion design — a timing change to note in ADR-0007 (owner-only; LOOP_STATE "Waiting for owner") |
 
 ## 9. Gaps and open points
 

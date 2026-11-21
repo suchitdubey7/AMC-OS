@@ -39,12 +39,12 @@ What stays **outside** AMC OS (from PS-001 §3, BA-002 §5 and owner decisions):
 ```mermaid
 flowchart LR
   subgraph People[AMC people — 12 workspaces, EA-002 §3]
-    P1[Senior management\nCEO · COO · CFO · CTO]
+    P1[Senior management\nCEO · COO]
     P2[Investment\nCIO · Fund Managers · Research · Dealers]
     P3[Control\nCompliance · Risk · Legal · InfoSec]
     P4[Operations\nFund Accounting · NAV · Operations · Investor Service]
-    P5[Business\nDistribution · Finance · Product]
-    P6[Administration\nTenant Admin · Technology Admin · Data Steward]
+    P5[Business\nCFO · Finance · Distribution · Product]
+    P6[Administration\nCTO · Tenant Admin · Technology Admin · Data Steward]
     P7[Oversight read-only\nTrustees · Auditors]
   end
   subgraph Vendor[AMC OS vendor]
@@ -175,7 +175,7 @@ flowchart TB
   GW --> APP
   APP --> DB
   APP --> AIG
-  AIG -->|redacted prompts, India region| AIP
+  AIG -->|classified and masked prompts, India region| AIP
   APP --> ADP
   ADP -->|per-tenant credentials| EXT
   CP -->|signed release and configuration, no financial data| B2
