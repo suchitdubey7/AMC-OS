@@ -1054,7 +1054,7 @@ BA-002 §7 processes P1–P13 each map to at least one workflow (§2 register); 
 | C5 | PRD-000 W3 names a "Portfolio Agent" that is not in the brief's D17 list | AIML-001 (Step 26) — same as BA-001 §5 C4 |
 | C6 | D09 Risk and D15 Finance have no end-to-end workflow in PRD-000; BA-002 P13 has no workflow | Closed: D09 by PRD-009 (Step 8, WF-033); D15 and P13 by PRD-015 (Step 9b, WF-040) |
 | C7 | Approval thresholds, delegated authority, recertification and review frequencies, tolerances and escalation limits named in the cards are tenant configuration with no values yet **[ASSUMPTION]** | Pilot discovery; BA-005 (Step 5) for who approves |
-| C8 | QA-001 still limits end-to-end workflow tests to WF-001…WF-017; BA-004 defines WF-001…WF-038 (WF-029…WF-038 cards in PRD-002…PRD-004, PRD-008, PRD-009, PRD-011…PRD-013), including the control workflows WF-020, WF-022 and WF-028 | Next QA-001 revision |
+| C8 | QA-001 still limits end-to-end workflow tests to WF-001…WF-017; BA-004 defines WF-001…WF-040 (WF-029…WF-040 cards in PRD-002…PRD-004, PRD-008, PRD-009, PRD-011…PRD-015), including the control workflows WF-020, WF-022 and WF-028 | Next QA-001 revision |
 | C9 | BA-003 TERM-078 calls SSI "Standing Settlement Instructions" and maps it to CAP-D07-002; BA-001 and BA-004 use "standard settlement instruction" under CAP-D07-004 (.2) | Next BA-003 revision |
 
 ## 6. How this document was checked
