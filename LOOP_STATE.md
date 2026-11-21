@@ -64,7 +64,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 14 | `wp2-step09b-prd-distribution-finance` | Step 9b: PRD-014 (D14, WF-039), PRD-015 (D15, WF-040); owner questions Q50–Q52 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 9 Minor, 5 Nits — all fixed except Nit 14 (trailer); Minor 9 partly (primary circulars not opened)) | pass | yes (21 Nov 2026, build loop, CR-0001 gate PASS) |
 | 15 | `wp2-step09c-prd-data-ai` | Step 9c: PRD-016 (D16, WF-041, WF-042), PRD-017 (D17, WF-043); PRD-000 re-keying note; owner questions Q53–Q60 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 2 Nits — all fixed except Nit 4 (trailer); round 1 had 1 Major, fixed) | pass | yes (21 Nov 2026, build loop, CR-0001 gate PASS) |
 | 16 | `wp2-step09d-owner-answers` | Step 9d: owner answers D-26…D-66 applied to PRD-001, PRD-003, PRD-006…PRD-017, BA-001, BA-004; PRD-000 note; owner questions Q61, Q62 | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed except Nit 3 (trailer); rounds 1–2 had 3 Major, all fixed) | pass | yes (21 Nov 2026, build loop, CR-0001 gate PASS) |
-| 17 | `wp3-step10-system-context` | Step 10: EA-001, EA-002 (12 workspaces); ADR-0016…ADR-0019; owner questions Q63–Q65 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 12 Minor, 2 Nits — all fixed except Nit 14 (trailer)) | see gate | no — owner-only ADRs (see "Waiting for owner") |
+| 17 | `wp3-step10-system-context` | Step 10: EA-001, EA-002 (12 workspaces); ADR-0016…ADR-0019; owner questions Q63–Q65 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 12 Minor, 2 Nits — all fixed except Nit 14 (trailer)) | pass | no — gate G2 failed: owner-only ADRs (see "Waiting for owner") |
 
 ## Owner decisions used by the loop
 
@@ -166,7 +166,7 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 
 | Branch | Why |
 | --- | --- |
-| `wp3-step10-system-context` | Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). Please also note three wording updates to older Draft ADRs that only you can make: ADR-0006 decision 1 (relay publishes to Kafka) vs D-70 (outbox first, Kafka later); ADR-0002 "exactly one schema" vs modules that own several (EA-002 §5.1); ADR-0007 orchestrator choice moved from WP3 to DA-002, Step 19 (EA-002 §8). If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
+| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST: **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). Please also note three wording updates to older Draft ADRs that only you can make: ADR-0006 decision 1 (relay publishes to Kafka) vs D-70 (outbox first, Kafka later); ADR-0002 "exactly one schema" vs modules that own several (EA-002 §5.1); ADR-0007 orchestrator choice moved from WP3 to DA-002, Step 19 (EA-002 §8). If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
 | — | Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
 
 ## Questions for owner (open)
