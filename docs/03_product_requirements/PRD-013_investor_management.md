@@ -2,7 +2,7 @@
 id: PRD-013
 title: Investor Management and Servicing (D13) — Product Requirements
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
@@ -16,7 +16,7 @@ This document states what AMC OS must do to give the AMC a complete, current and
 
 **The boundary (owner decision Q2 — [GOV-006](../00_governance/GOV-006_gap_analysis_and_delivery_plan.md) §4; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D13 boundary note; [PS-001](../01_product_strategy/PS-001_project_charter.md) §3):** CAMS and KFintech remain the registrar and transfer agent (RTA) of record. AMC OS holds a synchronised **mirror** of the investor book for servicing, analytics and reconciliation. It does **not** allot units, extinguish units, keep the official unit register or decide a transaction. Every unit, amount, load or tax figure AMC OS computes in this domain is a **check** of the RTA's figure; a difference is a break, never a correction of the RTA's record. PRD-000 "mode B" (AMC OS as transaction engine) is out of scope (GOV-006 Q2).
 
-**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 11, Chapter 4 (W10–W12), Chapter 5, Chapter 6, Chapter 7, Chapter 8, Chapter 9, Appendix A (R11–R13); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D13, §4, §5; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-08, P9, §5; [BA-003](../02_business_architecture/BA-003_domain_dictionary.md); [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-001, WF-007, WF-010, WF-011, WF-012, WF-017, §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3–§5; [PRD-001](PRD-001_platform_administration.md) §11 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. PRD-010, PRD-011 and PRD-012 are written in the same step (Step 9a) and are referred to by ID only.
+**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 11, Chapter 4 (W10–W12), Chapter 5, Chapter 6, Chapter 7, Chapter 8, Chapter 9, Appendix A (R11–R13); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D13, §4, §5; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-08, P9, §5; [BA-003](../02_business_architecture/BA-003_domain_dictionary.md); [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-001, WF-007, WF-010, WF-011, WF-012, WF-017, §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3–§5; [PRD-001](PRD-001_platform_administration.md) §11 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. PRD-010, PRD-011 and PRD-012 are written in the same step (Step 9a) and are referred to by ID only. Owner decisions D-52 (payout files sent by the RTA), D-53 (investor details fixed only through the RTA), D-54 (named Grievance Officer and DPO per AMC) and D-55 (AMC OS prepares investor messages; the RTA or the AMC's provider sends) of 21 Nov 2026 are applied ([LOOP_STATE.md](../../LOOP_STATE.md)).
 
 **What this document is not:** the RTA's processing rules or file formats (RTA agreements; INT-001, Step 14 — "Confirm with CAMS / KFintech"); the reconciliation engine and break workflow (D12 CAP-D12-003, FE-07); scheme-level units outstanding and NAV (D11, PRD-011); capital-stock and payables accounting (D10, PRD-010); distributor data and commission (D14, PRD-014); AI model governance (AIML-002, Step 26). **Rule for engineers:** no cut-off time, deadline, rounding rule, nominee count or service level is hard-coded; each is a versioned parameter or tenant configuration (PRD-001 FR-D01-033). Every authoritative unit or money figure comes from the RTA; AMC OS check values come from a deterministic engine (FE spec to be named in EA-003, Step 11), never from AI (BRL-D13-003).
 
@@ -33,7 +33,7 @@ This document states what AMC OS must do to give the AMC a complete, current and
 | FR-11-01 … FR-11-17 | FR-D13-001 … FR-D13-017 | Same order; capability added. **Rewritten** for the mirror (Q2): FR-D13-007, -008, -013 (see below), -015, -016 (RTA does the work, AMC OS tracks and checks). **FR-11-13 "Unit allotment"** becomes FR-D13-013 **"Unit allotment check"** — closes BA-001 §5 C5 |
 | BR-11-1 … BR-11-4 | BRL-D13-001 … BRL-D13-004 | BRL-D13-002 and -003 reworded from "decide" / "compute" to "check" |
 | Module 11 "Operating model choice" (mode A / mode B) | Intro and BRL-D13-005 | Mode B removed (GOV-006 Q2) |
-| W10, W11 (BA-004 WF-010, WF-011) unit and redemption computations | FR-D13-013, FR-D13-019 (checks) | Closes BA-004 §5.2 C3, except who sends the payout file → open point C1 (Q46) |
+| W10, W11 (BA-004 WF-010, WF-011) unit and redemption computations | FR-D13-013, FR-D13-019 (checks) | Closes BA-004 §5.2 C3; the payout file is sent by the RTA (owner decision D-52, open point C1 closed) |
 | Module 11 point 7 stories; Ch 5 US-IVS-01, US-IVS-02 | US-D13-001 (merged with US-IVS-01), US-D13-002 (merged with US-IVS-02) | Acceptance criteria from Ch 5 kept |
 | Module 11 point 18 acceptance criteria | AC-US-D13-003-1 (masking), AC-US-D13-004-1 (cut-off — rewritten as a check) | |
 | Module 11 points 13–17 | §5, §7, §9, §11, §12 | |
@@ -74,7 +74,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 | FR-D13-014 (FR-11-14) | M | CAP-D13-011 (.1), CAP-D13-012 (.1) | **Investor ledger (mirror):** unit holding per folio, plan and option with lot history (used for exit-load ageing checks and capital-gains statements; first in, first out) rebuilt from mirrored transactions and reconciled to the RTA's holding |
 | FR-D13-015 (FR-11-15) | M | CAP-D13-014, CAP-D13-012 (.2) | **Service requests:** change requests, statements (consolidated account statements come from depositories or the RTA), duplicate documents; deadline by request type — lifecycle in FR-D13-024 and WF-038 |
 | FR-D13-016 (FR-11-16) | M | CAP-D13-015 | **Complaints:** intake from email, web, branches, SEBI SCORES and the ODR portal; categorisation, deadline tracking, escalation, root cause, reporting **[REG — grievance redressal timelines; VAL]** ([S4], [S5]) — lifecycle in FR-D13-025 and WF-038 |
-| FR-D13-017 (FR-11-17) | M | CAP-D13-013 | **Investor communication:** templates, consents, channels (email, SMS, WhatsApp where permitted), delivery tracking; regulatory communications such as the fundamental-attribute change notice (D02 WF-001 / PRD-002) |
+| FR-D13-017 (FR-11-17) | M | CAP-D13-013 | **Investor communication:** AMC OS prepares the message from templates, checks consent and the channel (email, SMS, WhatsApp where permitted), and tracks delivery; the RTA or the AMC's own messaging provider sends it — AMC OS does not send investor messages itself (owner decision D-55); regulatory communications such as the fundamental-attribute change notice (D02 WF-001 / PRD-002) |
 
 ### 4.2 New requirements **[DES]**
 
@@ -82,7 +82,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 | --- | --- | --- | --- |
 | FR-D13-018 | M | CAP-D13-004 … -012, CAP-D13-016 | **RTA feed load:** load provisional (same-day) and final feeds from each RTA through one adapter per RTA; control totals (count, amount, units) checked per file; every row keeps its RTA reference; a mirror record changes only by a newer RTA record. Feed formats and timing: "Confirm with CAMS / KFintech" (INT-001, Step 14) |
 | FR-D13-019 | M | CAP-D13-005 (.1) | **Redemption check:** re-compute gross amount (units × applicable NAV), exit load by lot age, TDS and net amount, and compare with the RTA; difference beyond tolerance → break (D12). Closes BA-004 §5.2 C3 for the computation |
-| FR-D13-020 | M | CAP-D13-005 (.2), CAP-D13-009, CAP-D13-010, CAP-D13-016 | **Payout tracking:** each redemption, SWP and IDCW payout carries a due date from the deadline parameter and the business calendar (CAP-D01-009); status from the bank or RTA (`PAYOUT_INITIATED → PAID \| PAYOUT_FAILED → REPROCESSED`); an alert before the due date if not paid; a missed deadline is recorded with the delay for the delay-interest check **[VAL]**. Who sends the payout file is open (C1, Q46) |
+| FR-D13-020 | M | CAP-D13-005 (.2), CAP-D13-009, CAP-D13-010, CAP-D13-016 | **Payout tracking:** each redemption, SWP and IDCW payout carries a due date from the deadline parameter and the business calendar (CAP-D01-009); status from the bank or RTA (`PAYOUT_INITIATED → PAID \| PAYOUT_FAILED → REPROCESSED`); an alert before the due date if not paid; a missed deadline is recorded with the delay for the delay-interest check **[VAL]**. The RTA sends the payout file; AMC OS does not send it, and only tracks and checks it (owner decision D-52) |
 | FR-D13-021 | M | CAP-D13-006 | **Switch checks:** a switch-out without its switch-in (or the reverse) after the final feed is a break; the switch-out amount net of load must equal the switch-in amount; each leg is checked like a redemption and a purchase (FR-D13-019, FR-D13-013) |
 | FR-D13-022 | M | CAP-D13-008, CAP-D13-009 | **STP and SWP schedules:** mirror registrations (source and target scheme, amount or units, frequency, start, end, status); expected instalments per date; an instalment expected but not in the final feed, or present without an active registration, is an exception to DEP-08 |
 | FR-D13-023 | M | CAP-D13-010 | **IDCW check:** take record date and rate per unit from the approved Trustee decision (D02 / D10 input; never typed in D13); compute expected amounts per folio from units held on the record date, TDS where due, reinvestment units at the ex-IDCW NAV; compare with the RTA's IDCW transactions; track payouts (FR-D13-020) and unclaimed amounts by age **[REG — unclaimed amount rules; VAL]** |
@@ -93,7 +93,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 | FR-D13-028 | M | CAP-D13-001, CAP-D13-012, CAP-D13-016 | **Investor 360:** one screen with investor, folios, holdings, transactions with status across channel, RTA and payment, open service requests and complaints, communications, and mirror freshness ("as of" final or provisional) |
 | FR-D13-029 | M | CAP-D13-001; CAP-D01-005 (.3) | **Masking and unmasking:** personal data masked by default for every role; unmasking only for roles with `investor.pii.unmask`, with a recorded reason and purpose, for one record at a time; every unmask logged (BRL-D13-001) |
 | FR-D13-030 | M | CAP-D13-013 (.1), CAP-D13-001 | **Consent, purpose and rights:** each processing purpose recorded with its legal basis or consent and consent withdrawal; data-principal requests (access, correction, erasure, grievance, nominee) logged with due date **[REG — DPDP Act 2023 and Rules 2025; VAL]** ([S6]); correction of RTA-held data goes to the RTA (FR-D13-031); erasure is refused where law requires keeping the record (NFR-RET-005) |
-| FR-D13-031 | M | CAP-D13-001, CAP-D13-002 | **Mirror corrections:** AMC staff never edit a mirrored field; a wrong field becomes a correction request to the RTA (FR-D13-024) and a discrepancy flag until the RTA feed changes it (BRL-D13-006; owner question C2, Q47). Manual transaction reprocessing requests need maker, checker and Compliance (PRD-000 Module 11 point 13) |
+| FR-D13-031 | M | CAP-D13-001, CAP-D13-002 | **Mirror corrections:** AMC staff never edit a mirrored field; a wrong field becomes a correction request to the RTA (FR-D13-024) and a discrepancy flag until the RTA feed changes it (BRL-D13-006; owner decision D-53). Manual transaction reprocessing requests need maker, checker and Compliance (PRD-000 Module 11 point 13) |
 | FR-D13-032 | M | CAP-D13-004, -005, -011 | **Flows to other domains:** provisional and final net flows per scheme and plan to D04 cash ladder; capital-stock events to D10; investor-level unit totals to D12 for reconciliation with D11 units outstanding (BA-001 §4); top-investor concentration to D09; transactions to D14 and D16 — through events only (no cross-domain writes) |
 | FR-D13-033 | S | CAP-D13-013 (.3) | **Personal-data breach support:** find the investors affected by a breach, draft the notices for DPO approval, and record when each was sent **[REG — DPDP Rules 2025; VAL timelines]** |
 | FR-D13-034 | M | CAP-D17-009 | **Investor service assistant:** drafts replies, summarises history, proposes complaint category; sees masked data only; output is a draft a human edits and sends (§12; BRL-D13-008) |
@@ -107,7 +107,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 | BRL-D13-003 (BR-11-3) | Units and amounts are never computed by AI. Check values come from a deterministic engine | **[DES]** |
 | BRL-D13-004 (BR-11-4) | Consent and purpose limitation recorded for each processing purpose | **[REG — DPDP Act 2023 and Rules 2025; VAL dates]** ([S6]) |
 | BRL-D13-005 | The RTA's record is authoritative. A check difference creates a break in D12; it never changes the mirror | **[DES]** (owner decision Q2) |
-| BRL-D13-006 | A mirrored field is changed only by an RTA feed. AMC-side changes go to the RTA as requests | **[DES]**; open C2 (Q47) |
+| BRL-D13-006 | A mirrored field is changed only by an RTA feed. AMC-side changes go to the RTA as requests; the field stays flagged in AMC OS until the RTA corrects it | Owner decision D-53 |
 | BRL-D13-007 | Cut-offs, payout deadlines, service levels, complaint deadlines, tolerances and nominee limits are versioned tenant configuration approved through WF-021; AMC OS ships no values (regulatory parameters checked by Compliance, SOD-12) | **[DES]** |
 | BRL-D13-008 | AI never changes investor data, starts a transaction, sends a reply or closes a complaint (ADR-0008; SOD-10) | **[DES]** |
 | BRL-D13-009 | Investor personal data leaves AMC OS only as a masked export, or as an unmasked export with reason and approval (BA-005 §3 export rules) | **[DES]** |
@@ -130,7 +130,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Priority: **M** must 
 | Workflow | D13 role | Requirements |
 | --- | --- | --- |
 | [WF-010](../02_business_architecture/BA-004_end_to_end_workflows.md) Investor purchase | **Accountable** (DEP-08); unit recalculation is a check (FR-D13-013) | FR-D13-007, -013, -018 |
-| WF-011 Investor redemption | **Accountable**; amount checks and payout tracking; payout file sender open (C1) | FR-D13-008, -019, -020 |
+| WF-011 Investor redemption | **Accountable**; amount checks and payout tracking; the RTA sends the payout file (D-52) | FR-D13-008, -019, -020 |
 | WF-012 SIP processing | **Accountable**; mirror only | FR-D13-010 |
 | WF-001 Scheme launch (NFO) | NFO allotment mirrored; fundamental-change notices (CAP-D13-013 (.3)) | FR-D13-017 |
 | WF-007 Daily NAV | Investor-level units feed the D12 reconciliation with D11 units outstanding | FR-D13-032 |
@@ -184,7 +184,7 @@ flowchart TD
 | Hand-offs (outside) | RTA (does the change; channels include MF Central [S9]) — "Confirm with CAMS / KFintech"; SEBI SCORES and ODR portal — "Confirm with SEBI" for any interface |
 | Preconditions | Requester identified; for a change request, verification done in the RTA's process (one-time password or KYC) |
 | Final state | Request `COMPLETED` (confirmed by the RTA feed) or `REJECTED` with reason; complaint `CLOSED` with resolution and root cause; SCORES ATR uploaded and SEBI closure recorded where relevant |
-| Approvals | Reply to a complaint: Investor Service Supervisor; SCORES ATR: Grievance Officer (C3, Q48); complaint closure needs a resolution note (BRL-D13-010) |
+| Approvals | Reply to a complaint: Investor Service Supervisor; SCORES ATR: Grievance Officer (a named person per AMC, owner decision D-54); complaint closure needs a resolution note (BRL-D13-010) |
 | Exceptions | Deadline at 80% → escalate to supervisor; deadline missed → Grievance Officer and Compliance; RTA rejects the request → investor told the reason; investor not satisfied → `REOPENED`, or SCORES review, or ODR (`IN_ODR`); complaint shows a possible systemic issue (for example a NAV error) → to Compliance and the owning domain |
 | Audit | Every state change, reply draft and its editor, AI drafts with session ID (CAP-D17-001 (.4)), unmask events, SCORES and ODR references |
 | Source | **new** (BA-004 §5.1 D13 gap) |
@@ -219,12 +219,12 @@ From BA-005 §3 (D13 column) and §4, narrowed to capabilities (BA-005 §7 C2). 
 | CAP-D13-001, -002 correction request to RTA | Investor Service Executive | Investor Service Supervisor |
 | Manual reprocessing request (FR-D13-031) | Investor Service Executive | Investor Service Supervisor **and** Compliance Officer† |
 | CAP-D13-014 service requests | Investor Service Executive | Investor Service Supervisor (where the type needs it) |
-| CAP-D13-015 complaint reply and closure | Investor Service Executive | Investor Service Supervisor; SCORES ATR by Grievance Officer† (C3) |
+| CAP-D13-015 complaint reply and closure | Investor Service Executive | Investor Service Supervisor; SCORES ATR by Grievance Officer† (D-54) |
 | CAP-D13-013 templates and regulatory communications | Investor Service Executive | Investor Service Supervisor; Compliance Officer for regulatory notices† |
-| CAP-D13-013 (.1) consent and rights requests; breach notices | Investor Service Executive | Data Protection Officer† (C3) |
+| CAP-D13-013 (.1) consent and rights requests; breach notices | Investor Service Executive | Data Protection Officer† (D-54) |
 | PII export (BRL-D13-009) | Any role with E | Investor Service Supervisor or Compliance Officer † |
 
-**Rights added beyond BA-005 §3 (†):** Compliance Officer approval on reprocessing (PRD-000 Module 11 point 13 "MC + Compliance") and regulatory notices, and unmask for investigations; the **Grievance Officer** and **Data Protection Officer** authorities named in PRD-000 Module 11 point 4, which BA-005 §4 does not have (C3, Q48). PRD-000 Module 11 point 3 also lists "Sales / RMs (read, masked)", but BA-005 §3 gives RMs no D13 right; this PRD follows BA-005 — RMs see investor data only as D14 aggregates (C4).
+**Rights added beyond BA-005 §3 (†):** Compliance Officer approval on reprocessing (PRD-000 Module 11 point 13 "MC + Compliance") and regulatory notices, and unmask for investigations; the **Grievance Officer** and **Data Protection Officer** authorities named in PRD-000 Module 11 point 4, which BA-005 §4 does not have. Each AMC names one person as Grievance Officer and one as Data Protection Officer; the DPO is proposed together with the Compliance Officer (owner decision D-54; open point C3 — adding them to BA-005 waits for its next revision). PRD-000 Module 11 point 3 also lists "Sales / RMs (read, masked)", but BA-005 §3 gives RMs no D13 right; this PRD follows BA-005 — RMs see investor data only as D14 aggregates (C4).
 
 ## 8. User stories and acceptance criteria
 
@@ -294,20 +294,20 @@ Within PRD-000 C8 and [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md
 
 | # | Point | Where closed |
 | --- | --- | --- |
-| C1 | Who sends the redemption, SWP and IDCW payout file — the RTA, or AMC OS to the AMC's bank (with two signatories, CAP-D12-009)? BA-004 WF-011 marks it **[ASSUMPTION]** — owner question Q46 in [LOOP_STATE.md](../../LOOP_STATE.md) | Owner (Q46); pilot discovery |
-| C2 | May AMC staff correct a mirrored field (for example a typing error in an address) in AMC OS, or only by request to the RTA? Default: only through the RTA — owner question Q47 | Owner (Q47) |
-| C3 | Grievance Officer and Data Protection Officer are in PRD-000 but not in BA-005; who holds them — owner question Q48 | Owner (Q48); next BA-005 revision |
+| C1 | Who sends the redemption, SWP and IDCW payout file | Closed by owner decision D-52 (Q46): the RTA sends it; AMC OS tracks and checks (FR-D13-020) |
+| C2 | May AMC staff correct a mirrored field in AMC OS, or only by request to the RTA? | Closed by owner decision D-53 (Q47): only through the RTA; flagged in AMC OS until corrected (FR-D13-031, BRL-D13-006) |
+| C3 | Grievance Officer and Data Protection Officer are in PRD-000 but not in BA-005; who holds them | Closed by owner decision D-54 (Q48): a named person per AMC; DPO proposed with the Compliance Officer. Adding both to BA-005: next BA-005 revision |
 | C4 | PRD-000 gives Sales / RMs masked read of investor data; BA-005 gives none; Compliance approval, unmask rights and the PII-export checker added (†) | Next BA-005 revision |
-| C5 | Does AMC OS send investor communications itself (email, SMS, WhatsApp) or prepare them for the RTA or the AMC's provider? — owner question Q49 | Owner (Q49); INT-001 (Step 14) |
+| C5 | Does AMC OS send investor communications itself or prepare them for the RTA or the AMC's provider? | Closed by owner decision D-55 (Q49): AMC OS prepares, consent-checks and tracks; the RTA or the AMC's provider sends (FR-D13-017). Interface: INT-001 (Step 14) |
 | C6 | Tables listed in §10 are missing from DDL-000; `investor_txn.state` meaning in mirror mode | DA-001 / DDL (Steps 15–16) |
 | C7 | All timelines, cut-offs, tolerances, nominee limits, service levels and complaint deadlines **[VAL]** / **[ASSUMPTION]**; which pre-2026 circulars still apply | REG-001 (Step 25); pilot discovery |
 | C8 | Which deterministic engine (FE-nn) holds the unit, amount and IDCW checks | EA-003 (Step 11); FE specs (Step 22) |
 | C9 | BA-004 register gets WF-037 and WF-038 (rows added in this step); the full cards live here until BA-004's next revision; BA-004 §5.1 D13 row is closed | Next BA-004 revision |
-| C10 | BA-001 §5 C5 (FR-11-13 unit allotment) closed by FR-D13-013; BA-004 §5.2 C3 closed by FR-D13-013 and FR-D13-019, except the payout-file sender (C1) | Closed here |
+| C10 | BA-001 §5 C5 (FR-11-13 unit allotment) closed by FR-D13-013; BA-004 §5.2 C3 closed by FR-D13-013 and FR-D13-019; payout-file sender settled by D-52 (C1) | Closed here |
 
 ## Sources
 
-Repository sources: [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 11, Ch 4–9, Appendix A; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D13, §4, §5; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-08, P9; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-010…012, §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3–§5; [PRD-001](PRD-001_platform_administration.md) §11; [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 2, Ch 4; [GOV-003](../00_governance/GOV-003_ai_assisted_development_policy.md) §2, §5; [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, Q2.
+Repository sources: [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 11, Ch 4–9, Appendix A; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D13, §4, §5; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-08, P9; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-010…012, §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3–§5; [PRD-001](PRD-001_platform_administration.md) §11; [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 2, Ch 4; [GOV-003](../00_governance/GOV-003_ai_assisted_development_policy.md) §2, §5; [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, D-52…D-55, Q2.
 
 External sources (opened through web search on 21 Nov 2026; regulatory detail still **[VAL]**):
 

@@ -2,21 +2,21 @@
 id: PRD-009
 title: Risk Management (D09) — Product Requirements
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
 step: 8
-last_updated: 2026-11-20
+last_updated: 2026-11-21
 ---
 
 # PRD-009 — Risk Management (D09)
 
 This document states what AMC OS must do to measure every material risk in every scheme each business day with reproducible, versioned models, explain where the risk comes from, and raise alerts before limits are reached. It re-keys PRD-000 v0.9 Module 07 to the GOV-001 identifiers (`FR-07-nn` → `FR-D09-nnn`, `BR-07-n` → `BRL-D09-nnn`, Module 07 stories → `US-D09-nnn`) and adds the two capabilities that had no v0.9 source: risk attribution (CAP-D09-011) and risk alerts (CAP-D09-013). It also adds the end-to-end workflow D09 was missing (BA-004 §5.1, §5.2 C6): **WF-033 Daily risk run and risk alerts** (§6.2).
 
-**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 07, Chapter 6, Chapter 9; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D09, D17, §4; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) §2, §3, §4; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-006, WF-007, WF-014, WF-017, §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md); [PRD-004](PRD-004_portfolio_management.md) — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. [PRD-008](PRD-008_compliance_management.md) Compliance Management (written in the same step, Step 8) holds the rule engine in which internal risk limits live.
+**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 07, Chapter 6, Chapter 9; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D09, D17, §4; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) §2, §3, §4; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-006, WF-007, WF-014, WF-017, §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md); [PRD-004](PRD-004_portfolio_management.md) — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. [PRD-008](PRD-008_compliance_management.md) Compliance Management (written in the same step, Step 8) holds the rule engine in which internal risk limits live. Owner decisions D-33 (internal risk limits: Risk team writes, CRO approves, in the rule engine), D-36 (model validator: anyone who did not build the model), D-37 (escalation path for unactioned alerts set per tenant), D-38 (risk-limit change: CRO approves with the Risk Committee minute reference attached) and D-39 (operational and enterprise risk register in a later release) are applied ([LOOP_STATE.md](../../LOOP_STATE.md)).
 
-**What this document is not:** the formulas, precision and test values of the risk engine (FE-05, Step 22); limit evaluation and breaches, including internal risk limits (D08, FE-04, PRD-008 — BRL-D09-003); position-level exposure views (D04 CAP-D04-007, PRD-004 FR-D04-012) and performance attribution (D04 CAP-D04-009, FE-10, WF-032); market and index data (D16 CAP-D16-004); investor-level records (D13, mirrored from the RTA). **Rule for engineers (PRD-000):** no regulatory number or risk threshold is hard-coded; each is a versioned parameter or tenant configuration (PRD-001 FR-D01-033). Every official risk number comes from FE-05, never from AI (master prompt §3.1).
+**What this document is not:** the formulas, precision and test values of the risk engine (FE-05, Step 22); limit evaluation and breaches, including internal risk limits (D08, FE-04, PRD-008 — BRL-D09-003); position-level exposure views (D04 CAP-D04-007, PRD-004 FR-D04-012) and performance attribution (D04 CAP-D04-009, FE-10, WF-032); market and index data (D16 CAP-D16-004); investor-level records (D13, mirrored from the RTA); the operational and enterprise risk register (risk register, incidents, risk and control self-assessment) — a later release, not release 1 (owner decision D-39). **Rule for engineers (PRD-000):** no regulatory number or risk threshold is hard-coded; each is a versioned parameter or tenant configuration (PRD-001 FR-D01-033). Every official risk number comes from FE-05, never from AI (master prompt §3.1).
 
 ## 1. Scope
 
@@ -33,7 +33,7 @@ This document states what AMC OS must do to measure every material risk in every
 | Module 07 point 7 stories (CRO liquidity stress; FM PV01 of a proposed trade) | US-D09-001, US-D09-002 | Acceptance criteria are new **[DES]** |
 | Module 07 point 18 acceptance criteria | AC-US-D09-003-1 (reference bond), AC-US-D09-004-1 (model without validation) | Placed on US-D09-003 (was US-RSK-02) and on the new story US-D09-004 |
 | Ch 5 US-RSK-01 (CRO daily liquidity stress results) and US-RSK-02 (Risk Manager reference-tested formulas) | US-D09-001 (**merged** with the Module 07 point 7 CRO story) and US-D09-003 | US-RSK-01's criterion ("every scheme has a stress result within 30 min of NAV approval") is carried by AC-US-D09-001-1 together with NFR-PERF-012; US-RSK-02 has no own criterion ("See Module 07 AC") |
-| Module 07 point 13 approvals | BRL-D09-002 (models), BRL-D09-008 (scenario library), BRL-D09-005 (limits and thresholds) | Risk-limit changes: PRD-000 says "CRO + Risk Committee evidence" (open point C3) |
+| Module 07 point 13 approvals | BRL-D09-002 (models), BRL-D09-008 (scenario library), BRL-D09-005 (limits and thresholds) | Risk-limit changes: PRD-000 says "CRO + Risk Committee evidence"; owner decision D-38 confirms it (BRL-D09-005) |
 | Module 07 points 14, 15, 17 | §9 exceptions, NFR-AUD-009, NFR-PERF-012, NFR-PERF-013 | |
 | — | FR-D09-012 … FR-D09-020, BRL-D09-005 … 009, US-D09-004 … 009, WF-033 | **New** **[DES]** |
 
@@ -73,9 +73,9 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | --- | --- | --- | --- |
 | FR-D09-012 | S | CAP-D09-011 | **Risk attribution:** contribution of each security, sector and factor to the scheme's value-at-risk, tracking error and duration, from the same run and model version as the total; contributions add up to the total within a tolerance set in FE-05. This is *risk* attribution; *performance* attribution is D04 (FR-D04-009, WF-032) |
 | FR-D09-013 | M | CAP-D09-013 (.1) | **Alert thresholds:** threshold alerts on any risk measure, per scheme or scheme category, with an early-warning level below a limit. Thresholds are tenant configuration (PRD-001 FR-D01-033), effective-dated and approved by the Risk officer through WF-021 (BRL-D09-005); AMC OS ships no threshold values **[ASSUMPTION — confirm: Risk officer of the pilot AMC]** |
-| FR-D09-014 | M | CAP-D09-013 (.2) | **Alert routing and acknowledgement:** each alert has a severity, an owner (fund manager of the scheme by default, Risk Manager as watcher), a due time and a status (`OPEN → ACKNOWLEDGED → ACTION_TAKEN \| NO_ACTION_JUSTIFIED → CLOSED`); acknowledgement and closure need a comment; an alert not acknowledged by its due time escalates to the Risk officer and then as configured (WF-033) |
+| FR-D09-014 | M | CAP-D09-013 (.2) | **Alert routing and acknowledgement:** each alert has a severity, an owner (fund manager of the scheme by default, Risk Manager as watcher), a due time and a status (`OPEN → ACKNOWLEDGED → ACTION_TAKEN \| NO_ACTION_JUSTIFIED → CLOSED`); acknowledgement and closure need a comment; an alert not acknowledged by its due time escalates to the Risk officer and then along an escalation path set per tenant (owner decision D-37; suggested default: the CEO, then the Risk Committee **[DES]**) (WF-033) |
 | FR-D09-015 | M | CAP-D09-001 (.4) | **Daily risk run:** after the NAV for D is approved and the D snapshot is frozen (PRD-004 BRL-D04-002), run FE-05 for every scheme on that snapshot and versioned market data (WF-033); each result stores run ID, model versions, data versions and parameters; a scheme whose inputs are incomplete is held and its last good result shown as stale (BRL-D09-006) |
-| FR-D09-016 | M | CAP-D09-001 (.4) | **Model inventory and governance:** every risk model and formula library has a version, owner, documentation, validation record and status (`DRAFT → IN_VALIDATION → VALIDATED → ACTIVE → RETIRED`); activation needs the independent validation record and Risk officer approval (BRL-D09-002, US-D09-004) |
+| FR-D09-016 | M | CAP-D09-001 (.4) | **Model inventory and governance:** every risk model and formula library has a version, owner, documentation, validation record and status (`DRAFT → IN_VALIDATION → VALIDATED → ACTIVE → RETIRED`); activation needs the independent validation record — by anyone, inside or outside the AMC, who did not build the model (owner decision D-36) — and Risk officer approval (BRL-D09-002, US-D09-004) |
 | FR-D09-017 | M | CAP-D09-009 (.1), (.2), (.3) | **Scenario library:** stress scenarios (historical, hypothetical, redemption) are versioned records with description, shocks and source; adding, changing or retiring a scenario needs Risk officer approval (BRL-D09-008); stress results record the scenario version |
 | FR-D09-018 | M | CAP-D09-013, CAP-D09-003 | **Measures for limits:** D09 publishes approved daily measures (for example liquidity-stress outputs, duration, VaR) as inputs for D08 rules: internal risk limits tagged `INTERNAL_RISK` (BRL-D09-003) and regulatory liquidity rules (PRD-000 FR-06-06). D09 never decides a breach; D08 does (WF-006, WF-014) |
 | FR-D09-019 | M | CAP-D09-002 (.3), CAP-D09-013 | **AI and ML signals:** an ML credit early-warning score (CAP-D17-014 (.2)) is shown next to the deterministic indicators with model version and explanation, labelled as a prediction; it may raise an advisory alert but never changes a risk number, a limit, a compliance result or starts an order (BRL-D09-007) |
@@ -86,10 +86,10 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | ID (was) | Rule | Label |
 | --- | --- | --- |
 | BRL-D09-001 (BR-07-1) | All risk calculations run on approved end-of-day snapshots and versioned market data; each result stores model version, data versions and parameters | **[DES]** (PRD-000 unlabelled) |
-| BRL-D09-002 (BR-07-2) | No model goes live without an independent validation record. The validator is not the model developer; the Risk officer approves activation | **[DES]**; **[IND]** model-risk practice |
-| BRL-D09-003 (BR-07-3) | Internal risk limits live in the same rule engine as compliance rules (D08, FE-04), tagged `INTERNAL_RISK`; the Risk officer approves their values; rule mechanics as in PRD-008 | **[DES]** (PRD-000 unlabelled) |
+| BRL-D09-002 (BR-07-2) | No model goes live without an independent validation record. The validator may be anyone inside or outside the AMC (another Risk Manager, the data-science team or an outside firm) who did not build the model; the system refuses a validation recorded by the model's developer; the Risk officer approves activation | Owner decision D-36; **[IND]** model-risk practice |
+| BRL-D09-003 (BR-07-3) | Internal risk limits live in the same rule engine as compliance rules (D08, FE-04), tagged `INTERNAL_RISK`; the Risk team writes them and the CRO (Risk officer) approves them; rule mechanics as in PRD-008 | Owner decision D-33 |
 | BRL-D09-004 (BR-07-4) | The formula library is code-reviewed and unit-tested against reference values (for example the duration of a known bond) | **[DES]** |
-| BRL-D09-005 | Alert thresholds, escalation times and risk-limit values are tenant configuration approved by the Risk officer (WF-021) and never hard-coded; values **[ASSUMPTION — confirm: Risk officer of the pilot AMC]**; whether a risk-limit change also needs a Risk Committee record is open (C3) | **[DES]** |
+| BRL-D09-005 | Alert thresholds, escalation times and risk-limit values are tenant configuration approved by the Risk officer (WF-021) and never hard-coded; values **[ASSUMPTION — confirm: Risk officer of the pilot AMC]**. A risk-limit change is approved by the CRO in AMC OS only with the Risk Committee minute reference attached; without it the approval is refused (owner decision D-38). The escalation path for unactioned alerts is set per tenant (owner decision D-37) | **[DES]**; D-37, D-38 |
 | BRL-D09-006 | A stale result is always shown as stale, with its as-of date and the reason; it is never silently replaced or treated as current | **[DES]** (PRD-000 Module 07 point 14) |
 | BRL-D09-007 | An ML signal or an AI explanation never changes an official risk number, a limit or a compliance result, and never starts an order (PRD-000 §9.1 layer 2) | **[DES]** |
 | BRL-D09-008 | Stress scenarios are used only from the approved scenario library; library changes need Risk officer approval (PRD-000 Module 07 point 13) | **[DES]** |
@@ -140,7 +140,7 @@ flowchart TD
   F --> H{Any measure past an alert threshold?}
   H -- yes --> I[Raise alert; route to owner; Risk assistant may explain - read only]
   I --> J{Acknowledged by due time?}
-  J -- no --> K[Escalate to Risk officer, then as configured]
+  J -- no --> K[Escalate to Risk officer, then along the tenant's escalation path - default CEO, then Risk Committee]
   J -- yes --> L[Owner records action or justification; alert closed]
   F --> M{Report due to board or trustees?}
   M -- yes --> N[Risk Manager prepares pack; Risk officer approves; released]
@@ -156,11 +156,13 @@ From BA-005 §3 (D09 column) and §4, narrowed to each capability (BA-005 §7 C2
 | Capability | Maker | Checker(s) |
 | --- | --- | --- |
 | CAP-D09-001 … -008 measures; CAP-D09-011 attribution | System (FE-05); Risk Manager runs and re-runs | — |
-| CAP-D09-001 (.4) model activation | Model developer (Risk Manager or data-science team) | Independent validator, then Risk officer (BRL-D09-002; validator role open point C4) |
+| CAP-D09-001 (.4) model activation | Model developer (Risk Manager or data-science team) | Independent validator — anyone who did not build the model (D-36) — then Risk officer (BRL-D09-002) |
 | CAP-D09-009 scenario library | Risk Manager | Risk officer (BRL-D09-008) |
 | CAP-D09-010 what-if | Risk Manager; Fund Manager on own schemes and CIO† | — (not stored as official) |
 | CAP-D09-012 reports | Risk Manager prepares | Risk officer (BRL-D09-009); Trustee reads CAP-D09-012 (.3) (BA-005 ROLE-25) |
 | CAP-D09-013 thresholds | Risk Manager proposes | Risk officer, through WF-021 (BRL-D09-005) |
+| Internal risk limit values (`INTERNAL_RISK`, in D08) | Risk Manager writes (D-33) | CRO, with the Risk Committee minute reference attached (D-38) |
+| Alert escalation path | Risk Manager proposes | Risk officer, through WF-021 (tenant setting, D-37) |
 | CAP-D09-013 alert acknowledgement and closure | Alert owner (Fund Manager of the scheme)† | — (Risk officer sees escalations) |
 
 **Rights added beyond BA-005 §3 (†):** the BA-005 D09 cells for the Fund Manager and CIO are "R own" and "R"; this PRD adds running a what-if for their own schemes (US-D09-002) and acknowledging and closing alerts on their own schemes (FR-D09-014) **[DES]** (open point C5).
@@ -175,7 +177,7 @@ Priority: **C** critical (release-blocking), **O** optional — as PRD-000 Chapt
 | US-D09-002 (was Module 07 point 7) | As an FM, I want the PV01 of my proposed trade before I place it, so that I stay within duration bands | C | **AC-US-D09-002-1** (new **[DES]**) Given a proposed trade on my scheme, when I run a what-if, then PV01 and modified duration before and after are returned within NFR-PERF-013 and marked "what-if". |
 | US-D09-003 (was US-RSK-02) | As the Risk officer, I want the formula library proven on known values | C | **AC-US-D09-003-1** (was Module 07 point 18) Given a reference bond with known modified duration, when the engine computes it, then the result matches to 6 decimal places. |
 | US-D09-004 | As the Risk officer, I want no unvalidated model in use | C | **AC-US-D09-004-1** (was Module 07 point 18) Given a model version without validator sign-off, when activation is attempted, then it is refused. |
-| US-D09-005 | As the Risk officer, I want unanswered alerts escalated | C | **AC-US-D09-005-1** Given an alert with a due time, when it is not acknowledged by then, then it is escalated to the Risk officer and the escalation is logged. |
+| US-D09-005 | As the Risk officer, I want unanswered alerts escalated | C | **AC-US-D09-005-1** Given an alert with a due time, when it is not acknowledged by then, then it is escalated to the Risk officer and the escalation is logged. **AC-US-D09-005-2** (new, D-37) Given the Risk officer has not acted by the next escalation time, when that time passes, then the alert goes to the next step of the tenant's escalation path and this is logged. |
 | US-D09-006 | As an FM, I want to know when a risk number is old | C | **AC-US-D09-006-1** Given the run for D failed for my scheme, when I open the dashboard, then I see the last good result marked stale with its as-of date and reason. |
 | US-D09-007 | As the CIO, I want to see what drives a scheme's risk | O | **AC-US-D09-007-1** Given a daily run, when I open risk attribution, then the security contributions add up to the scheme VaR within the FE-05 tolerance and come from the same run version. |
 | US-D09-008 | As Compliance, I want ML signals kept advisory | C | **AC-US-D09-008-1** Given an ML early-warning score above its display level, when it is shown, then it is labelled as a prediction with model version, and no risk number, limit, compliance result or order changes. |
@@ -226,18 +228,18 @@ Within PRD-000 C8 and ADR-0008 (read and propose only). The **Risk assistant** (
 | # | Point | Where closed |
 | --- | --- | --- |
 | C1 | Liquidity stress-test methodology, frequency and disclosure; riskometer methodology; tracking-difference disclosure; which pre-2026 circulars still apply under the 2026 Regulations **[VAL]** | REG-001 (Step 25); FE-05 (Step 22) |
-| C2 | Escalation path after the Risk officer: whether a separate Risk Management Committee exists (BA-002 §2 marks it **[VAL]**) or escalation goes to the board — owner question Q31 in [LOOP_STATE.md](../../LOOP_STATE.md) | Owner (Q31); REG-001 (Step 25) |
-| C3 | Whether a risk-limit change needs a Risk Committee record in addition to Risk officer approval (PRD-000 Module 07 point 13) — owner question Q32 | Owner (Q32); pilot discovery |
-| C4 | PRD-000 names a "Model Validator (independent)" role that BA-005 does not have; who validates models in a small AMC (another Risk Manager, the data-science team or an outside firm) **[ASSUMPTION]** — owner question Q30 | Owner (Q30); next BA-005 revision; AIML-002 (Step 26) |
+| C2 | Escalation path after the Risk officer: whether a separate Risk Management Committee exists (BA-002 §2 marks it **[VAL]**) or escalation goes to the board | **Closed by owner decision D-37** (Q31): path set per tenant; suggested default the CEO, then the Risk Committee. Whether a Risk Management Committee is required: REG-001 (Step 25) **[VAL]** |
+| C3 | Whether a risk-limit change needs a Risk Committee record in addition to Risk officer approval (PRD-000 Module 07 point 13) | **Closed by owner decision D-38** (Q32): the CRO approves in AMC OS with the Risk Committee minute reference attached (BRL-D09-005) |
+| C4 | PRD-000 names a "Model Validator (independent)" role that BA-005 does not have; who validates models in a small AMC | **Closed by owner decision D-36** (Q30): anyone, inside or outside the AMC, who did not build the model. How an outside validator is recorded: next BA-005 revision; AIML-002 (Step 26) |
 | C5 | Fund Manager and CIO rights added in §7 (†) are not in BA-005 §3 | Next BA-005 revision |
 | C6 | Alert thresholds, escalation times, attribution tolerance and the liquidity assumptions (% of average daily volume) **[ASSUMPTION]** | Pilot discovery; FE-05 (Step 22) |
 | C7 | `risk` schema has no tables in DDL-000 | DA-001 / DDL (Steps 15–16) |
 | C8 | BA-004 register gets WF-033 (row added in this step); the full card lives here until BA-004's next revision | Next BA-004 revision |
-| C9 | BA-002 §3 gives DEP-11 operational and enterprise risk, but the brief's D09 list and BA-001 have no capability for them (risk register, incidents, risk and control self-assessment) — owner question Q33 | Owner (Q33); next BA-001 revision |
+| C9 | BA-002 §3 gives DEP-11 operational and enterprise risk, but the brief's D09 list and BA-001 have no capability for them (risk register, incidents, risk and control self-assessment) | **Closed by owner decision D-39** (Q33): later release, not release 1; capabilities to be added in a later BA-001 revision |
 
 ## Sources
 
-Repository sources: [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 07, Ch 6, Ch 9 (re-keyed requirements, rules, stories, labels); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D09, D17, §4 (capabilities, shared ownership); [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) §2–§4 (risk officer, committees, DEP-11); [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) §5 (D09 gap); [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3–§5 (rights, approval authorities, SoD); [PRD-004](PRD-004_portfolio_management.md) (snapshots, exposure views, WF-032); [LOOP_STATE.md](../../LOOP_STATE.md) owner decision D-3.
+Repository sources: [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 07, Ch 6, Ch 9 (re-keyed requirements, rules, stories, labels); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D09, D17, §4 (capabilities, shared ownership); [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) §2–§4 (risk officer, committees, DEP-11); [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) §5 (D09 gap); [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3–§5 (rights, approval authorities, SoD); [PRD-004](PRD-004_portfolio_management.md) (snapshots, exposure views, WF-032); [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, D-33, D-36…D-39.
 
 External sources (opened through web search on 20 Nov 2026; regulatory detail still **[VAL]**):
 
