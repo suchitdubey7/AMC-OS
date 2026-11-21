@@ -8,6 +8,8 @@
 
 **First, before Step 10 — owner answers 21 Nov 2026 (D-26 to D-58, Q20–Q52, multiple choice in chat):** apply them to the affected PRDs (PRD-001, PRD-006…PRD-015) as a small fix branch `wp2-step09d-owner-answers`, replacing the matching [ASSUMPTION]/open points. Q24 and Q51 answers carry [VAL] for Compliance. Then Step 10 as below.
 
+**Architecture decisions for Step 10 (owner, 21 Nov 2026, D-67 to D-75):** answers to the open decisions OD-1…OD-12 of the AI orchestration proposal (branch `proposal/ai-orchestration-architecture`, PR #1). Step 10 may now use that proposal as its main input — still read it as a Draft proposal, not as Approved — and apply these decisions. Q53–Q60 answers (D-59 to D-66) go into PRD-016 / PRD-017 in the same small fix branch as Q20–Q52.
+
 **Step 10** (Stage B — architecture) on a new branch `wp3-step10-system-context` from the chain tip: EA-001 system context; EA-002 layered architecture incl. 12 frontend workspaces; ADRs for identity provider (owner decision D-8), Redis, cloud/region (D-7). Note: new ADRs live in `architecture/adrs/`, which is owner-only in CODEOWNERS, so a branch that adds ADRs fails merge gate G2 and waits for the owner. Option for the run: write EA-001/EA-002 in `docs/04_enterprise_architecture/` and put the ADR texts on the same branch, recorded under "Waiting for owner". The proposal branch `proposal/ai-orchestration-architecture` (EA-100…EA-106, ADR-0009…0015) may be read as input only. Next free numbers: NFR-PERF-028, NFR-AUD-018, NFR-RET-008, NFR-SEC-006, NFR-SCAL-005, NFR-PRIV-005, NFR-AVAIL-003, NFR-OBS-003, WF-044, owner question Q61 (NFR-PERF-009 is unused, never reused).
 
 Done in the Step 9c run (21 Nov 2026, scheduled): PRD-016 Enterprise Data Platform (Module 14 re-keyed; takes over FR-D03-001/-002 as FR-D16-012/-013 and closes PRD-003 C3; `master` schema proposed for D16 (Q59); data catalogue, identifier crosswalk, counterparty and benchmark golden records; WF-041 master data change, WF-042 metric definition change and certification), PRD-017 AI and Decision Intelligence (Module 15 and Ch 9 re-keyed; 9 of 11 PRD-000 agents placed; new Dealing assistant and Risk assistant (closes the brief part of BA-001 §5 C4); anomaly detection, forecasting, kill switch, AI inventory; WF-043 AI assistant and model release). PRD-000: re-keying note added at the top; status not changed (GOV-001 §1 allows Superseded only after an Approved replacement) — owner question Q60. Step 9 is complete with 9c. Review: round 1 RECOMMEND CHANGES (1 Major — two Ch 5 stories not re-keyed — fixed with 9 Minor and 3 Nits); round 2 RECOMMEND MERGE AFTER FIXES (2 Minor, 1 Nit fixed). Findings left open from Step 9c: STEP-09c round 2 Nit 4 (commit trailer `Co-Authored-By: Claude`, as the loop prompt requires); the SEBI 2019 AI/ML circular body and the DPDP Rules commencement schedule were not opened (marked [VAL]).
@@ -124,6 +126,23 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | D-56 (Q50) | Distributor commission paid = AMC OS calculation, checked against the RTA figure, approved by Finance | 2026-11-21 |
 | D-57 (Q51) | Commission in the books, by type: trail commission is a scheme expense inside TER; amounts paid outside TER (e.g. SIP upfront) are an AMC company cost [VAL — Compliance to confirm current SEBI rules] | 2026-11-21 |
 | D-58 (Q52) | Budgets and multi-year plans are made in AMC OS | 2026-11-21 |
+| D-59 (Q53) | Metric definitions: Data Steward drafts, business owner approves (maker ≠ checker); Compliance also signs off regulatory metrics; no new council | 2026-11-21 |
+| D-60 (Q54) | New AI assistant or model: approved by its business owner, CTO and Information Security Officer; Risk Manager validates; no new committee | 2026-11-21 |
+| D-61 (Q55 / OD-4) | AI processing of AMC data: India-region private endpoints only, zero data retention, no training on AMC data; provider chosen later | 2026-11-21 |
+| D-62 (Q56) | Reference data: one copy per AMC (licences are per AMC); only currencies shared | 2026-11-21 |
+| D-63 (Q57 / OD-9) | Portfolio Agent and Product Intelligence Agent: later release, not release 1; Product Intelligence will be the D02 (Product and Scheme) agent | 2026-11-21 |
+| D-64 (Q58) | SEBI AI/ML reporting: AMC OS prepares the data from its AI inventory; Compliance files [VAL — content and frequency to be confirmed] | 2026-11-21 |
+| D-65 (Q59) | D16 owns the `master` schema (securities, issuers, ratings, benchmarks); GOV-001 §3 updated | 2026-11-21 |
+| D-66 (Q60) | PRD-000 stays Draft with a 'fully re-keyed' note on top; marked Superseded only once a replacement is Approved | 2026-11-21 |
+| D-67 (OD-1) | Positioning: connect to the AMC's existing systems first; AMC OS runs its own engines area by area where the AMC chooses (ADR-0009 option C) | 2026-11-21 |
+| D-68 (OD-2) | Default system of record for accounting/NAV: AMC OS where done in-house, external with checks where outsourced (same as D-16) | 2026-11-21 |
+| D-69 (OD-3) | '20–50 AMCs' is design capacity; commercial target stays 3–5 paying AMCs by month 36 | 2026-11-21 |
+| D-70 (OD-7) | Kafka later, when volumes need it; start with database-backed (outbox) messaging, designed so Kafka can be added | 2026-11-21 |
+| D-71 (OD-5 / OD-6) | API gateway and policy-engine products: Step 10 evaluates them now that cloud (D-7) and sign-in (D-8) are decided | 2026-11-21 |
+| D-72 (OD-8) | No external AI tools reading AMC OS through MCP in release 1 | 2026-11-21 |
+| D-73 (OD-10) | AI assistants: one shared, versioned definition list plus a per-AMC switch-on (needs WP4 database change) | 2026-11-21 |
+| D-74 (OD-11) | Fund Accounting and NAV Operations are two separate workspaces (master prompt §5 L1); the AI assistant is built into every workspace | 2026-11-21 |
+| D-75 (OD-12) | Emergency switch-off of AI (agent, tool or all AI for an AMC) by one authorised person; switching back on needs two people | 2026-11-21 |
 
 ## Waiting for owner (cannot be auto-merged)
 
@@ -135,11 +154,4 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 
 | # | Question | Raised by | Default used meanwhile |
 | --- | --- | --- | --- |
-| Q53 | Who approves a new or changed metric definition (for example "net sales"): only the metric's business owner, or also a Data Governance Council? There is no such council or role yet | Step 9c (PRD-016 C8) | Data Steward drafts, business owner certifies (maker ≠ checker); Compliance Officer also checks regulatory definitions; no council |
-| Q54 | Who sits on the "AI Governance Committee" that approves AI assistants and models, and do we need new roles for model developers and an AI product owner? | Step 9c (PRD-017 C6) | No committee: business owner of the assistant, CTO and Information Security Officer approve; Risk Manager validates ML models; Compliance Officer for compliance- or investor-facing assistants |
-| Q55 | Which AI model provider(s) may we use, and must all AI processing of AMC data stay in India? | Step 9c (PRD-017 C8) | India-region private endpoints only, zero data retention, no training on AMC data; provider not chosen |
-| Q56 | Reference data (security, issuer, ratings, index data): one copy per AMC (vendor licences are per AMC), or may some public data be shared across AMCs? | Step 9c (PRD-016 C4) | One copy per AMC; only currencies shared |
-| Q57 | Should the two extra PRD-000 assistants — Portfolio Agent (draft orders for fund managers) and Product Intelligence Agent (product gap ideas, draft SID text) — be in the product? | Step 9c (PRD-017 C4) | Not in the first release |
-| Q58 | SEBI asks mutual funds to report their AI/ML systems (circular of 9 May 2019): should AMC OS prepare that report from its AI inventory for Compliance to file? | Step 9c (PRD-017 C9) | AMC OS prepares the data; Compliance files; content and frequency to be confirmed |
-| Q59 | Should D16 (Enterprise Data Platform) own the `master` schema (securities, issuers, ratings, benchmarks)? This needs a change to GOV-001 §3, which only you can make | Step 9c (PRD-016 C1) | Treated as D16 in PRD-016 (proposal) |
-| Q60 | PRD-000 (the v0.9 master PRD) is now re-keyed into PRD-001…PRD-017. The plan says "mark it Superseded", but our rules allow that only once a newer document is Approved. Mark it Superseded now, or wait? | Step 9c (PRD-000 note) | Leave as Draft with a note at the top |
+| — | None open (all answered by 21 Nov 2026) | — | — |
