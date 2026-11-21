@@ -29,7 +29,7 @@ Master prompt §3.6 says: "Support AMC-specific configuration through governed m
 | Effective date | The business date from which a version applies |
 | Promotion | Moving an approved configuration version from a test environment to production unchanged (FR-D01-035) |
 
-## 1. Four kinds of variation, and one kind that is never allowed
+## 1. Four kinds of variation, what is not a tenant setting, and what is never allowed
 
 ```mermaid
 flowchart TB
@@ -153,7 +153,7 @@ Every rule set, whatever module owns it, must have:
 | Metric definitions | Reporting | WF-042: Data Steward drafts, business owner approves; Compliance also for regulatory metrics | D-59 |
 | Assistant definitions and versions | AI | WF-043: business owner, CTO and Information Security Officer approve; Risk Manager validates | D-60; FR-D17-024 |
 
-† Not yet in BA-005 (a role or a right waiting for the next BA-005 revision; LOOP_STATE "BA-005 changes waiting").
+† Not yet in BA-005: the Head of Sales role (PRD-014 BRL-D14-005) and the right `operations.recon_definition.approve` (PRD-012 §7) wait for the next BA-005 revision; both are also added to LOOP_STATE "BA-005 changes waiting".
 
 ## 7. How modules read configuration
 
