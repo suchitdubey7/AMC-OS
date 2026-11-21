@@ -120,6 +120,9 @@ def test_kill_switch_two_people_to_switch_on_d75():
     a, b = str(uuid.UUID(int=1)), str(uuid.UUID(int=2))
     v = _validator("AI_KILL_SWITCH_CHANGED")
     v.validate({"switch_scope": "ALL_AI", "new_state": "OFF", "changed_by_user_ids": [a]})
+    v.validate({"switch_scope": "TOOL", "scope_ref_id": a, "new_state": "OFF", "changed_by_user_ids": [a]})
+    with pytest.raises(jsonschema.ValidationError):
+        v.validate({"switch_scope": "TOOL", "new_state": "OFF", "changed_by_user_ids": [a]})
     v.validate({"switch_scope": "ALL_AI", "new_state": "ON", "changed_by_user_ids": [a, b]})
     for bad in ([a], [a, a]):
         with pytest.raises(jsonschema.ValidationError):
@@ -193,3 +196,16 @@ def test_ea007_catalogue_table_lists_exactly_the_catalogue():
     text = EA007.read_text(encoding="utf-8")
     listed = set(re.findall(r"^\| `([A-Z][A-Z0-9_]*)\.v1` \|", text, re.M))
     assert listed == {e["name"] for e in ENTRIES}
+
+
+def test_every_temporal_workflow_type_has_a_reuse_policy_w1a():
+    text = EA007.read_text(encoding="utf-8")
+    table = text[text.index("### 9.1"):text.index("### 9.2")]
+    types = set()
+    for row in table.splitlines():
+        cells = [c.strip() for c in row.split("|")]
+        if len(cells) > 5 and cells[1].startswith("WF-"):
+            types |= set(re.findall(r"`([A-Z][A-Za-z]+)`", cells[5]))
+    w1a = next(l for l in text.splitlines() if l.startswith("| W1a |"))
+    assert len(types) == 24
+    assert {t for t in types if f"`{t}`" not in w1a} == set()

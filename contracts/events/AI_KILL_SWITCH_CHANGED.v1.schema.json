@@ -65,6 +65,26 @@
           }
         }
       }
+    },
+    {
+      "if": {
+        "properties": {
+          "switch_scope": {
+            "enum": [
+              "ASSISTANT",
+              "TOOL"
+            ]
+          }
+        },
+        "required": [
+          "switch_scope"
+        ]
+      },
+      "then": {
+        "required": [
+          "scope_ref_id"
+        ]
+      }
     }
   ]
 }
