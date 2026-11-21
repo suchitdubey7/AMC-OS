@@ -217,10 +217,11 @@ stateDiagram-v2
 | --- | --- | --- | --- | --- | --- |
 | Order to broker (and cancel / amend) | INT-009 | Execution | Confirm with <broker> | FIX defines an Order Status Request message **[IND]**; whether each broker supports it: Confirm with <broker> | Dealer calls the broker's desk; recorded on the order |
 | Settlement instruction | INT-008 | Settlement | Confirm with <custodian> | Confirm with <custodian> | Operations Analyst checks the custodian portal or desk |
-| Payment file (commission, AMC payments where the AMC chooses) | INT-010 | Distribution, Settlement | Confirm with <bank> | Confirm with <bank> | Finance / Operations checks bank portal |
+| Commission payment file (where the AMC chooses) | INT-010 | Distribution | Confirm with <bank> | Confirm with <bank> | Finance / Operations checks bank portal |
 | NAV file to RTA | INT-006, INT-007 | NAV | Confirm with <RTA> | Confirm with <RTA> | NAV team confirms with RTA operations desk |
 | NAV submission to AMFI (where the tenant submits, D-44) | INT-002 | NAV | Confirm with AMFI | Public NAV report shows what AMFI published **[IND — INT-002]** | NAV team compares the AMFI published report with the approved NAV |
 | NAV, and ETF NAV / iNAV, to an exchange (only where the exchange requires it from the AMC) | INT-004, INT-005 | NAV | Confirm with <exchange> | Confirm with <exchange> | NAV team checks the exchange's published value |
+| MF-platform confirmations / StAR MF payment and allotment files — only if the AMC, not its RTA, sends them (default: the RTA) | INT-004, INT-005 | Investor | Confirm with <exchange> / RTA | Confirm | Investor Services checks with the exchange or RTA |
 | NAV to the AMC's own website | INT-001 §1 | NAV | Confirm with the AMC's web team | Read back from the website **[ASSUMPTION]** | NAV team checks the website |
 | Settlement payment instruction for scheme funding (where routed through AMC OS) | INT-010 | Settlement | Confirm with <bank> | Confirm with <bank> | Operations checks the bank portal |
 | Scheme set-up to RTA, depository, platforms | INT-006/007/011/004/005 | Product | Human task (EA-007 §10.2) | n/a | Product Manager confirms with each party |
@@ -319,8 +320,10 @@ IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [DES]*
 | EA-002 §5.1 | Already changed by EA-003 B9; also point to INT-001 §2 for adapter rules | Next EA-002 revision |
 | `contracts/schemas/` (owner-only) | Canonical families of §3 as JSON Schemas | Step 15 (DA-001) / owner |
 | DA-001, DDL | Connection register, file register, expected-file schedule (Operations); per-module load tables with source columns (§3 last paragraph); outbound instruction tables with A2 states | Steps 15–16 |
-| EA-007 G5 | Closed in design for every outbound channel of EA-007 §10.1 and BA-004 (RTA, AMFI, exchanges, AMC website, custodian, broker, bank): each spec states ack limit and status query as "Confirm with <provider>" with the manual check; the values themselves come at onboarding (G1) | — |
+| EA-007 G5 | Closed in design for every outbound channel of EA-007 §10.1, BA-004 and PRD-000 Ch 8 (RTA, AMFI, exchanges incl. MF platforms, AMC website, custodian, broker, bank): each spec states ack limit and status query as "Confirm with <provider>" with the manual check; the values themselves come at onboarding (G1) | — |
 | BA-004 WF-023 | Broker membership status from exchanges: INT-004/005 field 2 (g), Confirm with each exchange | Next BA-004 revision |
+| PRD-000 Ch 8 (NSE, BSE rows) | MF-platform confirmations and StAR MF payment / allotment files "out" are sent by the RTA by default; AMC OS sends them only if the AMC must (INT-004 field 2 e) **[ASSUMPTION]** | Pilot discovery; next PRD-013 revision |
+| BA-001, PRD-011 C9 | iNAV for ETFs: capability and owning module still open; INT-004/005 carry only the channel | Next BA-001 / PRD-011 revision |
 | PRD-011 FR-D11-001 | Price adapters sit in Valuation (EA-003 B9) — already listed in EA-003 §7 | Next PRD-011 revision |
 | SEC-001 | Fixed outbound addresses, certificate and key rotation, inbound endpoint hardening (§9) | Step 25 |
 | REG-001 | Retention per record class (NFR-RET-008); website terms of use for automated download (IN8) | Step 25 |

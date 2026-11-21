@@ -50,6 +50,6 @@ Outside system X06 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 | # | Source | Used for |
 | --- | --- | --- |
 | S1 | [PRD-000](../03_product_requirements/PRD-000_master_prd_v0.9.md) Ch 8 Banks row | Options, auth |
-| S4 | [PRD-007](../03_product_requirements/PRD-007_settlement_management.md) FR-D07-009, FR-D07-010, BRL-D07-005; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-026 | Settlement payments and their approval |
 | S2 | [EA-007](../04_enterprise_architecture/EA-007_event_architecture_and_process_workflows.md) §10.5 | Commission payment release |
 | S3 | [LOOP_STATE.md](../../LOOP_STATE.md) D-51, D-52, D-56 | What AMC OS does and does not pay |
+| S4 | [PRD-007](../03_product_requirements/PRD-007_settlement_management.md) FR-D07-009, FR-D07-010, BRL-D07-005; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-026 | Settlement payments and their approval |

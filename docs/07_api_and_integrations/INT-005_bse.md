@@ -18,7 +18,7 @@ Outside systems X03 and X09 of [EA-001](../04_enterprise_architecture/EA-001_sys
 | # | Field | Content | Label |
 | --- | --- | --- | --- |
 | 1 | Provider | BSE and its group: its clearing corporation, BSE StAR MF (mutual-fund platform), index data where licensed | [IND] |
-| 2 | Business purpose | Same as INT-004 field 2 (a)–(g), for BSE-listed prices, BSE corporate actions, BSE clearing obligations, StAR MF order and allotment data, NAV / iNAV out where BSE requires it from the AMC, and broker membership status | [DES] |
+| 2 | Business purpose | Same as INT-004 field 2 (a)–(g), for BSE-listed prices, BSE corporate actions, BSE clearing obligations, StAR MF order, payment and allotment data (PRD-000 Ch 8 lists these files as in and out; outbound sends by default by the RTA — **[ASSUMPTION — Confirm with BSE and the RTA]**), NAV / iNAV out (iNAV ownership open, PRD-011 C9) where BSE requires it from the AMC, and broker membership status | [DES] |
 | 3 | Approved interface | **Market data:** UDiFF trade and bhavcopy files (BSE UDiFF page: standard file formats set under SEBI's Market Data Advisory Committee; legacy files discontinued from 8 Jul 2024, read 22 Nov 2026) **[IND]**; delivery channel under BSE's licence — Confirm with BSE. **StAR MF:** BSE publishes file and API structure documents for StAR MF (for example `APIFileStructure.pdf` on bsestarmf.in — title seen in search 22 Nov 2026, not opened) **[IND]**; these are aimed at members and distributors; AMC-side data — directly or through the RTA — Confirm with BSE and the RTA. **Clearing obligations:** through the custodian or the clearing corporation — Confirm **[ASSUMPTION]** | [IND] / Confirm |
 | 4 | Authentication | As INT-004 — Confirm with BSE | Confirm |
 | 5 | Data contract | As INT-004 field 5 | [DES] |
@@ -39,10 +39,11 @@ As INT-004 §2:
 | Instruction | Owning module | Ack time limit | Status query | Manual check |
 | --- | --- | --- | --- | --- |
 | Scheme NAV and, for listed schemes, NAV / iNAV data to BSE — only where BSE requires it from the AMC | NAV | Confirm with BSE | Confirm with BSE | NAV team checks BSE's published value against the approved NAV and contacts BSE; resend released by a person with the same key |
+| StAR MF payment or allotment files — **only if the AMC, not its RTA, must send them** | Investor | Confirm with BSE / RTA | Confirm with BSE / RTA | Investor Services checks with BSE or the RTA; resend released by a person with the same key |
 
 ## 3. Confirm with BSE
 
-Points 1–6 of INT-004 §3, for BSE, its clearing corporation and StAR MF.
+Points 1–6 and 8 of INT-004 §3, for BSE, its clearing corporation and StAR MF.
 
 ## Sources
 

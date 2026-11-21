@@ -1,0 +1,32 @@
+## AMC OS Review Agent — advisory review
+
+**PR:** branch `wp3-step14-integrations` (base `origin/wp3-step13-events-workflows`), review round 2 · **Step / WP:** GOV-006 Step 14 / WP3 · **Reviewed at:** 6c71be180cd8ec890d6ec7dbc37e6206e87c27d0
+
+**Verdict (advisory):** RECOMMEND CHANGES
+Round 1 is almost fully fixed. One part of round 1's finding 1 is still open: the MF-platform outbound flows in PRD-000 Ch 8 are not covered. Yet INT-004 now says NAV is "the only possible direct send", and INT-001 says EA-007 G5 is closed "for every outbound channel".
+
+### Findings
+| # | Severity | File:line | Finding | Suggested fix |
+| --- | --- | --- | --- | --- |
+| 1 | Major | INT-004:21, INT-004:37, INT-005:21, INT-005:37-41, INT-001:322 | Round 1 finding 1 was only partly fixed. It named PRD-000 Ch 8 (line 1435) NSE "Out for MF platform confirmations". PRD-000 Ch 8 also gives BSE StAR MF "order/payment/allotment files" as "In / Out" (line 1436). The fix added NAV and iNAV rows only. INT-004 field 2(e) still treats platform data as inbound only. INT-004 §2 says "The only possible direct send is NAV publication", and the INT-004 §3 Confirm list asks only what the AMC can *receive*. INT-001 §14 still says G5 is "Closed in design for every outbound channel". Allotment or payment confirmations to a platform can affect units or money, so they may be class A2 sends. They are neither covered nor marked out of scope, and the PRD-000 direction is contradicted without a change note. | Do one of these. (a) Add the platform confirmation (and StAR MF payment/allotment) send as an A2 row in INT-004/005 §2: owning module Investor, all values "Confirm with <exchange>/RTA", with a manual check. Add a Confirm item: "Does the AMC, or only its RTA, send confirmations to the platform?" Or (b) state that the RTA sends these by default (as with KYC in INT-012). Add a change note against PRD-000 Ch 8 to INT-001 §14, and reword "only possible direct send" and the G5 row to match. |
+| 2 | Minor | INT-001:220 vs INT-001:225, INT-010:37-40 | The old summary row "Payment file (commission, AMC payments where the AMC chooses) — Distribution, Settlement" was kept next to the new "Settlement payment instruction for scheme funding" row. "AMC payments" has no matching row in INT-010 §2, and Settlement now appears in two rows for the same thing. | Change row 220 to "Commission payment file — Distribution" so that each row matches one row in INT-010 §2. |
+| 3 | Minor | INT-004:21 (f), INT-004:43, INT-001:223 | The new iNAV purpose assigns iNAV to the NAV module (D11) and says the question "is decided with FE-01 (Step 20)". PRD-011 line 25 lists "iNAV for ETFs during market hours" as out of D11's scope, with open point C9 (PRD-011:248, "no BA-001 capability"). INT-004 does not mention this, so the two documents disagree about who owns iNAV. | Cite PRD-011 C9 in INT-004 field 2(f) and in the note at INT-004:43. Add an INT-001 §14 row: BA-001 / PRD-011 C9, iNAV capability and owner, next revision. |
+| 4 | Nit | INT-010:51-55 | The sources table is numbered S1, S4, S2, S3 (S4 was inserted out of order). | Renumber the rows in order, or move S4 to the end. |
+
+### Checks run
+| Check | Result |
+| --- | --- |
+| scripts/check_docs.py | Run on 6c71be1 (clean working tree): "79 spec documents checked; 0 problem(s)." exit 0. `python3 -m pytest -q tests/governance`: 14 passed. The commit message's claim for check_docs matches. |
+| Arithmetic re-computed | There are no derived financial figures in this change. I checked counts with a script: 17 specs (INT-002…INT-018). Each has the 14 master prompt §10 fields in order, an ID matching its file name, and status Draft. INT-001 §3 has 21 canonical families. The 80 % figure has been removed from INT-002. |
+| Sources | I did not open any external provider or regulator page (no web access). The wording of claims matches the cited titles. The labels from round 1 are now correct: the NSE UDiFF claim is limited to the BSE source and marked [ASSUMPTION]/Confirm; CRISIL/ICRA is [ASSUMPTION]; SCORES facts are [IND]. Internal references I checked and found: PRD-007 FR-D07-009, FR-D07-010, BRL-D07-005, FR-D07-017 (maker-checker on cancellation); BA-004 WF-026 and the WF-007 hand-off (line 354: AMFI, exchanges, website); EA-007 line 367 (A2 includes "NAV files to channels"), §10.1 (line 431), G5 (line 571); GOV-006 Step 20 = FE-01; all 25 owner decisions in INT-001's list exist in LOOP_STATE and match how they are used; every D-number cited in INT-002…INT-018 is in that list (D-3 is cited on its own). The NFR IDs equal LOOP_STATE's next free numbers. I found no instruction-injection text in the diff. |
+| Scope vs GOV-006 step | Delivered: INT-001, one spec for each EA-001 outside system X01–X16, and every master prompt §10 provider. The GOV-001 §7 register, the GOV-006 Step 14 status and the README are updated. Round 1 fixes: findings 2–13 are fixed. Finding 1 is fixed for exchange NAV/iNAV and the AMC website, but not for MF-platform outbound flows (finding 1 above). Finding 14 is deferred to the LOOP_STATE update, which the caller excluded. Nothing is outside the step's scope. No domain D01–D17 is dropped. |
+
+### Not checked
+- CI status: the branch has no remote PR or CI run that I could inspect. I ran check_docs and the governance tests locally instead.
+- External sources not opened: AMFI NAV Download page, SEBI circular 2023/48, BSE UDiFF, NSE/BSE MF platform PDFs, PyPI, OnixS FIX dictionary, Digio, SEBI PR 37/2024, AMFI CRISIL/ICRA documents. So these are not verified: the 11 p.m. NAV limit, the 8 Jul 2024 BSE cut-over, and the "29 Oct 2026" NSE FAQ date (taken from a file name).
+- Database checks (DDL-000/DBT-000) not run, because this change has no database or code.
+- I did not read all 17 PRDs in full. I checked PRD-000 Ch 8, PRD-007 and PRD-011 for the rules cited in the fixes.
+
+_This review is advisory. Only the project owner can merge (GOV-003, GOV-007)._
+
+Relevant paths: /home/claude/amc-os/docs/07_api_and_integrations/INT-001_integration_architecture.md, /home/claude/amc-os/docs/07_api_and_integrations/INT-004_nse.md, /home/claude/amc-os/docs/07_api_and_integrations/INT-005_bse.md, /home/claude/amc-os/docs/07_api_and_integrations/INT-010_banks.md, /home/claude/amc-os/docs/03_product_requirements/PRD-000_master_prd_v0.9.md (lines 1435-1436), /home/claude/amc-os/docs/03_product_requirements/PRD-011_valuation_and_nav.md (lines 25, 248), /home/claude/amc-os/reviews/STEP-14_round1.md
