@@ -178,9 +178,12 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | PRD-015 | Finance and Management Reporting (D15) — product requirements (WF-040 card) | Draft | WP2 / Step 9 |
 | PRD-016 | Enterprise Data Platform (D16) — product requirements (WF-041, WF-042 cards) | Draft | WP2 / Step 9 |
 | PRD-017 | AI and Decision Intelligence (D17) — product requirements (WF-043 card) | Draft | WP2 / Step 9 |
+| EA-001 | System context | Draft | WP3 / Step 10 |
+| EA-002 | Layered enterprise architecture and the 12 role workspaces | Draft | WP3 / Step 10 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
+| ADR-0016 – ADR-0019 | Identity provider and sign-in; cache; cloud and regions; API gateway and policy engine (evaluation) | Draft | WP3 / Step 10 |
 | PRD-000 | Master PRD v0.9 (input) | Draft — to be re-keyed | WP2 |
 | DA-000 | Data and database architecture v0.9 (input) | Draft — to be split | WP4 |
 | DDL-000 | Core schema v0.9 (tested on PostgreSQL 16.15) | Draft | WP4 |
