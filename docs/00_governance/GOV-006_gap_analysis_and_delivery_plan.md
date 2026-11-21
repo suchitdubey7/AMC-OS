@@ -100,7 +100,7 @@ flowchart LR
 | **Stage B — architecture** | | | |
 | 10 🔄 in review (branch `wp3-step10-system-context`: EA-001, EA-002; ADR-0016 identity, ADR-0017 cache, ADR-0018 cloud and regions, ADR-0019 gateway and policy engine evaluation — ADRs are owner-only, so the owner merges) | EA-001 system context; EA-002 layered architecture incl. 12 frontend workspaces; ADRs for identity provider, Redis, cloud/region | 5, 13 | Stage A |
 | 11 🔄 in review (branch `wp3-step11-service-catalogue`: EA-003 service catalogue, EA-008 configuration over customisation; stacked on Step 10) | EA-003 domain boundaries & service catalogue; configuration-over-customisation design | 3.6, 5 | 10 |
-| 12 | EA-004 deployment & cell architecture; EA-005 multi-tenant; EA-006 control plane / data plane | 6 | 10 |
+| 12 🔄 in review (branch `wp3-step12-deployment-cells`: EA-004 deployment and cells, EA-005 multi-tenant, EA-006 control plane / data plane; stacked on Step 11) | EA-004 deployment & cell architecture; EA-005 multi-tenant; EA-006 control plane / data plane | 6 | 10 |
 | 13 | EA-007 event architecture + `contracts/events/` catalogue (all events, v1 schemas); Temporal workflow designs | 5 L4 | 11 |
 | 14 | INT-001 integration architecture + one spec per provider with all 14 fields (confirmed facts only) | 10 | 11 |
 | **Stage C — data and database** | | | |
