@@ -2,7 +2,7 @@
 id: GOV-005
 title: Documentation Programme — Work Package Plan
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP1
@@ -11,14 +11,14 @@ last_updated: 2026-11-19
 
 # GOV-005 — Work Package Plan
 
-The seven deliverables of the master build prompt (§22) are produced in seven work packages. Each package ends with a pull request; the next dependent package starts only after that PR is reviewed and its documents are Approved.
+The seven deliverables of the master build prompt (§22) are produced in seven work packages. Each package ends with a pull request; the next dependent package starts only after that PR is reviewed and its documents are Approved. Exception: during the documentation phase, steps may build on Draft documents (owner decision D-3, see the note below §1).
 
 ## 1. Packages
 
 | WP | Deliverable(s) | Stage | Main outputs | Depends on | Status |
 | --- | --- | --- | --- | --- | --- |
-| **WP1** | D1 Project Charter; D7 Engineering Governance | A, D | GOV-001–005, TRACE-001, PS-001, STD-001, QA-001, ADR-0001–0008, AGENTS.md, repo structure | — | **In review (this PR)** |
-| WP2 | D2 Business Capability Map; D3 Master PRD | A | BA-001 capability map, BA-002 operating model & department hierarchy, BA-003 domain dictionary, BA-004 workflows (WF-001…), BA-005 roles & permissions, PRD-001…PRD-017 (one per domain) re-keyed from PRD-000 | WP1 approved | Not started |
+| **WP1** | D1 Project Charter; D7 Engineering Governance | A, D | GOV-001–005, TRACE-001, PS-001, STD-001, QA-001, ADR-0001–0008, AGENTS.md, repo structure | — | Merged to `main`; documents Draft, awaiting owner approval |
+| WP2 | D2 Business Capability Map; D3 Master PRD | A | PS-002 vision, PS-003 market and customers, PS-004 benchmarks (Step 1), BA-001 capability map, BA-002 operating model & department hierarchy, BA-003 domain dictionary, BA-004 workflows (WF-001…), BA-005 roles & permissions, PRD-001…PRD-017 (one per domain) re-keyed from PRD-000 | WP1 (Draft allowed, D-3) | In progress — Step 1 in review (GOV-006 §3) |
 | WP3 | D4 Enterprise System Architecture | B | EA-001 system context, EA-002 layered architecture, EA-003 domain boundaries & service catalogue, EA-004 deployment & cells, EA-005 multi-tenant, EA-006 control plane / data plane, EA-007 event architecture + `contracts/events/`, INT-001 integration architecture | WP2 | Not started |
 | WP4 | D5 Enterprise Data & Database Architecture | C | DA-001 canonical model, ERDs in `architecture/erds/`, DBE-001 data dictionary (sensitivity, retention, example rows), DBE-002 DB standards, Alembic migrations reproducing DDL-000 + gaps, DBT referential-integrity tests | WP3 | Not started (v0.9 inputs exist) |
 | WP5 | D6 Financial Engine Specifications | D | FE-01…FE-10 using the 15-point template; financial control framework | WP4 | Not started |

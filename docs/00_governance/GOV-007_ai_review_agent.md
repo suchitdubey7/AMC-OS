@@ -15,7 +15,7 @@ Every pull request gets an independent AI review against the master build prompt
 
 ## 1. Why advisory only
 
-The master build prompt §16 says "No AI agent can independently approve and merge its own changes", and §17 forbids AI agents to approve their own code. GOV-003 §1 repeats this. An AI that wrote a change and an AI that approves it share the same blind spots; the human merge is the control.
+Since CR-0001 its verdict is also one input (gate G4) to the loop's rule-based merge gate; it still never approves or merges itself. The master build prompt §16 says "No AI agent can independently approve and merge its own changes", and §17 forbids AI agents to approve their own code. GOV-003 §1 repeats this. An AI that wrote a change and an AI that approves it share the same blind spots; the human merge is the control.
 
 ## 2. Agent identity
 

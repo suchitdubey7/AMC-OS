@@ -1,0 +1,26 @@
+# CODEOWNERS — files that always need the project owner (human) to merge.
+# The build loop's merge gate (scripts/merge_gate.py) reads this file: any change
+# touching these paths is never auto-merged (CR-0001, GOV-008 §5).
+# Paths not listed here may be auto-merged by the loop only if every gate passes.
+
+# Rules and instructions for AI agents
+/AGENTS.md                              @suchitdubey7
+/MASTER_BUILD_PROMPT.md                 @suchitdubey7
+/.claude/                               @suchitdubey7
+/.github/                               @suchitdubey7
+/scripts/                               @suchitdubey7
+
+# Governance (GOV-001 register rows and GOV-006 status cells are exempt — see merge_gate.py)
+/docs/00_governance/                    @suchitdubey7
+/architecture/adrs/                     @suchitdubey7
+
+# Financial engines, security and regulatory controls (T1 — expert review before Approval)
+/docs/08_financial_engines/             @suchitdubey7
+/docs/10_security_and_regulatory/       @suchitdubey7
+
+# Database and application code
+/database/                              @suchitdubey7
+/src/                                   @suchitdubey7
+/contracts/                             @suchitdubey7
+/infrastructure/                        @suchitdubey7
+/deployment/                            @suchitdubey7

@@ -2,11 +2,11 @@
 id: PS-001
 title: AMC OS Project Charter
 status: Draft
-version: 0.1
+version: 0.3
 owner: Product Manager
 approver: Project owner / sponsor
 work_package: WP1
-last_updated: 2026-11-19
+last_updated: 2026-11-20
 ---
 
 # PS-001 — AMC OS Project Charter
@@ -15,7 +15,7 @@ AMC OS will be a single, multi-tenant operating platform that runs an Indian mut
 
 ## 1. Vision
 
-> Every number an AMC reports — NAV, AUM, exposure, revenue, commission — comes from one auditable system, can be reproduced exactly for any past date, and can be explained in plain language on demand.
+The vision statement is kept in one place: [PS-002 §1](PS-002_product_vision.md#1-vision-statement). In short, every number an AMC reports comes from one auditable, reproducible system.
 
 ## 2. Problem
 
@@ -67,16 +67,11 @@ All targets are proposals for sponsor approval.
 
 ### 5.2 Customer profiles
 
-| Segment | Description | What they buy first | Deployment |
-| --- | --- | --- | --- |
-| C1 Large AMCs (top 10) | Very large AUM, heavy legacy, in-house IT | Individual modules: compliance, risk, data platform, AI | Dedicated |
-| C2 Mid-size AMCs | Growing, mixed legacy, cost-sensitive | Front-to-back core (OMS + compliance + accounting/NAV oversight) | Shared SaaS or dedicated |
-| C3 New and small AMCs | Recently licensed, including passive-only entrants **[VAL — current licensing routes]** | Full stack from day one | Shared SaaS |
-| C4 Adjacent (later) | Specialised Investment Fund arms, PMS/AIF managers in AMC groups | Selected modules | Shared SaaS |
+Superseded by [PS-003 §3](PS-003_market_and_customer_analysis.md#3-customer-segments-and-priority), which is now the single source for segments C1–C4, their priority and first purchase.
 
 ### 5.3 Important commercial finding — target scale
 
-The brief sets an initial target of **20–50 AMC customers**. With about 51 AMCs in India, that equals roughly 40–100% of every AMC in the country. That is a full-market-share target, not an initial one.
+The brief sets an initial target of **20–50 AMC customers**. With about 51 AMCs in India, that equals about 39–98% of every AMC in the country. That is a full-market-share target, not an initial one.
 
 Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 
@@ -91,7 +86,7 @@ Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 | Pricing basis | Platform fee per module + AUM-tiered fee; dedicated deployment priced on infrastructure + support |
 | Land-and-expand | Enter via a high-pain module (compliance, risk, distribution analytics, data platform), expand to front-to-back |
 | Unit economics | Gross margin target set after the first pilot, once hosting and support costs are measured |
-| Pilot | One design-partner AMC from month 18–22, with a parallel run before go-live |
+| Pilot | One design-partner AMC starting about month 15–18, so that a parallel run of at least 3 months ends and the pilot goes live by month 24 (owner decision D-12, 20 Nov 2026) |
 
 ## 7. Deployment models
 
@@ -111,11 +106,11 @@ Decision **(project owner, 19 Nov 2026 — GOV-006 Q1): adopted.**
 | Automation | Reconciliation auto-match ≥ 95%; MIS turnaround from days to same day |
 | Audit | 100% of approvals, overrides and financial state changes in the hash-chained audit log |
 | Delivery | Each work package and build increment passes its gates without waivers on T1 items |
-| Commercial | Pilot signed; then 3–5 paying AMCs |
+| Commercial | Pilot signed; then 3–5 paying AMCs by month 36, counting the pilot AMC (owner decision D-12) |
 
 ## 9. Roadmap baseline
 
-The master prompt's 24-month programme (months 1–3 documentation … months 22–24 pilot and rollout) is adopted as the planning baseline. It is not a guaranteed deadline, and correctness is never traded for schedule. The v0.9 PRD's 30-month, 10-phase roadmap is retired in favour of this baseline in WP2.
+The master prompt's 24-month programme (months 1–3 documentation … months 22–24 pilot and rollout) is adopted as the planning baseline. It is not a guaranteed deadline, and correctness is never traded for schedule. The v0.9 PRD's 30-month, 10-phase roadmap is retired in favour of this baseline in WP2. Owner decision D-12 (20 Nov 2026): go-live by month 24 takes priority, so the pilot starts earlier than the brief's months 22–24 — about month 15–18 — and its parallel run ends by month 24.
 
 ## 10. Key risks
 

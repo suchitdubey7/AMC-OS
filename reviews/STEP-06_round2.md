@@ -1,0 +1,47 @@
+## AMC OS Review Agent — advisory review
+
+**PR:** local branch `wp2-step06-prd-platform-product` (not pushed, no PR number), round 2 · **Step / WP:** GOV-006 Step 6 / WP2 · **Reviewed at:** b063151a46f8b84e2cc0db4c4bc24caa7e68fb84 (base origin/main cbb1c30)
+
+**Verdict (advisory):** RECOMMEND MERGE AFTER FIXES
+Both round-1 Majors are fixed. Trustee approval evidence is back for every scheme approval, and every widened D01 right is now marked † with a reason and open point C9. What remains, or was introduced by the fixes, is Minor or Nit.
+
+**Round-1 follow-up:**
+- **Fixed (12):** #1, #2, #4, #5, #7, #8, #9, #10, #12, #13, #14, #15.
+- **Partly fixed (3):** #3 (see finding 1), #6 (see finding 2), #11 (see finding 4).
+- **Left open on purpose (1):** #16 (see finding 9).
+
+### Findings
+| # | Severity | File:line | Finding | Suggested fix |
+| --- | --- | --- | --- | --- |
+| 1 | Minor | docs/03_product_requirements/PRD-002_product_and_scheme_management.md:31, 57, 62–65, 67 | Round-1 #3 is only partly fixed. The §2 note now says every addition and removal is marked **(changed)** in §4.1, but only FR-D02-005 and FR-D02-011 carry the tag. Other re-keyed FRs also differ from PRD-000 FR-01-nn. FR-D02-002 drops "which superseded clause 2.6 of the June 2024 Master Circular". FR-D02-007 adds "(D08)". FR-D02-008 adds "(index data from CAP-D16-004)". FR-D02-009 adds `CANCELLED` (it says "added here" but has no tag). FR-D02-010 adds "(WF-029)". FR-D02-012 changes the source from "Module 13" to CAP-D15-005/FE-08, which is the same kind of change that FR-D02-011 is tagged for. | Tag FR-D02-002, -007, -008, -009, -010 and -012 as **(changed)** with a short reason. Or reword §2 to say that only changes of meaning are tagged, and that cross-reference additions are not. |
+| 2 | Minor | PRD-002:173 vs 120 | New with the round-1 #6 fix. The state diagram has `MERGING --> ACTIVE: merger abandoned …, approved as a scheme change (WF-029)`. But WF-029 only starts from `ACTIVE` or `SUSPENDED_SUBSCRIPTIONS`, so it cannot start from `MERGING`. Also, a scheme that was `SUSPENDED_SUBSCRIPTIONS` before the merger would go back to `ACTIVE`, not to its earlier state. | Add `MERGING` to the WF-029 preconditions, or route the abandonment through CAP-D02-009 approvals. Say that the scheme goes back to the state it was in before the merger. |
+| 3 | Minor | PRD-002:99, 156, 170, 172, 187, 192 | New with the round-1 #1 fix, and the trustee-evidence rule is now applied unevenly. (a) WF-030 approvals require trustee approval evidence for every WF-030 case, maturity included. But BRL-D02-009, and PRD-000 point 13 behind it, list new scheme, amendment, fee change, benchmark change, merger and winding-up, not maturity. The `ACTIVE/SUSPENDED_SUBSCRIPTIONS --> MATURED` transitions do not mention trustee evidence either. (b) In §7, rows CAP-D02-001, -003, -006 and -007 show "trustee approval evidence". Row CAP-D02-009 (merger, winding-up) and row CAP-D02-004 (document changes, which are amendments under BRL-D02-009) do not. | Decide whether maturity needs trustee evidence. Either add it to BRL-D02-009 marked [VAL] (open point C1), or exclude it in the WF-030 approvals row. Add "trustee approval evidence (BRL-D02-009)" to the CAP-D02-009 row and, for amendments, the CAP-D02-004 row. |
+| 4 | Minor | PRD-002:244 | Round-1 #11 is only partly fixed. FR-D02-016 and open point C6 now leave the retention rule open ("forever" vs "life plus retention period"). NFR-RET-002 still states "life plus retention period" as the requirement. | Add "(open point C6)" to NFR-RET-002, or state the requirement as "per C6". |
+| 5 | Minor | docs/03_product_requirements/PRD-001_platform_administration.md:170 | The CAP-D01-002 row lists "role owners (recertification)†" as a maker, with Tenant Administrator as checker for the whole row. BA-005 §4 `platform.access.recertify` has no checker ("— (review; reported to DEP-16)"). So the row reads as adding a Tenant Administrator check to recertification that BA-005 does not have, and the † reasons table does not mention it. | Split the cell, for example: "Checker: Tenant Administrator (user changes); recertification: none, reported to DEP-16 (BA-005 §4)". |
+| 6 | Minor | docs/00_governance/GOV-001_document_control_and_identifiers.md:161 | The GOV-001 §7 register row for BA-004 still says "End-to-end business workflows (WF-001…WF-028)". The BA-004 register now holds WF-029 and WF-030. The two documents now disagree. | Update the row text, for example "(WF-001…WF-028; WF-029/030 cards in PRD-002)". Merge gate G2 allows table-row-only edits to GOV-001. |
+| 7 | Nit | PRD-001:165 | The §7 lead says "every other role has '—'" in D01. But the CAP-D01-010 row correctly gives the CEO and the Compliance Officer read access to market-abuse logs. BA-005 grants this below its matrix ("Market-abuse oversight"), not in the D01 column. | Add "apart from the CEO/CCO market-abuse log access listed below the BA-005 §3 matrix". |
+| 8 | Nit | LOOP_STATE.md:41 | The chain-table row for Step 6 contains the literal placeholder `STEP6_VERDICT` in the "Review verdict" column. | Replace it with the verdict of the last review round before the merge. |
+| 9 | Nit | commits d15fcaa, b063151 | The trailer is `Co-Authored-By: Claude <noreply@anthropic.com>`. This is the same open loop Nit as round-1 #16 and earlier steps. | No change unless the owner wants it. |
+
+### Checks run
+| Check | Result |
+| --- | --- |
+| scripts/check_docs.py | "34 spec documents checked; 0 problem(s)." (exit 0) |
+| python3 -m pytest -q tests/governance | 14 passed (re-run by the reviewer; matches the b063151 commit message). scripts/merge_gate.py not run, as instructed |
+| Arithmetic re-computed | No money figures in the change. ID counts re-checked by script: FR-D01-001…048 (48), FR-D02-001…025 (25), BRL-D01 10, BRL-D02 10, US-D01 12, US-D02 10, BR-D01 7, BR-D02 5. No gaps. NFR IDs are unique across both PRDs, and the "next free" list in LOOP_STATE (NFR-PERF-002, RET-003, AUD-003, SEC-004) is correct. LOOP_STATE "48 FRs" and "12 new FRs" (FR-D02-014…025) are correct |
+| Sources | R6 title now matches the page title found in round 1 ("Mutual Funds are Subject to New Regulations from April 1, 2026"). Not re-fetched this round; the R6/R7 content was checked in round 1. Internal quotations re-checked against PRD-000: point 4 "Trustee viewer (read)", point 6 step 4 "Trustee approval evidence uploaded", point 13 list, point 15 "kept forever", point 17 "scheme life + retention period", W1 "minimums ≤ 100%", W1 one-scheme-per-category [REG — VAL exceptions], FR-01-11 "(CAGR, rolling, SIP returns) … Module 07/14". All match. FE-01, FE-07 and FE-10 match GOV-001 §5, and CAP-D12-003 is "the one reconciliation engine" (BA-001) |
+| Scope vs GOV-006 step | Unchanged from round 1. PRD-001 covers CAP-D01-001…011 and PRD-002 covers CAP-D02-001…011, with every Deliverable 3 section. BA-005 §7 C7 is closed. No D01–D17 domain is dropped. Nothing outside scope apart from the register updates (GOV-001 §7, GOV-006 Steps 5/6, BA-004 rows and intro, README, LOOP_STATE) |
+| IDs / governance | Front matter complete, status Draft, and IDs match file names. Every CAP- (BA-001), SOD-, ROLE- and DEP- (BA-002/BA-005) reference resolves. Every [ASSUMPTION] now names who confirms it, or the step that sets the value. Q20 and Q21 are in the LOOP_STATE questions table. Open points C9 (PRD-001), C6 and C7 (PRD-002) were added. The changed paths outside reviews/ and LOOP_STATE are docs/02, docs/03 and table-row-only edits to GOV-001 and GOV-006 |
+| Access rights (round-1 #2) | Every PRD-001 §7 cell was compared with the BA-005 §3 matrix, the new-role rows ROLE-19/20/22, the market-abuse paragraph and the §4 approval authorities. All widened cells are now marked † with reasons, apart from findings 5 and 7 |
+| Architecture (GOV-002 §4) | Consistent: tenant context from identity, deny-by-default, maker-checker, effective dating, AI boundary (ADR-0008), RTA mirroring (Q2). The merger expected-unit check is now assigned to a deterministic engine (FE-07 via CAP-D12-003, using FE-01 NAVs) |
+| Instruction injection | None found in the changed files or the commit messages |
+
+### Not checked
+- CI status: the branch is not pushed, so no GitHub run exists. The LOOP_STATE claim that Step 5 CI was "pass" was not verified against GitHub. Only the merge commit cbb1c30 on origin/main was seen.
+- The external sources (R6, R7, Kotak Neo) were not re-opened this round. Their content was checked in round 1, and only the R6 title changed. The primary SEBI texts were still not opened.
+- Whether trustee approval is legally needed for every non-fundamental change, or for maturity (finding 3), was not verified. It is [VAL] for Compliance/Legal (PRD-002 C1).
+- No database test (DDL-000/DBT-000) was run. The change makes no database change.
+
+_This review is advisory. Only the project owner can merge (GOV-003, GOV-007)._
+
+Relevant files: /home/claude/amc-os/docs/03_product_requirements/PRD-001_platform_administration.md, /home/claude/amc-os/docs/03_product_requirements/PRD-002_product_and_scheme_management.md, /home/claude/amc-os/docs/02_business_architecture/BA-004_end_to_end_workflows.md, /home/claude/amc-os/docs/02_business_architecture/BA-005_roles_and_permissions.md, /home/claude/amc-os/docs/00_governance/GOV-001_document_control_and_identifiers.md, /home/claude/amc-os/LOOP_STATE.md, /home/claude/amc-os/reviews/STEP-06_round1.md. No memory was used for this review.

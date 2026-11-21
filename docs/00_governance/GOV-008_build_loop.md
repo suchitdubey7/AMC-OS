@@ -41,7 +41,7 @@ flowchart TD
 5. **Fix rounds.** Blocker or Major → fix and re-review, at most 3 rounds per run. Still failing after round 3 → push the branch with `BLOCKED` in `LOOP_STATE.md`, notify, and pause the loop.
 6. **Business gaps.** A fact or rule only the owner can give is written as `[ASSUMPTION]` or `[VAL]` with an open question, added to the "Questions for owner" list in `LOOP_STATE.md`, and the run continues.
 7. **Honest reporting.** Only checks actually run are reported as passed. CI status is read from GitHub after push.
-8. **Never:** merge, approve, push to `main`, force-push someone else's branch, change a document to Approved, or touch secrets.
+8. **Never:** approve, push anything to `main` except a gate-passing merge (§5), force-push someone else's branch or `main`, change a document to Approved, or touch secrets.
 
 ## 3. Stop conditions (the run notifies and changes nothing)
 
@@ -58,3 +58,13 @@ The owner restarts a paused loop by editing `LOOP_STATE.md` (Status: RUNNING) on
 ## 4. Notification content
 
 Step done, branch name and pull-request link, CI result, reviewer verdict and finding counts, new questions for the owner, and the next step.
+
+## 5. Merge protocol (CR-0001, owner decision D-4)
+
+After pushing a step branch, the run tries to merge it:
+
+1. Fetch `main`. Take the **oldest** unmerged branch in the chain (the one sitting directly on `main`); only that one may be merged.
+2. Check it out and run `python3 scripts/merge_gate.py --base origin/main --head <branch> --ci <status>` (status from the GitHub API, or `unknown` if unreadable).
+3. **PASS:** merge with `git merge --no-ff` into `main`, commit message = "Merged by build loop under CR-0001" + the full gate report; push `main`; record in LOOP_STATE.md. Then repeat for the next branch in the chain.
+4. **FAIL:** stop merging; record the failed gates in LOOP_STATE.md under "Waiting for owner"; continue stacking new steps on the chain tip (up to the §3 limit).
+5. Never merge out of order, never merge a branch that touches owner-only paths, never resolve a merge conflict on `main` automatically.

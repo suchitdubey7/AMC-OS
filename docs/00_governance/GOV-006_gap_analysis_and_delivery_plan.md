@@ -2,7 +2,7 @@
 id: GOV-006
 title: Gap Analysis against the Master Build Prompt and Step-by-Step Delivery Plan
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP1
@@ -13,14 +13,14 @@ last_updated: 2026-11-19
 
 The master build prompt's governance sections (§15–§18, §20) are now fully written down, but most of the specification work (§4–§14 and Deliverables 2–6 of §22) is still open or exists only as unsplit v0.9 drafts. This document lists every gap by brief section and turns them into 28 small, reviewable steps.
 
-## 1. Repository state (checked 19 Nov 2026, 23:00 IST)
+## 1. Repository state (updated 19 Nov 2026, 23:35 IST)
 
 | Branch | Content | Merged to `main`? |
 | --- | --- | --- |
-| `main` | v0.9 PRD, v0.9 database doc, DDL, tests (4 files) | — |
-| `wp1-governance-charter` | WP1: charter, governance, ADRs, folder structure (66 files) + this document | **No. No pull request opened yet** |
+| `main` | v0.9 inputs + WP1 (charter, governance, ADRs, folder structure) + Step 0 CI | — |
+| Unmerged chain | Step 1 and its review fixes, GOV-007 reviewer, GOV-008 build loop | No — live list and merge order in [LOOP_STATE.md](../../LOOP_STATE.md) |
 
-**Gap 0:** WP1 must be reviewed and merged by the project owner. Branch protection on `main` is not yet switched on, and no CI pipeline exists, so nothing currently enforces the rules in GOV-003 and STD-001.
+**Gap 0 (remaining):** branch protection on `main` is not yet switched on (owner action), so nothing yet *forces* the checks in GOV-003 before a merge. CI now runs documentation checks and database tests (Step 0).
 
 ## 2. Gap analysis by brief section
 
@@ -48,7 +48,7 @@ Status key: ✅ covered · 🟡 partly covered (v0.9 draft or principle only) ·
 | 11 | AI & ML governance | 🟡 | PRD-000 Ch 9 (11 agents) | Agent fields missing (input/output schema, model version, evaluation suite); brief adds Dealing assistant and Risk assistant; RAG source metadata spec; **10 ML use cases and model governance not specified** |
 | 12 | Security architecture | ❌ | Controls listed in PRD-000 Ch 7 | Security architecture doc; **formal threat model**; mapping to ISO 27001, SOC 2, OWASP ASVS, NIST CSF; incident response; privileged access; key management design |
 | 13 | Technology stack | 🟡 | ADR-0004/5/6/7 | ADRs still needed: identity provider, Redis, orchestrator, LangGraph, containers/Kubernetes, Terraform, observability, CI/CD, cloud provider and region |
-| 14 | Repo structure & Stages A–E | 🟡 | Structure ✅; Stage A 1/10 done, B 0/10, C 0/14 as split docs, D 2/12 (testing, release governance), E structure only | See plan below |
+| 14 | Repo structure & Stages A–E | 🟡 | Structure ✅; Stage A: 1/10 drafted (Step 1, in review), none approved; B 0/10, C 0/14 as split docs, D 2/12 (testing, release governance), E structure only | See plan below |
 | 15 | Architecture governance | ✅ | GOV-002 | ARB members not named (interim approver) |
 | 16 | Engineering standards | ✅ | STD-001, QA-001 | Service README template; CI enforcement not built |
 | 17 | AI-assisted development | ✅ | GOV-003 | Enforcement needs branch protection + CI |
@@ -86,17 +86,17 @@ flowchart LR
 
 | Step | Content | Brief § | Depends on |
 | --- | --- | --- | --- |
-| **0** ✅ done 19 Nov 2026 (branch protection pending, owner action) | You merge WP1; switch on branch protection; add CI: DDL + DBT tests on PostgreSQL, Markdown link check, ID-uniqueness check, front-matter check | 15–17 | — |
+| **0** 🟡 partly done 19 Nov 2026 (WP1 merged, CI added; branch protection pending, owner action) | You merge WP1; switch on branch protection; add CI: DDL + DBT tests on PostgreSQL, Markdown link check, ID-uniqueness check, front-matter check | 15–17 | — |
 | **Stage A — business** | | | |
-| 1 🔄 in review | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
-| 2 | BA-001 business capability map (all 17 domains, level 1–3 capabilities) | 4, 22-D2 | 0 |
-| 3 | BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs) | 14-A | 2 |
-| 4 | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
-| 5 | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
-| 6 | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
-| 7 | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |
-| 8 | PRD-006 Trading & Execution, PRD-007 Settlement (split), PRD-008 Compliance, PRD-009 Risk | 4 | 6 |
-| 9 | PRD-010 Accounting, PRD-011 Valuation & NAV, PRD-012 Fund Ops, PRD-013 Investor, PRD-014 Distribution, PRD-015 Finance, PRD-016 Data, PRD-017 AI; PRD-000 marked Superseded | 4 | 6 |
+| 1 ✅ merged to `main` 20 Nov 2026 (Draft, not Approved) | PS-002 product vision; PS-003 market & customer analysis with sourced figures; benchmark capability comparison | 2, 14-A | 0 |
+| 2 ✅ merged to `main` 20 Nov 2026 (Draft, not Approved) | BA-001 business capability map (all 17 domains, level 1–3 capabilities) | 4, 22-D2 | 0 |
+| 3 ✅ merged to `main` 20 Nov 2026 (Draft, not Approved) | BA-002 AMC operating model & department hierarchy; BA-003 domain dictionary (glossary with IDs) | 14-A | 2 |
+| 4 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-004 end-to-end workflows WF-001…WF-0nn (re-keyed + new ones for D01, D06, D07) | 14-A | 2 |
+| 5 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | BA-005 roles & permissions (re-keyed; SoD rules) | 14-A | 3 |
+| 6 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-001 Platform Administration (new) + PRD-002 Product | 4 | 2–5 |
+| 7 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-003 Investment, PRD-004 Portfolio, PRD-005 OMS | 4 | 6 |
+| 8 ✅ merged to `main` 20 Nov 2026 by the build loop (CR-0001; Draft, not Approved) | PRD-006 Trading & Execution, PRD-007 Settlement (split), PRD-008 Compliance, PRD-009 Risk | 4 | 6 |
+| 9 🔄 9a (PRD-010…PRD-013) and 9b (PRD-014, PRD-015) merged to `main` 21 Nov 2026 by the build loop (CR-0001; Draft); 9c in review (branch `wp2-step09c-prd-data-ai`: PRD-016, PRD-017; PRD-000 re-keying note — Superseded status left to the owner, Q60) | PRD-010 Accounting, PRD-011 Valuation & NAV, PRD-012 Fund Ops, PRD-013 Investor, PRD-014 Distribution, PRD-015 Finance, PRD-016 Data, PRD-017 AI; PRD-000 marked Superseded | 4 | 6 |
 | **Stage B — architecture** | | | |
 | 10 | EA-001 system context; EA-002 layered architecture incl. 12 frontend workspaces; ADRs for identity provider, Redis, cloud/region | 5, 13 | Stage A |
 | 11 | EA-003 domain boundaries & service catalogue; configuration-over-customisation design | 3.6, 5 | 10 |

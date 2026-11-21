@@ -79,7 +79,7 @@ The 17 business domains from the master build prompt are fixed IDs. The v0.9 PRD
 | D13 | Investor Management and Servicing | `investor` | Module 11 | — |
 | D14 | Distribution Management | `distribution` | Module 12 | Channel management, sales incentives, segmentation, forecasting |
 | D15 | Finance and Management Reporting | `finance` | Module 13 | Expense management, financial planning |
-| D16 | Enterprise Data Platform | `analytics` | Module 14 | Data catalogue |
+| D16 | Enterprise Data Platform | `analytics`, `master` | Module 14 | Data catalogue; owns master data (securities, issuers, ratings, benchmarks) — owner decision D-65 (Q59), 21 Nov 2026 |
 | D17 | AI and Decision Intelligence | `ai` | Module 15, Ch 9 | Dealing assistant, risk assistant, anomaly detection, forecasting |
 
 A domain is never silently omitted: if a domain has no content yet, its PRD section must say so and point to the work package that will fill it.
@@ -112,6 +112,10 @@ A domain is never silently omitted: if a domain has no content yet, its PRD sect
 | Control-plane / integration rule (proposal) | `CPR-n` / `INR-n` | CPR-1 | EA-103 / INT-100 |
 | Open owner decision (proposal) | `OD-n` | OD-1 | EA-100 §7 |
 | Conflict (proposal) | `Cn` | C1 | EA-100 §2 |
+| Capability | `CAP-Dxx-nnn` (level 3: `.m`) | CAP-D04-012.2 | BA-001; owner decision D-13 (20 Nov 2026) |
+| Department | `DEP-nn` | DEP-07 | BA-002; owner decision D-13 |
+| Dictionary term | `TERM-nnn` | TERM-045 | BA-003; owner decision D-13 |
+| Role | `ROLE-nn` | ROLE-11 | BA-005; owner decision D-17 (20 Nov 2026) |
 
 IDs are never reused, even after deletion.
 
@@ -154,11 +158,34 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | GOV-006 | Gap analysis and step-by-step delivery plan | Draft | WP1 |
 | GOV-007 | AI review agent (advisory) | Draft | WP1 |
 | GOV-008 | Build loop | Draft | WP1 |
+| CR-0001 | Build loop strict auto-merge | Draft | WP1 |
 | TRACE-001 | Traceability matrix (structure + seed) | Draft | WP1 |
 | PS-001 | Project charter | Draft | WP1 |
 | PS-002 | Product vision | Draft | WP2 / Step 1 |
 | PS-003 | Market and customer analysis | Draft | WP2 / Step 1 |
 | PS-004 | Benchmark capability comparison | Draft | WP2 / Step 1 |
+| BA-001 | Business capability map | Draft | WP2 / Step 2 |
+| BA-002 | AMC operating model and department hierarchy | Draft | WP2 / Step 3 |
+| BA-003 | Domain dictionary (glossary with IDs) | Draft | WP2 / Step 3 |
+| BA-004 | End-to-end business workflows (WF-001…WF-043; WF-029/030 cards in PRD-002, WF-031 in PRD-003, WF-032 in PRD-004, WF-033 in PRD-009, WF-034 in PRD-008, WF-035 in PRD-011, WF-036 in PRD-012, WF-037/038 in PRD-013, WF-039 in PRD-014, WF-040 in PRD-015, WF-041/042 in PRD-016, WF-043 in PRD-017) | Draft | WP2 / Step 4 |
+| BA-005 | User roles, permissions and segregation of duties | Draft | WP2 / Step 5 |
+| PRD-001 | Platform Administration (D01) — product requirements | Draft | WP2 / Step 6 |
+| PRD-002 | Product and Scheme Management (D02) — product requirements | Draft | WP2 / Step 6 |
+| PRD-003 | Investment Management (D03) — product requirements | Draft | WP2 / Step 7 |
+| PRD-004 | Portfolio Management (D04) — product requirements | Draft | WP2 / Step 7 |
+| PRD-005 | Order Management System (D05) — product requirements | Draft | WP2 / Step 7 |
+| PRD-006 | Trading and Execution (D06) — product requirements | Draft | WP2 / Step 8 |
+| PRD-007 | Settlement Management (D07) — product requirements | Draft | WP2 / Step 8 |
+| PRD-008 | Compliance Management (D08) — product requirements | Draft | WP2 / Step 8 |
+| PRD-009 | Risk Management (D09) — product requirements | Draft | WP2 / Step 8 |
+| PRD-010 | Fund Accounting (D10) — product requirements | Draft | WP2 / Step 9 |
+| PRD-011 | Valuation and NAV (D11) — product requirements (WF-035 card) | Draft | WP2 / Step 9 |
+| PRD-012 | Fund Operations (D12) — product requirements (WF-036 card) | Draft | WP2 / Step 9 |
+| PRD-013 | Investor Management and Servicing (D13) — product requirements (WF-037, WF-038 cards) | Draft | WP2 / Step 9 |
+| PRD-014 | Distribution Management (D14) — product requirements (WF-039 card) | Draft | WP2 / Step 9 |
+| PRD-015 | Finance and Management Reporting (D15) — product requirements (WF-040 card) | Draft | WP2 / Step 9 |
+| PRD-016 | Enterprise Data Platform (D16) — product requirements (WF-041, WF-042 cards) | Draft | WP2 / Step 9 |
+| PRD-017 | AI and Decision Intelligence (D17) — product requirements (WF-043 card) | Draft | WP2 / Step 9 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
