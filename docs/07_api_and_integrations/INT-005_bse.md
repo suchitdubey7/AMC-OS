@@ -18,7 +18,7 @@ Outside systems X03 and X09 of [EA-001](../04_enterprise_architecture/EA-001_sys
 | # | Field | Content | Label |
 | --- | --- | --- | --- |
 | 1 | Provider | BSE and its group: its clearing corporation, BSE StAR MF (mutual-fund platform), index data where licensed | [IND] |
-| 2 | Business purpose | Same as INT-004 field 2, for BSE-listed prices, BSE corporate actions, BSE clearing obligations and StAR MF order and allotment data | [DES] |
+| 2 | Business purpose | Same as INT-004 field 2 (a)–(g), for BSE-listed prices, BSE corporate actions, BSE clearing obligations, StAR MF order and allotment data, NAV / iNAV out where BSE requires it from the AMC, and broker membership status | [DES] |
 | 3 | Approved interface | **Market data:** UDiFF trade and bhavcopy files (BSE UDiFF page: standard file formats set under SEBI's Market Data Advisory Committee; legacy files discontinued from 8 Jul 2024, read 22 Nov 2026) **[IND]**; delivery channel under BSE's licence — Confirm with BSE. **StAR MF:** BSE publishes file and API structure documents for StAR MF (for example `APIFileStructure.pdf` on bsestarmf.in — title seen in search 22 Nov 2026, not opened) **[IND]**; these are aimed at members and distributors; AMC-side data — directly or through the RTA — Confirm with BSE and the RTA. **Clearing obligations:** through the custodian or the clearing corporation — Confirm **[ASSUMPTION]** | [IND] / Confirm |
 | 4 | Authentication | As INT-004 — Confirm with BSE | Confirm |
 | 5 | Data contract | As INT-004 field 5 | [DES] |
@@ -32,13 +32,17 @@ Outside systems X03 and X09 of [EA-001](../04_enterprise_architecture/EA-001_sys
 | 13 | Certification requirements | StAR MF onboarding tests — Confirm with BSE | Confirm |
 | 14 | Operational ownership | As INT-004 field 14 | [DES] |
 
-## 2. Outbound instructions
+## 2. Outbound instructions (EA-007 §9.3 class A2)
 
-None sent by AMC OS directly (as INT-004 §2).
+As INT-004 §2:
+
+| Instruction | Owning module | Ack time limit | Status query | Manual check |
+| --- | --- | --- | --- | --- |
+| Scheme NAV and, for listed schemes, NAV / iNAV data to BSE — only where BSE requires it from the AMC | NAV | Confirm with BSE | Confirm with BSE | NAV team checks BSE's published value against the approved NAV and contacts BSE; resend released by a person with the same key |
 
 ## 3. Confirm with BSE
 
-The same four points as INT-004 §3, for BSE, its clearing corporation and StAR MF.
+Points 1–6 of INT-004 §3, for BSE, its clearing corporation and StAR MF.
 
 ## Sources
 

@@ -13,7 +13,7 @@ last_updated: 2026-11-22
 
 This document says how AMC OS talks to every outside system: who owns each connection, how data comes in and goes out, how a provider's own format is kept away from the rest of the product, what happens when a file is late or a message gets no answer, and how each connection is watched and certified. It is master prompt §14 Stage B item 10 ("Integration architecture") and §10 ("External integration architecture"). The 17 provider specifications [INT-002](INT-002_amfi.md) … [INT-018](INT-018_investor_message_providers.md) fill in the 14 fields of master prompt §10 for each outside party in [EA-001](../04_enterprise_architecture/EA-001_system_context.md) §4 (X01–X16).
 
-**Builds on Draft documents:** EA-001 §4–§5, EA-002, EA-003 (B9, T16, adapter rows of §3), EA-004 §9.2, EA-005 §5, EA-007 (§9.3 classes A1–A3, events `FILE_RECEIVED`, `FILE_QUARANTINED`), BA-002 §5–§6, BA-004 (hand-off rows), PRD-000 Ch 8, PRD-001…PRD-017 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). Nothing used here is Approved; EA-001…EA-008 are still waiting for the owner to merge. Owner decisions used: D-8, D-16, D-31, D-40, D-44, D-46, D-51, D-52, D-53, D-55, D-61, D-62, D-67, D-70, D-72 ([LOOP_STATE.md](../../LOOP_STATE.md)). The proposal branch `proposal/ai-orchestration-architecture` (INT-100) was read as input only; nothing in it is treated as approved.
+**Builds on Draft documents:** EA-001 §4–§5, EA-002, EA-003 (B9, T16, adapter rows of §3), EA-004 §9.2, EA-005 §5, EA-007 (§9.3 classes A1–A3, events `FILE_RECEIVED`, `FILE_QUARANTINED`), BA-002 §5–§6, BA-004 (hand-off rows), PRD-000 Ch 8, PRD-001…PRD-017 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). Nothing used here is Approved; EA-001…EA-008 are still waiting for the owner to merge. Owner decisions used in INT-001…INT-018: D-8, D-12, D-16, D-29, D-31, D-32, D-35, D-40, D-44, D-46, D-50, D-51, D-52, D-53, D-54, D-55, D-56, D-58, D-60, D-61, D-62, D-67, D-70, D-72, D-75 ([LOOP_STATE.md](../../LOOP_STATE.md)). The proposal branch `proposal/ai-orchestration-architecture` (INT-100) was read as input only; nothing in it is treated as approved.
 
 **Status of every decision in this document:** **[DES]** — a design proposal for the owner (interim ARB) unless another label is shown. **No provider interface, file layout, message format, endpoint or credential is specified anywhere in INT-001…INT-018.** Where a provider has published a document that was found in this run, it is cited as **[IND]** (provider fact, not law) with the date it was seen; everything else is **Confirm with <provider>**. Numbers marked **[ASSUMPTION]** are starting values to be replaced.
 
@@ -57,6 +57,8 @@ Every outside system of EA-001 §4 has one specification. The owning module is t
 
 The brief's list (master prompt §10) is fully covered: AMFI (INT-002), FactSet (INT-003), NSE (INT-004), BSE (INT-005), CAMS (INT-006), KFin Technologies (INT-007), custodians (INT-008), brokers (INT-009), banks (INT-010), NSDL/CDSL (INT-011), KRA and CKYC (INT-012), regulatory information sources (INT-013). INT-014 … INT-018 cover the other outside systems of EA-001.
 
+**The AMC's own website** is not an outside provider in EA-001; it is one of the NAV publication channels of EA-007 §10.1 and BA-004 WF-007. AMC OS hands the approved NAV to the AMC's website by a file or call agreed with the AMC's web team (Confirm with the AMC), as a class A2 send of the NAV module (§6 table) **[DES]**.
+
 **Every specification has the same 14 fields** (master prompt §10), in this order: provider, business purpose, approved interface, authentication, data contract, ingestion schedule, error handling, retry logic, idempotency, reconciliation, monitoring, commercial dependency, certification requirements, operational ownership. Each also has an outbound-instruction table (EA-007 §9.3 A2) where it sends anything that can move money, securities or published figures, and a "Confirm with" list.
 
 ## 2. Adapter rules
@@ -69,7 +71,7 @@ The brief's list (master prompt §10) is fully covered: AMFI (INT-002), FactSet 
 | I4 | Inbound data is kept **raw first**: the unchanged file or message goes to object storage with a checksum before parsing (ADR-0007), so every loaded record can be traced back to the exact bytes received | EA-001 §4 rule 2; PRD-000 Ch 8 |
 | I5 | Loads are **idempotent**: the same file or message loaded twice has no second effect (§5) | Master prompt §3.2 |
 | I6 | Outbound financial instructions follow EA-007 §9.3 class A2: never retried automatically; idempotency key and client reference on every send; unknown outcome → status query → person (§6) | EA-007 §9.3 |
-| I7 | **Credentials belong to one tenant** and live in that tenant's cell secrets manager under the tenant's key (EA-005 §5); an adapter reads them at run time and never writes them to logs, events or files | EA-001 §4 rule 3; EA-005 §5 |
+| I7 | **Credentials belong to one tenant** and live in the secrets manager of that tenant's cell (EA-001 §4 rule 3; design of secrets handling in SEC-001, Step 25); an adapter reads them at run time and never writes them to logs, events or files | EA-001 §4 rule 3 |
 | I8 | Every adapter run carries the tenant context from the schedule or workflow that started it (EA-005 §2); one run never mixes two tenants, even when two AMCs use the same provider | EA-005 §2 |
 | I9 | A provider being slow or down never corrupts state: the waiting workflow waits, retries (A1 only) or raises an exception task; nothing is guessed or filled in | EA-001 §4 rule 4; master prompt §5 L4 |
 | I10 | AMC OS never calculates an authoritative figure inside an adapter. An adapter parses, validates and checks totals; any calculation belongs to the engine in the owning module (FE-01…FE-10) | Master prompt §3.1 |
@@ -124,7 +126,7 @@ The canonical interface is AMC OS's own description of each kind of data that cr
 | Clearing obligation | Settlement | Clearing corporations via exchanges or custodian (INT-004/005/008) | (input to WF-026; no event of its own in v1) |
 | Holdings and cash statement | Settlement (load); Operations (reconciliation) | Custodians, banks, depositories (INT-008/010/011) | `FILE_RECEIVED`, then `RECONCILIATION_COMPLETED` |
 | Custodian books and NAV (outsourced mode, D-40, D-44) | Accounting, NAV | Custodians (INT-008) | (mirror loads; checks raise `RECONCILIATION_EXCEPTION_CREATED`) |
-| NAV publication record | NAV | AMFI (INT-002), RTAs (INT-006/007), exchanges | `NAV_PUBLISHED` |
+| NAV publication record | NAV | AMFI (INT-002), RTAs (INT-006/007), exchanges (INT-004/005), the AMC's website (§1) | `NAV_PUBLISHED` |
 | Investor, folio and transaction | Investor | RTAs (INT-006/007), MF platforms (INT-004/005) | `INVESTOR_TRANSACTION_RECEIVED`, `INVESTOR_FLOWS_PROVISIONAL`, `INVESTOR_FLOWS_FINAL` |
 | KYC status | Investor | KRAs and CKYC, usually via the RTA (INT-012) | (part of investor record; `INVESTOR_DATA_FLAGGED` on mismatch) |
 | Complaint | Investor | SEBI SCORES (INT-013), RTA (INT-006/007) | `COMPLAINT_RECEIVED` |
@@ -218,9 +220,12 @@ stateDiagram-v2
 | Payment file (commission, AMC payments where the AMC chooses) | INT-010 | Distribution, Settlement | Confirm with <bank> | Confirm with <bank> | Finance / Operations checks bank portal |
 | NAV file to RTA | INT-006, INT-007 | NAV | Confirm with <RTA> | Confirm with <RTA> | NAV team confirms with RTA operations desk |
 | NAV submission to AMFI (where the tenant submits, D-44) | INT-002 | NAV | Confirm with AMFI | Public NAV report shows what AMFI published **[IND — INT-002]** | NAV team compares the AMFI published report with the approved NAV |
+| NAV, and ETF NAV / iNAV, to an exchange (only where the exchange requires it from the AMC) | INT-004, INT-005 | NAV | Confirm with <exchange> | Confirm with <exchange> | NAV team checks the exchange's published value |
+| NAV to the AMC's own website | INT-001 §1 | NAV | Confirm with the AMC's web team | Read back from the website **[ASSUMPTION]** | NAV team checks the website |
+| Settlement payment instruction for scheme funding (where routed through AMC OS) | INT-010 | Settlement | Confirm with <bank> | Confirm with <bank> | Operations checks the bank portal |
 | Scheme set-up to RTA, depository, platforms | INT-006/007/011/004/005 | Product | Human task (EA-007 §10.2) | n/a | Product Manager confirms with each party |
 | ISIN request | INT-011 | Product | Human task | n/a | As above |
-| KYC upload (where the AMC uploads, not the RTA) | INT-012 | Investor | Confirm with <KRA> / CERSAI | Confirm | Investor Service checks the KRA / CKYC portal |
+| KYC upload | INT-012 | Investor | **Not in the default design** (KYC goes through the RTA); INT-012 §2 must be revised before any direct upload | — | — |
 | Report filing to SEBI | INT-013 | Compliance | Human step (I12) | n/a | Compliance Officer records the portal acknowledgement |
 | Investor message request | INT-018 | Investor | Confirm with <provider> | Confirm | Not a financial instruction: not class A2; resend rules in INT-018 |
 
@@ -252,7 +257,7 @@ stateDiagram-v2
 | S1 | Transport encrypted in every case (TLS 1.2 or later, SFTP, or the provider's private network / leased line where it requires one) **[Confirm with <provider> which one]** |
 | S2 | Files encrypted at rest in raw landing with the tenant's key (EA-005 §5); PGP on the file itself where the provider supports it (PRD-000 Ch 8) |
 | S3 | Mutual TLS or key-based SFTP preferred over passwords; where the provider issues passwords or API keys, they sit in the tenant's secrets and are rotated on the provider's schedule or at least yearly **[ASSUMPTION]** |
-| S4 | **Fixed outbound addresses per cell** so providers that allow-list IP addresses can do so; a tenant moving cells (EA-004 §6) triggers a re-allow-listing task with each provider before the move |
+| S4 | **Fixed outbound addresses per cell, in both the primary and the disaster-recovery region**, so providers that allow-list IP addresses can do so and a regional failover (EA-004 §9.2) does not cut connections; both sets are given to each provider at onboarding. A tenant moving cells (EA-004 §6) triggers a re-allow-listing task with each provider before the move |
 | S5 | Inbound push endpoints are per tenant, authenticated, and accept only the expected file types and sizes |
 | S6 | No provider credential, file content or personal data in logs or events (NFR-SEC-007, NFR-SEC-008) |
 | S7 | Provider data that includes personal data (RTA, KRA, bank) is classified as such (PRD-016) and handled under DPDP rules **[VAL — DPO]** |
@@ -277,7 +282,7 @@ Every connection goes through the same steps before production use. This extends
 | --- | --- | --- |
 | C1 | Interface documents obtained from the provider under the AMC's agreement; recorded with version and date in the connection register | Provider document reference (never copied into this repository if the provider restricts it) |
 | C2 | Adapter built against a **provider simulator** that replays sample files and messages, including the provider's error codes | Contract tests in CI |
-| C3 | Connectivity in the provider's test environment (where one exists) | Test log |
+| C3 | Connectivity in the provider's test environment (where one exists), from the primary and the disaster-recovery addresses (S4) | Test log |
 | C4 | Provider's own certification or test pack, where it has one (for example FIX certification per broker, payment-file certification per bank) | Provider sign-off |
 | C5 | Volume test at the tenant's expected peak | Test report |
 | C6 | Parallel run with the AMC's current process: at least one month for feeds that affect NAV or money (PRD-000 Ch 8), and for an AMC's first go-live inside the pilot parallel run (D-12) | Daily comparison report signed by the operational owner |
@@ -314,7 +319,8 @@ IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [DES]*
 | EA-002 §5.1 | Already changed by EA-003 B9; also point to INT-001 §2 for adapter rules | Next EA-002 revision |
 | `contracts/schemas/` (owner-only) | Canonical families of §3 as JSON Schemas | Step 15 (DA-001) / owner |
 | DA-001, DDL | Connection register, file register, expected-file schedule (Operations); per-module load tables with source columns (§3 last paragraph); outbound instruction tables with A2 states | Steps 15–16 |
-| EA-007 G5 | Closed in design: each spec states ack limit and status query as "Confirm with <provider>" with the manual check; values come at onboarding | — |
+| EA-007 G5 | Closed in design for every outbound channel of EA-007 §10.1 and BA-004 (RTA, AMFI, exchanges, AMC website, custodian, broker, bank): each spec states ack limit and status query as "Confirm with <provider>" with the manual check; the values themselves come at onboarding (G1) | — |
+| BA-004 WF-023 | Broker membership status from exchanges: INT-004/005 field 2 (g), Confirm with each exchange | Next BA-004 revision |
 | PRD-011 FR-D11-001 | Price adapters sit in Valuation (EA-003 B9) — already listed in EA-003 §7 | Next PRD-011 revision |
 | SEC-001 | Fixed outbound addresses, certificate and key rotation, inbound endpoint hardening (§9) | Step 25 |
 | REG-001 | Retention per record class (NFR-RET-008); website terms of use for automated download (IN8) | Step 25 |

@@ -18,7 +18,7 @@ Outside system X06 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 | # | Field | Content | Label |
 | --- | --- | --- | --- |
 | 1 | Provider | Each bank holding scheme collection, payout or operating accounts, or the AMC's own accounts | [IND] |
-| 2 | Business purpose | **In:** account statements (intraday and end of day), payment status (Settlement for scheme cash; Operations reconciliation WF-015; Finance for AMC accounts). **Out (only where the AMC chooses):** payment files such as distributor commission (Distribution, WF-013) — never investor payouts (D-52) or scheme expenses (D-51) | [DES] |
+| 2 | Business purpose | **In:** account statements (intraday and end of day), payment status (Settlement for scheme cash; Operations reconciliation WF-015; Finance for AMC accounts). **Out (only where the AMC chooses):** settlement payment instructions for scheme funding (Settlement, WF-026, FR-D07-010) and payment files such as distributor commission (Distribution, WF-013) — never investor payouts (D-52) or scheme expenses (D-51) | [DES] |
 | 3 | Approved interface | Confirm with <bank>. PRD-000 Ch 8 lists the options to ask about: host-to-host SFTP or bank API; statements as SWIFT MT940 or ISO 20022 camt.053 **[ASSUMPTION — options only]**; SWIFT in release 1 is owner question Q78 | Confirm |
 | 4 | Authentication | Digital signatures and dual authorisation on payment files (PRD-000 Ch 8); channel credentials — Confirm with <bank>; per tenant | Confirm |
 | 5 | Data contract | Canonical families: **holdings and cash statement** (cash part), **payment file and payment status** (INT-001 §3) | [DES] |
@@ -36,6 +36,7 @@ Outside system X06 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 
 | Instruction | Owning module | Approval before send | Ack time limit | Status query | Manual check |
 | --- | --- | --- | --- | --- | --- |
+| Settlement payment instruction for scheme funding (pay-in, WF-026), where the AMC routes it through AMC OS | Settlement | Funding check passed (FR-D07-009, BRL-D07-005); release by the bank-mandate signatories, maker-checker (FR-D07-010; BA-004 WF-026 — number of authorisers is the AMC's bank mandate **[ASSUMPTION]**) | Confirm with <bank> | Confirm with <bank> | Operations Analyst checks the bank portal or desk; payment not confirmed → WF-027 if it causes a fail; resend only by a person with the same key |
 | Commission payment file (where the AMC routes it through AMC OS) | Distribution | Finance approval (D-56); release by two bank-mandate signatories (EA-007 §10.5 step 6) | Confirm with <bank> | Confirm with <bank> | Finance checks the bank portal; resend only by a person with the same key |
 
 ## 3. Confirm with <bank>
@@ -49,5 +50,6 @@ Outside system X06 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 | # | Source | Used for |
 | --- | --- | --- |
 | S1 | [PRD-000](../03_product_requirements/PRD-000_master_prd_v0.9.md) Ch 8 Banks row | Options, auth |
+| S4 | [PRD-007](../03_product_requirements/PRD-007_settlement_management.md) FR-D07-009, FR-D07-010, BRL-D07-005; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-026 | Settlement payments and their approval |
 | S2 | [EA-007](../04_enterprise_architecture/EA-007_event_architecture_and_process_workflows.md) §10.5 | Commission payment release |
 | S3 | [LOOP_STATE.md](../../LOOP_STATE.md) D-51, D-52, D-56 | What AMC OS does and does not pay |

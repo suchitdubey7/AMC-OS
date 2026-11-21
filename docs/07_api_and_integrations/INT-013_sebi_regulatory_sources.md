@@ -17,9 +17,9 @@ Outside system X13 of [EA-001](../04_enterprise_architecture/EA-001_system_conte
 
 | # | Field | Content | Label |
 | --- | --- | --- | --- |
-| 1 | Provider | Securities and Exchange Board of India (SEBI): public website (circulars, master circulars, regulations), intermediary portals for filings, SCORES complaint system. Other public sources the Compliance team adds (for example AMFI circulars, INT-002) use the same pattern | [REG] |
-| 2 | Business purpose | (a) Watch for new circulars and regulations and put each in front of Compliance for triage (WF-034; PRD-000 Ch 8: triaged within 1 business day **[DES]**); (b) prepare reports that people file (WF-016); (c) receive investor complaints raised on SCORES and record responses (Investor, PRD-013) | [DES] |
-| 3 | Approved interface | **Circulars:** SEBI public website pages (read; automated fetch only within the site's terms, owner question Q80 **[VAL]**). **Filings:** SEBI portals, by a person — channel per report Confirm with SEBI / Compliance (REG-001, Step 25). **Complaints:** SCORES — SEBI launched "SCORES 2.0" on 1 Apr 2024 (SEBI press release PR No. 37/2024, title and date seen 22 Nov 2026; body not opened) **[REG]**; whether SCORES offers any data interface to entities: Confirm with SEBI; default: complaints are downloaded or keyed by a person | [REG] / Confirm |
+| 1 | Provider | Securities and Exchange Board of India (SEBI): public website (circulars, master circulars, regulations), intermediary portals for filings, SCORES complaint system; the online dispute resolution (ODR) portal named "SMART ODR" in PRD-000 Ch 8. Other public sources the Compliance team adds (for example AMFI circulars, INT-002) use the same pattern | [IND] |
+| 2 | Business purpose | (a) Watch for new circulars and regulations and put each in front of Compliance for triage (WF-034; PRD-000 Ch 8: triaged within 1 business day **[DES]**); (b) prepare reports that people file (WF-016); (c) receive investor complaints raised on SCORES and record responses (Investor, PRD-013); (d) record disputes that reach online dispute resolution (SMART ODR) and their outcome — by a person, as for SCORES; the AMC's obligations under the ODR framework **[REG — VAL: Compliance to confirm]** | [DES] |
+| 3 | Approved interface | **Circulars:** SEBI public website pages (read; automated fetch only within the site's terms, owner question Q80 **[VAL]**). **Filings:** SEBI portals, by a person — channel per report Confirm with SEBI / Compliance (REG-001, Step 25). **Complaints:** SCORES — SEBI launched "SCORES 2.0" on 1 Apr 2024 (SEBI press release PR No. 37/2024, title and date seen 22 Nov 2026; body not opened) **[IND]**; SMART ODR: channel Confirm with SEBI; whether SCORES offers any data interface to entities: Confirm with SEBI; default: complaints are downloaded or keyed by a person | [IND] / Confirm |
 | 4 | Authentication | Website: none. Portals and SCORES: the AMC's own credentials held by named people; AMC OS never stores them (INT-001 I12) | [DES] |
 | 5 | Data contract | Canonical families: **regulatory circular and filing record** (Compliance), **complaint** (Investor) (INT-001 §3). Each circular record keeps source URL, title, number, date, the raw copy and the extraction time (master prompt §11 RAG metadata) | [DES] |
 | 6 | Ingestion schedule | Circular watch daily (PRD-000 Ch 8); complaints daily; filings per the tenant's regulatory calendar | [DES] |
@@ -38,7 +38,7 @@ None automated. Filings and complaint responses are entered on SEBI's systems by
 
 ## 3. Confirm with SEBI (through Compliance)
 
-1. Whether SCORES 2.0 offers any data interface for regulated entities.
+1. Whether SCORES 2.0 or SMART ODR offers any data interface for regulated entities.
 2. Portal and format for each regulatory report the AMC files (REG-001, Step 25).
 3. Terms of use for automated reading of the SEBI website.
 
