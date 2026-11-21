@@ -79,7 +79,7 @@ The 17 business domains from the master build prompt are fixed IDs. The v0.9 PRD
 | D13 | Investor Management and Servicing | `investor` | Module 11 | — |
 | D14 | Distribution Management | `distribution` | Module 12 | Channel management, sales incentives, segmentation, forecasting |
 | D15 | Finance and Management Reporting | `finance` | Module 13 | Expense management, financial planning |
-| D16 | Enterprise Data Platform | `analytics` | Module 14 | Data catalogue |
+| D16 | Enterprise Data Platform | `analytics`, `master` | Module 14 | Data catalogue; owns master data (securities, issuers, ratings, benchmarks) — owner decision D-65 (Q59), 21 Nov 2026 |
 | D17 | AI and Decision Intelligence | `ai` | Module 15, Ch 9 | Dealing assistant, risk assistant, anomaly detection, forecasting |
 
 A domain is never silently omitted: if a domain has no content yet, its PRD section must say so and point to the work package that will fill it.
