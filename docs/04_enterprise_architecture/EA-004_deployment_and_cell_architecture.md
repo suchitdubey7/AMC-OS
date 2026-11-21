@@ -28,6 +28,9 @@ This document says how AMC OS is deployed: the deployment models offered to AMCs
 | Primary / DR region | AWS Mumbai `ap-south-1` runs the cells; AWS Hyderabad `ap-south-2` holds copies to take over after a regional disaster (D-7, ADR-0018) |
 | RPO / RTO | Recovery point objective: how much recent data may be lost. Recovery time objective: how long until service is back |
 | Release ring | A group of cells upgraded together; rings go one after another so a bad release is caught early |
+| Canary | The first production cell to get a new release, watched closely before the others get it |
+| Soak period | The time a release runs in one ring before the next ring gets it |
+| WAL / point-in-time recovery | PostgreSQL writes every change to a write-ahead log (WAL); keeping the log lets a database be restored to any moment, not only to the last nightly backup |
 | Expand → migrate → contract | A way to change a database so the old and the new application version both work during an upgrade: add new things first, move data, remove old things one release later |
 
 ## 1. Deployment models
@@ -47,11 +50,11 @@ Rules for every model:
 1. **One code base, one release, one set of images.** Shared and dedicated cells run the same container images, the same database migrations and the same configuration catalogue (EA-008 §9 rule 4). A dedicated cell never gets code or settings a shared cell cannot have (master prompt §6, §3.6).
 2. **Same isolation inside a dedicated cell.** Row-level security, composite keys and tenant context stay on even when a cell holds one tenant (DA-000 §6.1: "defence in depth even when alone").
 3. **India only.** Every cell, every backup and every DR copy is in `ap-south-1` or `ap-south-2` (D-7, ADR-0018 Decision 1).
-4. **Dedicated cell in the AMC's own account:** the vendor still operates it through the control plane (EA-006) and needs an agreed operating role in that account; the AMC controls the account and its keys **[DES]**. Whether this option is offered in the first release is owner question **Q72** (it adds account set-up, contract and support work).
+4. **Dedicated cell in the AMC's own account:** the vendor still operates it through the control plane (EA-006) and needs an agreed operating role in that account; the AMC controls the account and its keys **[DES]**. Whether this option is offered in the first release is owner question **Q72** (it adds account set-up, contract and support work); until answered, it is designed but offered only after release 1.
 
 ### 1.1 Regulatory context (to be confirmed)
 
-SEBI's "Framework for Adoption of Cloud Services by SEBI Regulated Entities" (circular SEBI/HO/ITD/ITD_VAPT/P/CIR/2023/033, 6 Mar 2023) lists AMCs / mutual funds among the entities it applies to. According to a secondary summary of it ([Taxmann](https://www.taxmann.com/post/blog/sebi-introduces-framework-for-adoption-of-cloud-services-by-regulated-entities/), read 21 Nov 2026), it requires storage and processing in data centres of cloud providers **empanelled by MeitY**, the regulated entity to keep "complete ownership of all its data and logs, encryption keys", an assessment of vendor lock-in and concentration risk (preferring provider-agnostic solutions), and DR drills and a contingency plan for a shutdown of cloud services. **[REG — secondary source; VAL — the circular body was not opened; confirm: Compliance / legal counsel, REG-001 Step 25]**. What follows from it for this document, if confirmed:
+SEBI's "Framework for Adoption of Cloud Services by SEBI Regulated Entities" (circular SEBI/HO/ITD/ITD_VAPT/P/CIR/2023/033, 6 Mar 2023, [SEBI circular page](https://www.sebi.gov.in/legal/circulars/mar-2023/framework-for-adoption-of-cloud-services-by-sebi-regulated-entities-res-_68740.html); body not opened) lists AMCs / mutual funds among the entities it applies to. According to a secondary summary of it ([Taxmann](https://www.taxmann.com/post/blog/sebi-introduces-framework-for-adoption-of-cloud-services-by-regulated-entities/), read 21 Nov 2026), it requires storage and processing in data centres of cloud providers **empanelled by MeitY**, the regulated entity to keep "complete ownership of all its data and logs, encryption keys", an assessment of vendor lock-in and concentration risk (preferring provider-agnostic solutions), and DR drills and a contingency plan for a shutdown of cloud services. **[REG — secondary source; VAL — the circular body was not opened; confirm: Compliance / legal counsel, REG-001 Step 25]**. What follows from it for this document, if confirmed:
 
 | Point in the summary | Effect on the design |
 | --- | --- |
@@ -198,7 +201,7 @@ Placement happens in WF-019 between `DRAFT` and `PROVISIONING`. The Platform Ope
 | P3 | Shared: choose a production cell whose measured load plus the new tenant's expected size stays under the §4.2 headroom; if none, create a new shared cell |
 | P4 | Keep large tenants apart: no two tenants above the "large" size class in one shared cell **[ASSUMPTION — size classes defined after the capacity test]** |
 | P5 | The tenant's production and non-production environments are placed in matching production and non-production cells (§3) |
-| P6 | A cell running an older release (dedicated cell in its change window, §8) never receives new tenants |
+| P6 | A cell that is not on the current release (for example a shared cell still waiting for its ring during a roll-out, §8) never receives new tenants |
 | P7 | The placement, with the rule results, is recorded in the control plane and in the tenant record (FR-D01-001) and audited (WF-019 "Audit: placement") |
 
 **Pilot AMC.** Proposed: the pilot AMC (D-12) goes alone into a new **shared-shape** cell, so later AMCs can join the same cell once the pilot's load is measured, and the pilot is not slowed by other tenants during the parallel run **[DES]**. Owner question **Q71**.
@@ -230,14 +233,14 @@ Rules **[DES]**:
 1. **Same release on both cells.** A move never upgrades or downgrades the tenant at the same time.
 2. **Freeze window** after the operations day close (WF-036, D-48) and before the next business day; never while a NAV run, a settlement cycle or a period close is open for that tenant. Planned on a non-business day where possible.
 3. **Identifiers do not change.** `tenant_id` and every record ID (UUIDs) stay the same, so composite keys, the audit chain and outside references stay valid.
-4. **Keys.** Inside one AWS account the tenant key can move with the tenant; across accounts (to or from a dedicated cell, or into the AMC's account) data is re-encrypted under the target cell's tenant key during import. Key design: SEC-001 (Step 25).
+4. **Keys.** The target cell **always** gets a new tenant master key, and the tenant's encrypted data (personal-data columns, objects, exports) is re-encrypted under it during import — inside one AWS account and across accounts alike. The source key therefore protects only the source copy, so destroying it later (rule 7) can never touch the live tenant. Key design: SEC-001 (Step 25).
 5. **Verification before cut-over:** row counts per table, control totals for financial tables (units, journal amounts per scheme, positions), hash-chain check of the audit log, object counts and checksums. Any difference stops the move; the tenant stays on the source cell.
 6. **Two-sided cut-over:** the Platform Operator and the Tenant Administrator both confirm, as for activation (FR-D01-002, SOD-15).
-7. **Fallback.** The source copy stays read-only for a fallback period **[ASSUMPTION — 30 days; confirm: project owner]**, then it is deleted and its tenant key destroyed, with evidence kept in the control plane.
+7. **Fallback.** The source copy stays read-only for a fallback period **[ASSUMPTION — 30 days; confirm: project owner]**, then it is removed by the offboarding procedure of EA-005 §7 and the **source** tenant key is destroyed (never the target's, rule 4), with evidence kept in the control plane.
 8. **No operator reading of data.** The move is done by tooling running inside the cells with the tenant's approval; the operator sees counts and checksums, not business data (SOD-09). The export travels cell-to-cell in encrypted form, never through the control plane's own storage (EA-006 rule CP-1).
 9. **Outside parties.** Providers that send to or receive from AMC OS (EA-001 X02–X16) may need new endpoints or IP addresses after a move; the plan lists each connection and its re-test **[DES; confirm with each provider]**.
 
-The same export is the basis of the exit export (FR-D01-004, D-27) and of the per-tenant restore (§8.3).
+The same export is the basis of the exit export (FR-D01-004, D-27) and of the per-tenant restore (§9.3). The tools that export, import and remove a tenant's rows touch every module's schema; how they keep to one-schema-per-role, row-level security, the audit chain and the immutability rules is set out in EA-005 §2.1.
 
 ## 7. When a module leaves the monolith (EA-003 G7)
 
@@ -343,7 +346,9 @@ Control-plane NFRs are in EA-006 §7.
 | Document | Change needed | When |
 | --- | --- | --- |
 | DA-000 §6.1 | DEDICATED_DB tier not offered (§1) — if the owner accepts Q69 | DA-001, Step 15 |
-| PRD-001 FR-D01-001 | Isolation tier values `SHARED`, `DEDICATED` and hosting account (vendor or AMC) | Next PRD-001 revision |
+| PRD-001 FR-D01-001 | Isolation tier values `SHARED` and `DEDICATED_DEPLOYMENT` (no `DEDICATED_DB`, if Q69 is accepted), plus a hosting-account field (vendor or AMC) | Next PRD-001 revision |
+| DDL-000 `platform.tenant` → DA-001 / DDL | `isolation_tier` check today allows `SHARED`, `DEDICATED_DB`, `DEDICATED_DEPLOYMENT`; drop `DEDICATED_DB` (Q69) and add the hosting-account column | Steps 15–16 |
+| ADR-0003 (owner-only) revision, or ADR-0020 | GOV-002 §2 wants an ADR for tenant-isolation changes: the two cell shapes (DEDICATED_DB dropped), placement rules P1–P7, new tenant key on every migration (§6 rule 4) | Owner, before Steps 15–16 |
 | ADR-0018 | Record MeitY empanelment status of the regions used (§1.1); confirm every managed service in §2 exists in both regions (ADR-0018 Decision 4) | Owner (owner-only file); SEC-001 / REG-001 Step 25 |
 | INF-001 | Container runtime, Terraform modules for one cell, DR runbook, release ring automation | Step 26 |
 | REL-001 / runbooks | Soak periods, maintenance windows, failover declaration and tenant notice | Step 26 |

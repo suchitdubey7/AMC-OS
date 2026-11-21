@@ -26,6 +26,7 @@ Master prompt §6 says: "Keep the control plane separate from the customer finan
 | Cell agent | A small part inside each cell that is the only link to the control plane (EA-004 §2) |
 | Pull model | The cell agent asks the control plane "anything for me?" and fetches it; the control plane never opens connections into a cell |
 | Signed artefact | A file (release, policy bundle, configuration bundle) with a digital signature the cell checks before using it |
+| Mutual TLS | An encrypted connection where both sides prove who they are with certificates, not only the server |
 | Desired state | What the control plane says a cell should run (release, tenant list, limits); the cell agent makes the cell match it and reports back |
 
 ## 1. The line between the planes
@@ -58,7 +59,7 @@ flowchart LR
   A2 -->|pull| CP
   A1 -->|push: health, usage counts, release status| CP
   A2 -->|push| CP
-  A1 <-.->|tenant migration and DR copies:\ncell to cell, encrypted, never via CP storage| A2
+  A1 <-.->|tenant migration:\ncell to cell, encrypted, never via CP storage| A2
 ```
 
 ### 1.1 What may be in the control plane
@@ -91,6 +92,19 @@ These take up the proposal's CPR-1…CPR-6, changed where noted.
 | CP-6 | Cells keep running when the control plane is down; only onboarding, placement, releases, promotions and migrations wait (NFR-AVAIL-003) |
 | CP-7 | Every control-plane action that changes a cell (placement, release, limit change, migration, promotion) is recorded in an append-only control-plane audit log and also in the target cell's audit log for the affected tenant *(new)* |
 | CP-8 | Release signing keys are **not** held by the control plane. Releases are signed by the build pipeline after the GOV-004 release gates with two-person approval; a compromised control plane can therefore not push code a cell would accept *(new)* |
+
+### 1.3 Which copy of the tenant record is authoritative
+
+The tenant record exists in the control-plane registry and in `platform.tenant` inside the cell **[DES]**:
+
+| Field | Authoritative copy | How the other copy is updated |
+| --- | --- | --- |
+| Tenant ID, tier, cell, region, hosting account, plan and modules (contract) | Control plane (desired state) | Sent to the cell as a signed desired-state step; the cell applies it and reports back |
+| Status changes that need the tenant's confirmation (activation, migration cut-over, offboarding) | Cell (the Tenant Administrator confirms there, FR-D01-002) | The cell reports the confirmed state to the control plane |
+| Actual state (what the cell really runs: release, applied steps, limits in force) | Cell | Reported by the cell agent |
+| Everything else in `platform` (configuration values, calendars, organisation units, entitlement use) | Cell only | Not copied |
+
+DA-000 Ch 2 calls `platform` the "global control plane"; under this design `platform` is an in-cell schema of the Tenant module (EA-003 §3.1), and the vendor's control plane is the separate system described here.
 
 ## 2. Control-plane components
 
@@ -148,7 +162,8 @@ sequenceDiagram
   CP->>CP: store for at most the promotion window; cannot decrypt
   P->>CP: cell agent fetches bundle for its tenant
   P->>P: decrypt; check signature, hash, version ID, catalogue compatibility with production release
-  P->>P: record as Approved version (same ID); takes effect on its effective date
+  P->>P: record as Submitted version (same ID); production checker approves (maker-checker in production)
+  P->>P: Approved; takes effect on its effective date
   P->>U: (via CP metadata) promotion result
 ```
 
@@ -157,7 +172,8 @@ sequenceDiagram
 | Unchanged | Production checks the hash; any difference rejects the bundle |
 | Readable only by the tenant | Encrypted with the production tenant's master key; the control plane holds only the ciphertext, the hash and the metadata. Whether the UAT cell may use the production tenant's key for encryption is a key-design point for SEC-001 (Step 25) **[DES]** |
 | Release compatibility | If production runs an older release that does not know a setting in the bundle, the bundle waits until production is upgraded (EA-008 §9) |
-| Production approval | A promoted version keeps its maker-checker record from UAT; whether production additionally needs a "go-live" confirmation by the tenant is a tenant setting in the catalogue **[DES]** |
+| Production approval | The UAT approval is evidence, not the production approval: UAT users sign in through a different broker in a cell with looser change control, so production cannot rely on them. A promoted bundle therefore arrives in production as **Submitted**, and a production checker — holding the production grant and not the production user mapped to the UAT maker — must approve it before it can become effective. This applies to every K1 setting and every K2 rule set and is **not** a tenant setting (EA-008 §1 does not allow maker-checker to be removed) **[DES]** |
+| Signature meaning | The non-production cell's signature proves the bundle was not changed in transit; it does not prove approval. Which keys production trusts for bundles is an SEC-001 item (Step 25) |
 | Record | Each promotion is a `platform.config_promotion` row in both tenants (EA-008 §8) and a control-plane audit entry (CP-7) |
 | Expiry | The control plane deletes the ciphertext after delivery or after the promotion window **[ASSUMPTION — 7 days; confirm: SRE lead]** |
 | Rule sets (K2) | Domain rule sets (compliance rules, posting rules, commission structures) follow the same bundle mechanism, owned by their module (EA-008 §6) |
@@ -201,6 +217,9 @@ The filter is an allow-list in the cell agent and the telemetry collector: only 
 | PRD-001 FR-D01-035, FR-D01-046, FR-D01-047 | Point to EA-006 §4 and EA-004 §8 | Next PRD-001 revision |
 | SEC-001 | Key used to encrypt promotion bundles; cell identity certificates; release signing keys | Step 25 |
 | INF-001 | Control-plane infrastructure, cell agent, telemetry allow-list | Step 26 |
+| EA-003 §3.1 | Tenant module keeps CAP-D01-001, -006, -011 inside the cell; note that desired state for placement, plan and release comes from the control plane (§1.3) | Next EA-003 revision |
+| DA-000 Ch 2 → DA-001 | `platform` is an in-cell schema, not the vendor control plane (§1.3) | DA-001, Step 15 |
+| EA-008 §5 | Promoted bundle arrives as Submitted and needs a production checker (§4) | Next EA-008 revision |
 | BA-005 | No change: ROLE-20 already has rights on tenants, cells and releases only | — |
 
 ## 9. Gaps and open points

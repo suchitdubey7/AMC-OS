@@ -54,6 +54,20 @@ The rule (master prompt §3.4, ADR-0003 §1): tenant context comes from an authe
 | Inbound file (adapter) | The connection record the file arrived through belongs to one tenant (EA-001 §4 rule 3, EA-003 T16) | Ingestion worker | A file is never matched to a tenant by its content |
 | Break-glass support (WF-022) | The approved break-glass grant names one tenant, one scope and an expiry | Break-glass tool sets context for that tenant only | See §6 |
 
+### 2.1 Platform data tools that touch every schema
+
+Some cell tools must read or write a tenant's rows in **every** module schema. They are named here so ADR-0020 can record them as exceptions, with these limits **[DES]**:
+
+| Tool | Reads / writes | Design |
+| --- | --- | --- |
+| Tenant set-up seed (WF-019 `SETUP`) | Writes seed rows (roles, calendars, chart-of-accounts template, configuration defaults) | Each module's own seed function runs under **that module's** database role; the tool only calls them in order. No role writes another schema (EA-003 B1) |
+| Tenant export (migration, exit export FR-D01-004, D-27) | Reads every schema for one tenant | Each module's export function, under that module's role, with the tenant context set from the approved migration or exit record (tenant-scoped, two-sided confirmed). Read only |
+| Tenant import (migration target) | Writes every schema for one tenant | Each module's import function, under that module's role, with the tenant context set from the approved migration record. Imported rows pass the same insert checks as new rows (for example balanced journals) and keep their original IDs, timestamps and versions. **Audit rows** are imported through a separate insert-only import function of the audit owner that writes the rows and their original hashes unchanged and then re-verifies the chain end to end; it never recomputes hashes. This is a named exception to EA-003 T15 |
+| Per-tenant restore extract (EA-004 §9.3) | Reads a scratch copy | Runs only against the scratch cluster, with the scratch cluster's own migration-owner role; nothing is written to the live cell; the scratch cluster is destroyed afterwards |
+| Offboarding removal (§7) and migration-source removal (EA-004 §6 rule 7) | Removes a tenant's rows | Posted journals and audit rows are protected by immutability triggers (DDL-000; DBT-000 T3a, T3b), and must stay so for every other tenant. How one tenant's protected rows are removed without weakening those triggers is **open**: options are (a) a migration-owner procedure that removes rows for one tenant only, under two-sided approval, with the run itself audited; (b) partitioning protected tables also by tenant so a tenant's partitions can be detached and dropped; (c) keeping the rows and crypto-shredding personal data only, with the rows removed when backups expire. Chosen in DA-001 with ADR-0020 (§10 G6) |
+
+Every tool run is started from an approved, tenant-scoped record, is logged in the tenant's audit trail and in the control plane (EA-006 CP-7), and never works on two tenants in one run.
+
 **Rule for every system worker:** it may set a tenant context only from a tenant-scoped record that was itself created inside that tenant by an authenticated action (an event, a workflow start, a schedule entry, a connection, a grant). It never loops over tenants to read business data, except the relay and scheduler reading the tenant list and their own tenant-scoped work rows **[DES]**. These worker cases are the system-worker exceptions to STD-001 §4 that ADR-0020 must record (EA-003 §7).
 
 ## 3. Isolation in every layer (master prompt §3.4)
@@ -79,6 +93,7 @@ The table extends EA-002 §7. "Shared cell" is the hard case; a dedicated cell h
 | Backups | Cell-level backups encrypted with cell keys and tenant data keys; per-tenant extract only through the scratch-restore procedure (EA-004 §9.3) | Own backups | DA-000 §6.8 |
 | Support tools | No standing operator access to business data; break-glass only (§6) | Same | SOD-09; WF-022 |
 | Exports | Every export runs inside the tenant context and is encrypted with the tenant key; export files carry the tenant ID in the manifest | — | FR-D01-004 |
+| Audit (tenant-level audit, master prompt §6 Model A) | `audit` tables are tenant tables with forced RLS; append-only; hash chain per tenant per day; written only through the insert-only audit function (EA-003 B8, T15); the tenant's Auditor (ROLE-18) searches only its own tenant; the chain can be exported to the AMC at any time | Own audit store | NFR-AUD-001; EA-003 T15; DDL-000 |
 
 ## 4. Noisy neighbours
 
@@ -91,13 +106,11 @@ Resource limits per tenant are in EA-004 §4.3 (gateway rate limits, per-tenant 
 
 ```mermaid
 flowchart TB
-  CK[Cell key — in the cell's key service\nencrypts cell-level backups and volumes]
+  CK[Cell key — in the cell's key service\nencrypts cell-level backups and volumes\nindependent of tenant keys]
   TK1[Tenant A master key\nin the key service, never leaves it]
   TK2[Tenant B master key]
   DK1[Data keys for A\nPII columns, objects, exports]
   DK2[Data keys for B]
-  CK --- TK1
-  CK --- TK2
   TK1 -->|wraps| DK1
   TK2 -->|wraps| DK2
 ```
@@ -109,7 +122,7 @@ flowchart TB
 | Volumes and backups | Storage-level encryption with the cell key, in addition to the tenant keys | DA-000 §6.5 |
 | Dedicated cells | Customer-managed keys possible: the AMC controls the master key in its own key service, and AMC OS uses it by a grant **[DES]** | ADR-0018 Decision 6 |
 | DR | Keys replicated to `ap-south-2` (ADR-0018 Decision 6) so DR copies can be read | ADR-0018 |
-| Exit | After the retention period, destroying the tenant key crypto-shreds its encrypted data in live storage and in backups (D-27; FR-D01-004) | DA-000 §6.5, §6.9 |
+| Exit | After the retention period, destroying the tenant key makes the data encrypted with it unreadable (personal-data columns, objects, exports) in live storage and in backups (D-27; FR-D01-004). Other rows (for example journals and positions) are not encrypted with the tenant key: they are removed from live storage by the offboarding removal (§2.1) and stay in cell backups, readable with the cell key, until those backups expire under the backup retention period | DA-000 §6.5, §6.9, §10.1 |
 | Data ownership | The AMC keeps ownership of its data, logs and keys (SEBI cloud framework as summarised in EA-004 §1.1 **[REG — secondary; VAL]**) | EA-004 §1.1 |
 
 Detailed key management (rotation periods, key-service choice, separation of duties for key administrators): SEC-001, Step 25.
@@ -118,7 +131,12 @@ Detailed key management (rotation periods, key-service choice, separation of dut
 
 1. A Platform Operator has **no** standing right to any tenant's business data (BA-005 ROLE-20).
 2. Break-glass access is requested with an incident reference, scope and duration; the tenant approves inside its own cell; access is time-boxed (at most 4 hours, WF-022), logged action by action and reported to the tenant.
-3. **Change proposed to DA-000 §6.4:** DA-000 lets break-glass tooling use a database role with `BYPASSRLS`. Proposed instead: the break-glass tool connects with a read-only role that **does not** bypass RLS and sets the tenant context of the approved grant only. Reason: a bypass role would let one support session see every tenant in the cell, while the approval covers one tenant **[DES]**. Write access during break-glass is not offered by default; a fix to data goes through the tenant's own users and normal processes.
+3. **Change proposed to DA-000 §6.4:** DA-000 lets break-glass tooling use a database role with `BYPASSRLS`, which would let one support session see every tenant in the cell while the approval covers one tenant. Proposed instead **[DES]**:
+   - When the tenant approves, a **per-grant** read-only database login is created and it is dropped (and its sessions ended) at expiry.
+   - The RLS policies that apply to break-glass logins do **not** use the session setting `app.tenant_id` (any session can set that value itself). They allow a row only if its `tenant_id` matches an approved, unexpired grant row for that login in a break-glass grant table owned by the Tenant module.
+   - The break-glass tool offers predefined read-only views and queries, not free SQL.
+   - Write access is not offered; a fix to data goes through the tenant's own users and normal processes.
+   - The exact mechanism (policy form, grant table, login handling) is set in DA-001 and recorded in ADR-0020 (§9).
 4. The control plane only shows that a break-glass grant exists (incident, tenant, start, expiry); it never receives the data seen (EA-006 §2).
 
 ## 7. Tenant lifecycle and what happens to resources
@@ -131,7 +149,7 @@ WF-019 states (PRD-001 FR-D01-001) mapped to resource actions **[DES]**:
 | `PROVISIONING` | Placement (EA-004 §5); tenant master key; storage prefix or buckets; cache namespace; broker realm or organisation; per-tenant limits from the plan | Control plane through the cell agent (EA-006 §3) |
 | `SETUP` | Tenant row and seed data (roles, calendars, chart-of-accounts template, configuration defaults); first Tenant Administrator; IdP connection test; **isolation smoke tests run with this tenant's credentials** (DA-000 §6.9) | Cell tooling; Tenant Administrator |
 | `ACTIVE` | Two-sided confirmation (FR-D01-002, SOD-15) | Operator and Tenant Administrator |
-| `SUSPENDED` | Read-only for all users (D-26 for lapsed modules; exit notice); exports allowed; no new business processing | Tenant module (entitlements) |
+| `SUSPENDED` | Read-only for all users after an exit notice (FR-D01-004, WF-019); exports allowed; no new business processing. (A single lapsed module becoming read-only while the tenant stays `ACTIVE` is D-26, not this state) | Tenant module |
 | `OFFBOARDED` | Export delivered and confirmed, or contract time limit passed (D-27); rows deleted by tenant and tenant partitions or objects removed, or records kept as law requires **[VAL]**; tenant key destroyed after the retention period; certificate of deletion | Cell tooling, approved by both sides |
 
 ## 8. Isolation tests
@@ -144,20 +162,21 @@ The negative tests in DA-000 §6.10 (1–11) stay. Added for the parts this docu
 | 13 | Publish an event without `tenant_id`, and one whose `tenant_id` differs from the outbox row's tenant | Consumer refuses; alert raised |
 | 14 | Scheduled job entry for tenant A runs | Touches only tenant A rows (checked by row counts per tenant before and after) |
 | 15 | Inbound file arrives on tenant A's connection carrying tenant B's identifiers | Loaded only into tenant A or rejected; never into tenant B |
-| 16 | Break-glass session for tenant A queries tenant B rows | 0 rows (no RLS bypass) |
+| 16 | Break-glass login for tenant A queries tenant B rows, including after setting `app.tenant_id` to tenant B itself; and uses the login after expiry | 0 rows; login refused after expiry |
 | 17 | Log search by a tenant A user | Returns only tenant A lines |
 | 18 | Telemetry sent to the control plane during a NAV run | Contains no prices, positions, investor data or prompts (EA-006 NFR-OBS-003) |
 | 19 | Per-tenant restore drill (EA-004 §9.3) | Extract contains only that tenant's rows; other tenants untouched |
-| 20 | Tenant migration (EA-004 §6) | Row counts, control totals and audit chain identical before and after |
+| 20 | Tenant migration (EA-004 §6) | Row counts, control totals and audit chain identical before and after; target uses a new tenant key; destroying the source key leaves the target readable |
 | 21 | AI tenant-leakage suite (DA-000 §6.10 test 10) with tenant names in prompts and documents | No cross-tenant content in answers or tool results |
 
-Tests 1–11 already run in CI for the database (DBT-000); 12–21 are added when the code exists (build increment 1 onwards, QA-001).
+Tests 1–6 (DBT-000 T1a–T1g) and test 11 (catalogue check) run in CI today; tests 7–10 and 12–21 are added when the code exists (build increment 1 onwards, QA-001; ADR-0003 Validation).
 
 ## 9. Effects on other documents
 
 | Document | Change needed | When |
 | --- | --- | --- |
-| ADR-0020 (owner-only, to be drafted) | Record the system-worker tenant-context cases of §2 (event consumer, outbox relay, scheduler, ingestion, break-glass) as named exceptions to STD-001 §4 | Before Steps 15–16; owner |
+| ADR-0020 (owner-only, to be drafted) | Record the system-worker tenant-context cases of §2 (event consumer, outbox relay, scheduler, ingestion, break-glass) and the platform data tools of §2.1 (seed, export, import incl. audit-chain import, restore extract, removal) as named exceptions to STD-001 §4 and EA-003 B1/T15; the per-grant break-glass login and its RLS policies (§6) | Before Steps 15–16; owner |
+| ADR-0003 (owner-only) | Revision for the tenant-isolation changes here (GOV-002 §2): break-glass without `BYPASSRLS`, tenant context for workers | Owner |
 | DA-000 §6.4 → DA-001 | Break-glass role without `BYPASSRLS` (§6.3) | DA-001, Step 15 |
 | DA-001 / DDL | Tenant-scoped schedule entries; tenant ID in Temporal workflow IDs; analytics isolation choice for ClickHouse | Steps 15–16 |
 | STD-001 | Tenant context as request-scoped value; no tenant parameter from callers; linter for session `SET` | STD-001 next revision |
@@ -174,6 +193,7 @@ Tests 1–11 already run in CI for the database (DBT-000); 12–21 are added whe
 | G3 | Key rotation and key-administrator separation of duties | SEC-001 (Step 25) |
 | G4 | External review of the isolation design (T1, D-5) | Owner, before Approval |
 | G5 | Legal retention after exit | REG-001 (Step 25) **[VAL]** |
+| G6 | How one tenant's immutable rows (posted journals, audit) are removed at exit or after a migration without weakening the triggers (§2.1) | DA-001 (Step 15) with ADR-0020 |
 
 ## Sources
 
