@@ -185,11 +185,11 @@ The 22 services of master prompt §5 L3 are modules of one application (ADR-0002
 | Compliance | D08 | `compliance` | Reporting | D16 | `analytics` |
 | Risk | D09 | `risk` | AI | D17 | `ai` |
 
-Audit has no separate service in the master prompt list; it is part of platform core, so the Tenant module owns two schemas (`platform`, `audit`), and D11 and D12 each span several schemas (GOV-001 §3). ADR-0002 says each package owns "exactly one" schema; its wording should be changed to "one or more schemas of its own domain" when the owner next edits ADR-0002 (owner-only file; listed in LOOP_STATE "Waiting for owner"). Integration adapters are modules too (one per provider family), owned by the domain that uses the data (INT-001, Step 14).
+Audit has no separate service in the master prompt list; it is part of platform core, so the Tenant module owns two schemas (`platform`, `audit`), and D11 and D12 each span several schemas (GOV-001 §3). ADR-0002 was reworded on this branch from "exactly one" to "one or more schemas of its own domain" at the owner's request (21 Nov 2026). Integration adapters are modules too (one per provider family), owned by the domain that uses the data (INT-001, Step 14).
 
 ### 5.2 L4 Workflow and events
 
-ADR-0006 applies. Owner decision D-70 fixes the timing: release 1 uses the **transactional outbox in PostgreSQL** with in-process delivery and idempotent consumers; Kafka is added when volumes need it, with the outbox designed so the relay can publish to Kafka without changing modules. This matches ADR-0006 decision 4 ("Kafka is introduced only where asynchronous fan-out is needed"), but ADR-0006 decision 1 still says the relay publishes to Kafka; its wording should be brought in line with D-70 when the owner next edits ADR-0006 (owner-only file; listed in LOOP_STATE "Waiting for owner"). Temporal runs the long, cross-module workflows (daily NAV, NFO, settlement fails, breach resolution, commission run — ADR-0006 §3). Event catalogue and workflow designs: EA-007, Step 13.
+ADR-0006 applies. Owner decision D-70 fixes the timing: release 1 uses the **transactional outbox in PostgreSQL** with in-process delivery and idempotent consumers; Kafka is added when volumes need it, with the outbox designed so the relay can publish to Kafka without changing modules. This matches ADR-0006 decision 4 ("Kafka is introduced only where asynchronous fan-out is needed"), and ADR-0006 decision 1 was reworded on this branch to match D-70 at the owner's request (21 Nov 2026). Temporal runs the long, cross-module workflows (daily NAV, NFO, settlement fails, breach resolution, commission run — ADR-0006 §3). Event catalogue and workflow designs: EA-007, Step 13.
 
 ### 5.3 L5 Financial engines
 
@@ -256,7 +256,7 @@ Master prompt §13 asks for the smallest reliable set. Proposed **[DES]**:
 | OpenTelemetry, Prometheus, Grafana | Yes | Master prompt §13; ADR in INF-001 (Step 26) |
 | Docker | Yes | Master prompt §13 |
 | Kubernetes, Terraform | Open | INF-001 (Step 26); Kubernetes "when justified" (master prompt §13) |
-| Airflow or Dagster | Open | ADR-0007 says "chosen in WP3 by ADR"; this document proposes moving the choice to DA-002 (Step 19, WP4), because it depends on the ingestion design — a timing change to note in ADR-0007 (owner-only; LOOP_STATE "Waiting for owner") |
+| Airflow or Dagster | Open | ADR-0007 says "chosen in WP3 by ADR"; this document proposes moving the choice to DA-002 (Step 19, WP4), because it depends on the ingestion design — ADR-0007 updated on this branch to this timing at the owner's request (21 Nov 2026) |
 
 ## 9. Gaps and open points
 

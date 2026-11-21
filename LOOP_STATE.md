@@ -166,7 +166,7 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 
 | Branch | Why |
 | --- | --- |
-| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST: **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). Please also note three wording updates to older Draft ADRs that only you can make: ADR-0006 decision 1 (relay publishes to Kafka) vs D-70 (outbox first, Kafka later); ADR-0002 "exactly one schema" vs modules that own several (EA-002 §5.1); ADR-0007 orchestrator choice moved from WP3 to DA-002, Step 19 (EA-002 §8). If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
+| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST: **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). The branch also carries the wording fixes to ADR-0002 (one or more schemas), ADR-0006 (outbox first, Kafka later, D-70) and ADR-0007 (orchestrator choice in Step 19), made at the owner's request in chat on 21 Nov 2026; the loop is not permitted to merge owner-only files, so the owner merges this branch. If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
 | — | Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
 
 ## Questions for owner (open)

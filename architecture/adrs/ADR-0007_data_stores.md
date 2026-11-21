@@ -14,7 +14,7 @@ related: DA-000 Ch 1, 8, 9
 Master prompt §5 L6 forbids forcing all workloads into one database.
 
 ## Decision
-PostgreSQL = system of record for transactions. ClickHouse = analytics and long history. S3-compatible storage = documents, raw inbound files (immutable), evidence, archives (Iceberg/Parquet). pgvector on a separate PostgreSQL cluster = governed retrieval to start. Python + Polars = data processing; Airflow or Dagster chosen in WP3 by ADR.
+PostgreSQL = system of record for transactions. ClickHouse = analytics and long history. S3-compatible storage = documents, raw inbound files (immutable), evidence, archives (Iceberg/Parquet). pgvector on a separate PostgreSQL cluster = governed retrieval to start. Python + Polars = data processing; Airflow or Dagster chosen by ADR with DA-002 (GOV-006 Step 19, WP4), because the choice depends on the ingestion design (EA-002 §8). *(Timing changed 21 Nov 2026 on the project owner's instruction; was "in WP3".)*
 
 ## Alternatives considered
 | Option | Why not chosen |
