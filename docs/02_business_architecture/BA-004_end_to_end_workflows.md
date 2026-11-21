@@ -394,7 +394,7 @@ flowchart TD
 | Approvals | Head of Fund Accounting approves the monthly close; reopening needs CFO + Head of Fund Accounting with a reason, and every posting during a reopen is tagged |
 | Exceptions | Trial balance variance unexplained → back to true-ups |
 | Audit | Checklist, true-up entries, reconciliation results, sign-off, any reopen with reason |
-| Source | W8. Variant for outsourced fund accounting (D-16): the books stay with the custodian; AMC OS mirrors the trial balance and reconciles it (CAP-D10-012), and the monthly sign-off records the AMC's review **[ASSUMPTION]** — confirm in pilot discovery |
+| Source | W8. Variant for outsourced fund accounting (D-16): the books stay with the custodian; AMC OS loads the custodian's books daily and rechecks the key items (accruals, unit capital, NAV), with no full shadow ledger (owner decision D-40; PRD-010 FR-D10-024), and reconciles the trial balance (CAP-D10-012); the monthly sign-off records the AMC's review **[ASSUMPTION]** — confirm in pilot discovery |
 
 ```mermaid
 flowchart LR
@@ -477,11 +477,11 @@ sequenceDiagram
 | Trigger | Redemption request (at the RTA) |
 | Initiator | Investor or distributor |
 | Departments | **DEP-08**; DEP-06 (scheme cash and payout), DEP-07 (payables), DEP-02 / DEP-03 (cash ladder) |
-| Capabilities | CAP-D13-005, CAP-D13-011, CAP-D13-016, CAP-D02-006 (.2), CAP-D11-013, CAP-D10-010, CAP-D04-002 (.4), CAP-D12-002 (.2), CAP-D12-009 |
+| Capabilities | CAP-D13-005, CAP-D13-011, CAP-D13-016, CAP-D02-006 (.2), CAP-D11-013, CAP-D10-010, CAP-D04-002 (.4), CAP-D12-002 (.2) |
 | Hand-offs (outside) | RTA (request, time-stamp, computation, payout file — owner decision D-52); bank (payout) |
 | Preconditions | Units free of lock-in and lien; KYC not on hold |
 | Final state | Units extinguished; payout `PAID` within the regulatory timeline **[VAL]** |
-| Approvals | The payout file is prepared and sent by the RTA, not by AMC OS (owner decision D-52); AMC OS tracks and checks the payout (CAP-D12-009, PRD-013 FR-D13-020) |
+| Approvals | The payout file is prepared and sent by the RTA, not by AMC OS (owner decision D-52); AMC OS tracks and checks the payout (CAP-D13-016, CAP-D13-005 (.2); PRD-013 FR-D13-020) |
 | Exceptions | Units not available → `REJECTED` with reason; bank failure → `PAYOUT_FAILED`, bank-detail check, re-initiate; timeline missed → delay-interest calculation **[VAL]** |
 | Audit | Request, cut-off applied, NAV used, load and tax, payout file, bank result |
 | Source | W11. Under mirror mode (Q2) the RTA computes the redemption; AMC OS recomputes as a check. The RTA sends the payout file; AMC OS tracks and checks it (owner decision D-52). TDS for NRI investors is **[VAL]** |
@@ -493,7 +493,7 @@ flowchart TD
   B -- yes --> D[Applicable NAV by cut-off rule]
   D --> E[Gross = units x NAV; exit load by lot age FIFO; TDS if NRI]
   E --> F[Redemption payable posted; cash ladder updated]
-  F --> G[Payout file to bank - two authorisers]
+  F --> G[RTA sends payout file - D-52; AMC OS tracks]
   G --> H{Bank success?}
   H -- no --> I[PAYOUT_FAILED: bank-detail check, re-initiate]
   H -- yes --> J[PAID; timeline met? else delay-interest calc]
