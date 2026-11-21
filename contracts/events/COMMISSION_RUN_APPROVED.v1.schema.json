@@ -9,7 +9,8 @@
     "producer": "DISTRIBUTION",
     "aggregate_type": "distribution.commission_run",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE_RUN_REF"
   },
   "type": "object",
   "additionalProperties": false,

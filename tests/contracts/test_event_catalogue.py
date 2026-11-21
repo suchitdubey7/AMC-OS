@@ -10,11 +10,10 @@ import re
 import uuid
 from pathlib import Path
 
+import jsonschema  # hard imports: a missing package must fail the run, never skip it
 import pytest
-
-jsonschema = pytest.importorskip("jsonschema")
-yaml = pytest.importorskip("yaml")
-referencing = pytest.importorskip("referencing")
+import referencing
+import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 EVENTS = ROOT / "contracts" / "events"
@@ -89,8 +88,57 @@ def test_no_binary_numbers_and_no_personal_data_fields():
                     assert field != "tenant_id", f"{p.name}: tenant_id belongs only in the envelope"
 
 
+FIGURE_SOURCES = {"ENGINE", "ENGINE_RUN_REF", "EXTERNAL_SOURCE", "PERSON_DECISION", "MODULE_AGGREGATION"}
+
+
+def _uses_figures(schema: dict) -> bool:
+    """Money anywhere, or decimal quantities and prices in a Financial event (an AI score is not a figure)."""
+    refs = [n["$ref"] for _, n in walk(schema) if isinstance(n.get("$ref"), str)]
+    if any(r.endswith("/money") for r in refs):
+        return True
+    return schema["x-amc-os"]["event_class"] == "FINANCIAL" and any(r.endswith("/decimal_string") for r in refs)
+
+
+@pytest.mark.parametrize("entry", ENTRIES, ids=lambda e: e["name"])
+def test_figure_source_rule_e7(entry):
+    schema = load(EVENTS / entry["schema"])
+    meta, props = schema["x-amc-os"], schema["properties"]
+    if _uses_figures(schema):
+        assert meta.get("figure_source") in FIGURE_SOURCES, "event with figures must declare figure_source (E7)"
+    src = meta.get("figure_source")
+    if src == "ENGINE":
+        assert "engine_version" in schema["required"] or "rule_versions" in schema["required"]
+    if src == "ENGINE_RUN_REF":
+        assert any(k.endswith("_run_id") and k in schema["required"] for k in props)
+
+
+def _validator(name: str):
+    return jsonschema.Draft202012Validator(load(EVENTS / f"{name}.v1.schema.json"), registry=REGISTRY)
+
+
+def test_kill_switch_two_people_to_switch_on_d75():
+    a, b = str(uuid.UUID(int=1)), str(uuid.UUID(int=2))
+    v = _validator("AI_KILL_SWITCH_CHANGED")
+    v.validate({"switch_scope": "ALL_AI", "new_state": "OFF", "changed_by_user_ids": [a]})
+    v.validate({"switch_scope": "ALL_AI", "new_state": "ON", "changed_by_user_ids": [a, b]})
+    for bad in ([a], [a, a]):
+        with pytest.raises(jsonschema.ValidationError):
+            v.validate({"switch_scope": "ALL_AI", "new_state": "ON", "changed_by_user_ids": bad})
+
+
+def test_approval_decision_names_the_decider():
+    u = str(uuid.UUID(int=1))
+    base = {"approval_request_id": u, "subject_module": "NAV", "subject_type": "NAV_RUN", "subject_id": u,
+            "decided_at": "2026-11-20T18:35:02+05:30"}
+    v = _validator("APPROVAL_DECIDED")
+    v.validate(base | {"decision": "WITHDRAWN"})
+    v.validate(base | {"decision": "APPROVED", "decided_by_user_id": u})
+    with pytest.raises(jsonschema.ValidationError):
+        v.validate(base | {"decision": "APPROVED"})
+
+
 def _example(schema: dict, resolver=None):
-    """Smallest instance with every required field, built from the schema (no invented business values)."""
+    """Instance with every field (required and optional), built from the schema (no invented business values)."""
     resolver = resolver or REGISTRY.resolver(schema.get("$id", ""))
     if "$ref" in schema:
         resolved = resolver.lookup(schema["$ref"])
@@ -101,7 +149,7 @@ def _example(schema: dict, resolver=None):
         return schema["enum"][0]
     t = schema.get("type")
     if t == "object":
-        return {k: _example(schema["properties"][k], resolver) for k in schema.get("required", [])}
+        return {k: _example(v, resolver) for k, v in schema.get("properties", {}).items()}  # optional fields too
     if t == "array":
         return [_example(schema["items"], resolver) for _ in range(schema.get("minItems", 0))]
     if t == "integer":

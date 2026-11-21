@@ -827,3 +827,5 @@ events:
     data_classification: CONFIDENTIAL
     schema: ASSISTANT_VERSION_RELEASED.v1.schema.json
     consumers: []
+# Changes inside a version (EA-007 rule V1: optional fields added in place) are listed here.
+changes: []

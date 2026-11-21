@@ -9,7 +9,8 @@
     "producer": "ACCOUNTING",
     "aggregate_type": "accounting.journal",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE"
   },
   "type": "object",
   "additionalProperties": false,
@@ -19,7 +20,8 @@
     "journal_type",
     "accounting_date",
     "total_debit",
-    "total_credit"
+    "total_credit",
+    "engine_version"
   ],
   "properties": {
     "journal_id": {
@@ -39,6 +41,9 @@
     },
     "total_credit": {
       "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "engine_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/engine_version"
     },
     "batch_id": {
       "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"

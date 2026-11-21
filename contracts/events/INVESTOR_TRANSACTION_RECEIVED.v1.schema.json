@@ -9,7 +9,8 @@
     "producer": "INVESTOR",
     "aggregate_type": "investor.investor_transaction",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "EXTERNAL_SOURCE"
   },
   "type": "object",
   "additionalProperties": false,

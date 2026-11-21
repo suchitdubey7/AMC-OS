@@ -79,5 +79,27 @@
     "process_workflow_id": {
       "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/workflow_id"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "APPROVED",
+              "REJECTED"
+            ]
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "required": [
+          "decided_by_user_id"
+        ]
+      }
+    }
+  ]
 }

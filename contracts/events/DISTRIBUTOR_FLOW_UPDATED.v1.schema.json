@@ -9,7 +9,8 @@
     "producer": "DISTRIBUTION",
     "aggregate_type": "distribution.distributor_flow",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "MODULE_AGGREGATION"
   },
   "type": "object",
   "additionalProperties": false,

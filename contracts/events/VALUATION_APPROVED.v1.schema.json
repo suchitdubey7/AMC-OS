@@ -9,7 +9,8 @@
     "producer": "VALUATION",
     "aggregate_type": "valuation.valuation",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE"
   },
   "type": "object",
   "additionalProperties": false,

@@ -9,7 +9,8 @@
     "producer": "OMS",
     "aggregate_type": "trading.order",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "PERSON_DECISION"
   },
   "type": "object",
   "additionalProperties": false,

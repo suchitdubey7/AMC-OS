@@ -15,7 +15,7 @@ This document designs layer 4 of the master prompt (§5 L4, "Workflow and Event 
 
 The machine-readable contract is in [`contracts/events/`](../../contracts/events/README.md): one JSON Schema per event payload (`<NAME>.v1.schema.json`), the envelope, the common types and `catalogue.yaml`. The contract tests are in [`tests/contracts/`](../../tests/contracts/test_event_catalogue.py).
 
-**Builds on Draft documents:** ADR-0002, ADR-0003, ADR-0005, ADR-0006, ADR-0008, ADR-0017, EA-002, EA-003, EA-004, EA-005, EA-006, EA-008, BA-004 (WF-001…WF-043), BA-005, PRD-000 §2.5, PRD-001…PRD-017, DA-000, DDL-000 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). Nothing used here is Approved; EA-001…EA-006, EA-008 and ADR-0016…ADR-0019 are still waiting for the owner to merge. Owner decisions used: D-16, D-26, D-30, D-32, D-36, D-37, D-42, D-44, D-45, D-48, D-53, D-56, D-59, D-60, D-70, D-72, D-75 ([LOOP_STATE.md](../../LOOP_STATE.md)). The proposal branch `proposal/ai-orchestration-architecture` (EA-102 transaction orchestration, ADR-0013 unknown outcome) was read as input only; nothing in it is treated as approved.
+**Builds on Draft documents:** ADR-0002, ADR-0003, ADR-0005, ADR-0006, ADR-0008, ADR-0017, EA-002, EA-003, EA-004, EA-005, EA-006, EA-008, BA-004 (WF-001…WF-043), BA-005, PRD-000 §2.5, PRD-001…PRD-017, DA-000, DDL-000 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). Nothing used here is Approved; EA-001…EA-006, EA-008 and ADR-0016…ADR-0019 are still waiting for the owner to merge. Owner decisions used: D-16, D-26, D-30, D-32, D-36, D-37, D-42, D-44, D-45, D-48, D-53, D-56, D-58, D-59, D-60, D-70, D-75 ([LOOP_STATE.md](../../LOOP_STATE.md)). The proposal branch `proposal/ai-orchestration-architecture` (EA-102 transaction orchestration, ADR-0013 unknown outcome) was read as input only; nothing in it is treated as approved.
 
 **Status of every decision in this document:** **[DES]** — a design proposal for the owner (interim ARB) unless another label is shown. No regulatory fact is stated; where a workflow depends on a regulatory deadline, the deadline is a tenant setting or a value from the owning module and is marked **[VAL]**. Numbers marked **[ASSUMPTION]** are starting values to be replaced by measured ones. Facts about Temporal are taken from its documentation (Sources S8–S10) and labelled **[IND]** (vendor product fact, not law).
 
@@ -35,6 +35,9 @@ The machine-readable contract is in [`contracts/events/`](../../contracts/events
 | Activity | One step of a process workflow that calls a module's public interface |
 | Signal | A message that wakes a waiting process workflow (for example "the approval was decided") |
 | Unknown outcome | We sent an instruction to an outside party and do not know whether it arrived |
+| Tolerant reader | A consumer that uses the fields it knows and ignores any new ones, so an added optional field does not break it |
+| Signal-with-start | One call that wakes a process workflow if it is running, or starts it first if it is not |
+| Continue-As-New | Temporal's way for a long-running workflow to close its current history and carry on as a fresh run with the same ID, so the history never grows too large |
 
 ## 1. What travels as an event, a call or a workflow
 
@@ -57,12 +60,12 @@ Events are never commands. If a module needs another module to do something, it 
 | E4 | Order is kept **per aggregate and per consumer** (`aggregate_seq`). There is no order across aggregates; a consumer that needs "everything for date D" waits for the closing event of that date (for example `ACCOUNTING_DAY_CLOSED`) and then reads through the owner's interface, never by counting events | **[DES]** |
 | E5 | Every event carries `tenant_id` in the envelope, equal to the outbox row's tenant. A consumer sets its tenant context from it and refuses an event without it or with a mismatch, and raises an alert (EA-005 §8 test 13) | ADR-0003 §3; EA-005 §2 |
 | E6 | Money and quantities are decimal strings (`decimal_string`, `money`), never JSON numbers; the scale comes from the producing engine's precision rules | Master prompt §3.2; ADR-0005 |
-| E7 | Every financial figure in an event names the engine version that produced it (`engine_version`) or the rule versions applied (`rule_versions`), so a figure can be traced and reproduced | Master prompt §3.2 "versioned calculations"; EA-004 §8.2 rule 6 |
+| E7 | Every event that carries money or quantity figures declares where they come from (`figure_source` in the schema's `x-amc-os` block): **ENGINE** — computed by an AMC OS engine, and the payload names `engine_version` or `rule_versions`; **ENGINE_RUN_REF** — figures of an earlier engine run, and the payload names that run's ID (for example `nav_run_id`), whose event names the engine version; **EXTERNAL_SOURCE** — facts received from an outside party (broker, custodian, RTA), traceable through the source record; **PERSON_DECISION** — entered or decided by a person (an order, a fair-value decision); **MODULE_AGGREGATION** — totals or splits made by the module's own deterministic code (trade allocation, distributor flows), to be covered by an FE or module specification (G10). So every figure can be traced and reproduced; checked by test T-E1 | Master prompt §3.2 "versioned calculations"; EA-004 §8.2 rule 6 |
 | E8 | An event is a fact. It is never edited or deleted. A wrong fact is corrected by a new business action that publishes its own event (for example `TRADE_CORRECTED`, `NAV_CORRECTION_APPROVED`) | Master prompt §3.2 "immutable history" |
 | E9 | **No investor or employee personal data in any event** (no PAN, names, contact details, bank accounts). Investor events carry internal reference IDs only; a consumer that needs more calls the Investor module, which masks by default (EA-003 §3.18). Payload classification is Internal or Confidential (PRD-016 FR-D16-008), never Restricted-PII | NFR-PRIV-001; **[DES]** |
 | E10 | The actor of an approval, release, posting, publication or settlement event is never an AI assistant. `actor_type = AI_ASSISTANT` is allowed only on draft and proposal events (`ORDER_CREATED` in DRAFT, `AI_PROPOSAL_CREATED`, `AI_ANOMALY_FLAGGED`); a consumer refuses any other event with an AI actor and raises a security alert | Master prompt §3.1; ADR-0008 §3; SOD-10 |
 | E11 | `correlation_id` is the same across the user request, every event, workflow step, audit row, log line and trace of one business action | Master prompt §5 L4 "Correlation IDs"; NFR-AUD-018 |
-| E12 | Events stay inside the cell. No event is sent to a party outside AMC OS in release 1 (owner question Q74); integration messages to outside parties are adapter calls of the owning module (EA-003 B9) | EA-006 §5; D-72 |
+| E12 | Events stay inside the cell. No event is sent to a party outside AMC OS in release 1 (owner question Q74); integration messages to outside parties are adapter calls of the owning module (EA-003 B9) | EA-006 §5; **[DES]**, Q74 |
 | E13 | Events are not the audit trail. The audit trail is the insert-only, hash-chained `audit` records written through the audit function (EA-003 B8); an event may point to them through `correlation_id` | NFR-AUD-001 |
 | E14 | A consumer's copy of another module's data (read model) is for display and triggering only. A financial calculation reads its inputs through the owner's interface at calculation time, never from a read model that may lag | EA-003 §3.16 (NAV calls Accounting); **[DES]** |
 
@@ -87,7 +90,7 @@ Schema: [`contracts/events/envelope.v1.schema.json`](../../contracts/events/enve
 | `data_classification` | Yes | Internal or Confidential (E9) |
 | `payload` | Yes | The event's own fields, validated against `<NAME>.v<n>.schema.json` |
 
-Payload schemas are **closed** (no fields beyond the schema) so a producer mistake is caught at write time; consumers read them as **tolerant readers** (they ignore fields they do not know), which is what makes the additive changes of §6 safe.
+Payload schemas are **closed** (no fields beyond the schema), and **only the producer** validates against the closed schema, so a producer mistake is caught at write time. Consumers are **tolerant readers**: they check the fields and types they use and ignore fields they do not know. This is what makes the additive changes of §6 safe during a rolling upgrade, when a consumer on the older release may receive an event with a new optional field (test T-E9).
 
 ## 4. Delivery in release 1 (outbox, in process) and later on Kafka
 
@@ -115,8 +118,8 @@ sequenceDiagram
 | D2 | **One relay per producing module**, run in the `worker` process role (EA-004 §2.1) under that module's database role. It works tenant by tenant from `platform.tenant` and sets the tenant context per batch (EA-005 §2, named system-worker exception, ADR-0020 scope) |
 | D3 | **Handlers run under the consumer's database role** in their own transaction. The hand-over is in process: the relay passes the event object to the subscribed handler; no module reads another module's outbox (EA-003 B2). The subscription list is generated from `catalogue.yaml` at build time, so a subscription exists only if the contract lists it |
 | D4 | **Inbox per consuming schema**: `<schema>.inbox_event (tenant_id, event_id, handler, processed_at)` with a unique key on `(tenant_id, event_id, handler)`. The handler inserts it in the same transaction as its effect (E3) |
-| D5 | **Retries**: exponential back-off with jitter, up to **10 attempts over about 2 hours [ASSUMPTION — tune in the capacity test]**. Errors are classified: a *data* error (schema or business check fails) goes to the dead-letter store at once; a *temporary* error (lock, timeout) is retried |
-| D6 | **Dead-letter store per consuming schema**: `<schema>.dead_letter_event` with the envelope, error, attempts and status. For `FINANCIAL` and `CONTROL` events the aggregate is **parked** for that consumer: later events of the same aggregate wait until the dead letter is resolved, so order (E4) is never broken. A dead letter raises an alert (NFR-OBS-004) and appears in the Operations exception queue (CAP-D12-008) for the tenant |
+| D5 | **Retries**: exponential back-off with jitter, up to **10 attempts over about 2 hours [ASSUMPTION — tune in the capacity test]**. Errors are classified: a *data* error (a field the consumer needs is missing or of the wrong type, or the consumer's business check fails — never merely an unknown field, §3) goes to the dead-letter store at once; a *temporary* error (lock, timeout) is retried |
+| D6 | **Dead-letter store per consuming schema**: `<schema>.dead_letter_event` with the envelope, error, attempts and status. For `FINANCIAL`, `CONTROL` and `ACCESS` events the aggregate is **parked** (for access events, so that for example a revocation can never be overtaken by a later grant change) for that consumer: later events of the same aggregate wait until the dead letter is resolved, so order (E4) is never broken. A dead letter raises an alert (NFR-OBS-004) and appears in the Operations exception queue (CAP-D12-008) for the tenant |
 | D7 | **Resolution**: a person with the consumer module's support right replays the dead letter through the same handler after the cause is fixed (code release or data fix through the owner's normal process). The payload is never edited (E8). The vendor's support staff see counts and error codes only, not payloads (EA-006 §5); payload inspection needs the tenant's user or break-glass (WF-022) |
 | D8 | **Retention**: delivered outbox rows are kept **35 days [ASSUMPTION]** for replay, then archived per tenant to object storage, encrypted with the tenant key (EA-005 §5); how long archives are kept follows the data classification and REG-001 **[VAL]**. Inbox rows are kept at least as long as the producer's outbox rows, so a late duplicate is still recognised |
 | D9 | **Replay for a new consumer or a rebuilt read model**: from the producer's outbox (within D8) or archive, through the normal handler, with idempotency by inbox. A replay is an approved operation recorded in the audit trail |
@@ -280,8 +283,8 @@ Classes: **Financial** (changes or reports a financial figure or position), **Co
 | `DATASET_CERTIFIED.v1` | Reporting (D16) | `analytics.dataset_certification` | Control | A dataset for a date is certified | — |
 | `DQ_EXCEPTION_RAISED.v1` | Reporting (D16) | `analytics.dq_exception` | Control | A data-quality rule fails | — |
 | `METRIC_DEFINITION_CERTIFIED.v1` | Reporting (D16) | `analytics.metric_definition` | Control | A metric definition version is certified (WF-042, D-59) | Finance |
-| `AI_PROPOSAL_CREATED.v1` | AI (D17) | `ai.proposal` | Ai | An assistant drafts a proposal that enters the owning module's normal approval (ADR-0008 §3) | — |
-| `AI_ANOMALY_FLAGGED.v1` | AI (D17) | `ai.anomaly` | Ai | An anomaly model flags a record; advisory only, never changes a figure (FR-D17-019) | — |
+| `AI_PROPOSAL_CREATED.v1` | AI (D17) | `ai.proposal` | AI | An assistant drafts a proposal that enters the owning module's normal approval (ADR-0008 §3) | — |
+| `AI_ANOMALY_FLAGGED.v1` | AI (D17) | `ai.anomaly` | AI | An anomaly model flags a record; advisory only, never changes a figure (FR-D17-019) | — |
 | `AI_KILL_SWITCH_CHANGED.v1` | AI (D17) | `ai.kill_switch` | Control | AI is switched off (one person) or back on (two people) for an assistant, a tool or all AI (D-75) | — |
 | `ASSISTANT_VERSION_RELEASED.v1` | AI (D17) | `ai.assistant_version` | Control | An assistant version is released after approval (WF-043, D-60) | — |
 
@@ -348,12 +351,13 @@ Two kinds **[DES]**:
 
 | # | Rule **[DES]** | Source |
 | --- | --- | --- |
-| W1 | Workflow ID = `<tenant_id>/<WF-nnn>/<business key>` (for example `…/WF-007/2026-11-20/<scheme_id>`); pattern `workflow_id` in `common.v1.schema.json`. Two tenants' workflows can never share an ID, and a second start with the same ID is refused, so a process cannot be started twice for the same business key | EA-005 §2; EA-005 §9 "workflow ID format" |
+| W1 | Workflow ID = `<tenant_id>/<WF-nnn>/<business key>` (for example `…/WF-007/2026-11-20/<scheme_id>`); pattern `workflow_id` in `common.v1.schema.json`. Two tenants' workflows can never share an ID | EA-005 §2; EA-005 §9 "workflow ID format" |
+| W1a | **Duplicate starts.** Temporal never runs two *open* executions with the same ID; for *closed* ones its default reuse policy is Allow Duplicate, and even Reject Duplicate is checked only against closed runs still kept in the namespace (30 days with the default retention) **[IND — S13]**. So every start sets the reuse policy explicitly: **Reject Duplicate** for workflows whose business key must run once (`NavDay`, `SchemeNav`, `TradeSettlement`, `SettlementDay`, `RiskDay`, `OperationsDay`, `AccountingDayClose`, `AccountingMonthClose`, `CommissionRun`, `ManagementClose`, `BreakGlass`, `NfoLaunch`, `BrokerOrder`); **Allow Duplicate Failed Only** where a failed run may be restarted by a person (`RegulatoryReport`, `ConfigChange`, `AccessRequest`, `Recertification`, `TenantLifecycle`); signal-with-start with conflict policy **Use Existing** for the event-started workflows (`SettlementFail`, `BreachResolution`). **The lasting guard is not Temporal**: the owning module keeps a unique business record per key (for example one NAV run per scheme, plan and date; one breach workflow per breach) with an idempotency key (EA-003 T15), and refuses a second start for a key whose record is already complete, whatever Temporal's retention. Test T-E10 | **[DES]** |
 | W2 | The tenant is fixed at start from the authenticated caller (a user request through the owning module, a tenant schedule entry, or an event with its tenant) and stored in the start input; a workflow never changes tenant | EA-005 §2 |
 | W3 | Every activity sets the database tenant context (`SET LOCAL`) from the workflow's tenant and connects with the called module's own database role | EA-003 B1; EA-005 §2 |
 | W4 | People never talk to Temporal. A user's action on a running process (for example "rerun NAV") is an API call to the owning module, which checks tenant, rights and the workflow ID's tenant prefix and then sends the signal. The Temporal service is not reachable through the gateway. EA-005 §8 test 12 (signal from a tenant B user refused) is enforced here | EA-002 §4; B5 |
 | W5 | **One Temporal namespace per cell [DES; owner question Q73]**, with tenant in the ID and in a search attribute; per-tenant namespaces were considered and rejected for release 1 because a shared cell would then run many namespaces for few workflows. A dedicated cell has its own Temporal service anyway (EA-004 §2) | EA-004 §2 |
-| W6 | Workflow inputs, results and signals carry **IDs, states and dates, not financial figures or personal data**; figures stay in module tables and are read by activities. Payloads stored in Temporal's history are encrypted by the worker before they leave the process, with a cell key (SEC-001, Step 25) | E9; ADR-0006 |
+| W6 | Workflow inputs, results and signals carry **IDs, states and dates, not financial figures or personal data**; figures stay in module tables and are read by activities. Payloads stored in Temporal's history are encrypted by the worker before they leave the process, with a **per-tenant data key wrapped by the tenant's master key** (EA-005 §5 envelope encryption), so destroying a tenant's key at exit also makes its Temporal history unreadable; closed workflow histories are kept only for the namespace retention period **[ASSUMPTION — 30 days, Temporal's default; SEC-001 and REG-001 to confirm]** | E9; EA-005 §5; ADR-0006 |
 
 ### 9.3 Activities, retries and outside parties
 
@@ -383,7 +387,8 @@ The **L4 signal bridge** is platform infrastructure in the `worker` role, not a 
 | `APPROVAL_DECIDED` | Signal `process_workflow_id` |
 | `SETTLEMENT_FAILED` | Signal-with-start `…/WF-027/<settlement_id>` |
 | `COMPLIANCE_BREACH_DETECTED` | Signal-with-start `…/WF-014/<breach_id>` |
-| `ACCOUNTING_DAY_CLOSED`, `RECONCILIATION_COMPLETED`, `PRICES_VALIDATED` | Signal the open `NavDay` of that business date (readiness re-check, §10.1) |
+| `ACCOUNTING_DAY_CLOSED` (one scheme) | Signal the child `…/WF-007/<accounting_date>/<scheme_id>` directly (readiness re-check, §10.1) |
+| `PRICES_VALIDATED`, `RECONCILIATION_COMPLETED` (date-wide or several schemes) | Signal the parent `…/WF-007/<business date>`; the parent keeps the list of its open children and forwards a readiness re-check signal to each child concerned (all children for prices; the listed `scheme_ids` for a reconciliation, or all if the list is empty) |
 
 ### 9.5 Size limits
 
@@ -449,10 +454,10 @@ flowchart TD
 | 3 | Approvals: Head of Products, then Compliance with trustee evidence attached (A3) | Workflow, Documents | `APPROVAL_DECIDED`, `DOCUMENT_VERSION_APPROVED` |
 | 4 | Wait for the SEBI filing reference and then for "observations received" or "cleared" — entered by a person through the Product API (signal) | Product | `SCHEME_AMENDED` only after activation; draft versions are not published |
 | 5 | Set-up tasks with outside parties (ISINs, RTA, exchange platforms) as human tasks with due dates; interfaces "Confirm with provider" (INT-001) | Product, Workflow | `TASK_ASSIGNED`, `TASK_OVERDUE` |
-| 6 | Timer to the NFO open date and close date from the scheme record; daily collection tracking loop with Continue-As-New (§9.5) | Product, Investor | `INVESTOR_FLOWS_FINAL` (Investor) |
+| 6 | Timer to the NFO open date and close date from the scheme record; daily collection tracking loop (timer, then a call to the Product API, which reads collections from the Investor module) with Continue-As-New (§9.5) — no bridge signal is needed | Product, Investor | `INVESTOR_FLOWS_FINAL` (Investor; not consumed by the workflow) |
 | 7 | NFO close | Product | `NFO_CLOSED` |
 | 8 | Minimum-subscription result from the Product API (the rule is **[REG — VAL]**, BA-004 WF-001); not met → refund tracking tasks and scheme `CANCELLED` | Product | — |
-| 9 | Met → wait for allotment mirrored from the RTA; Accounting opens the books (unit capital and cash) through its API; Portfolio opens the portfolio | Investor, Accounting, Portfolio | `JOURNAL_POSTED`, `HOLDINGS_UPDATED` |
+| 9 | Met → wait for allotment mirrored from the RTA (timer plus readiness call to the Product API, as in §10.5 step 2); Accounting opens the books (unit capital and cash) through its API; Portfolio opens the portfolio | Investor, Accounting, Portfolio | `JOURNAL_POSTED`, `HOLDINGS_UPDATED` |
 | 10 | Product activates the scheme; daily NAV starts from the next schedule run | Product | `SCHEME_ACTIVATED` |
 
 ### 10.3 Failed settlement — `SettlementFail` (WF-027, Settlement module)
@@ -513,7 +518,7 @@ Added to the isolation tests of EA-005 §8 and the chaos test of ADR-0006 **[DES
 
 | # | Test | Expected result | When |
 | --- | --- | --- | --- |
-| T-E1 | Contract tests (`tests/contracts/test_event_catalogue.py`): every schema valid JSON Schema 2020-12; catalogue and files match; no JSON numbers; no personal-data field names; no `tenant_id` in payloads; an example envelope of every event validates; master prompt §5 L4 examples present; the §8 table lists exactly the catalogue | Pass | Now (run on this branch); in CI once the owner adds the job (§12) |
+| T-E1 | Contract tests (`tests/contracts/test_event_catalogue.py`): every schema valid JSON Schema 2020-12; catalogue and files match; no JSON numbers; every event with figures declares its `figure_source` and ENGINE events name an engine or rule version (E7); the kill-switch two-person rule and the approval decider rule are enforced by the schema; no personal-data field names; no `tenant_id` in payloads; an example envelope of every event validates; master prompt §5 L4 examples present; the §8 table lists exactly the catalogue | Pass | Now (run on this branch); in CI once the owner adds the job (§12) |
 | T-E2 | Kill the relay, a consumer and a workflow worker during a NAV day and a settlement cycle | No lost event, no duplicate effect, workflows continue | Build increment 1 (ADR-0006 validation) |
 | T-E3 | Deliver the same event twice and out of order within one aggregate | One effect; order kept | Build increment 1 |
 | T-E4 | Poison event for one consumer | Dead-lettered after the retry limit; aggregate parked for that consumer only; alert raised; replay after fix gives one effect | Build increment 1 |
@@ -521,6 +526,8 @@ Added to the isolation tests of EA-005 §8 and the chaos test of ADR-0006 **[DES
 | T-E6 | Signal a tenant A workflow through the bridge with a tenant B event | Refused (EA-005 tests 12–13) | Build increment 1 |
 | T-E7 | Release upgrade with an open Pinned NAV day and an open Auto-Upgrade breach workflow | NAV day finishes on the old version; breach workflow replays on the new version (VW1–VW3) | Release pipeline (REL-001) |
 | T-E8 | Outbound instruction with no acknowledgement | `UNKNOWN_OUTCOME`, no automatic resend; status query path taken (§9.3 A2) | Build increment 1 with a provider simulator |
+| T-E9 | Producer on the new release adds an optional field (V1); consumer on the older release receives it | One effect, no dead letter (tolerant reader, §3) | Release pipeline |
+| T-E10 | Start a `NavDay` for a date whose run already closed, inside and after the Temporal retention period | Refused both times (W1a: reuse policy, then the NAV module's unique run record) | Build increment 1 |
 
 ## 12. Non-functional requirements proposed here
 
@@ -542,9 +549,9 @@ NFR IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [D
 | ADR-0020 (owner-only, to be drafted) | Add to its scope: relay and handler tenant loops (D2, D3) and the L4 signal bridge as named system workers | Owner, before Steps 15–16 |
 | ADR-0006 (owner-only) | Note that the schema registry in release 1 is `contracts/events/` plus CI (V5); Pinned / Auto-Upgrade rule (§9.6); unknown-outcome rule for outbound instructions (§9.3) | Owner |
 | `.github/workflows/ci.yml` (owner-only) | Add a job that runs `python3 -m pytest -q tests/contracts` (needs `pytest`, `jsonschema`, `PyYAML`) | Owner |
-| EA-003 | §3 cards: three renamed events (§7); G2 (events) and G6 closed; §4.3 diagram unchanged | Next EA-003 revision |
+| EA-003 | Three renamed events (§7): in the §3.1 (Tenant), §3.14 (Accounting), §3.17 (Operations), §3.20 (Finance) and §3.22 (AI) cards and the `ENTITLEMENT_RECEIVED` label of the §4.3 diagram; G2 (events) and G6 closed | Next EA-003 revision |
 | BA-004 rule 6, PRD-000 §2.5 | v0.9 dotted event names replaced as in §7 | Next revisions |
-| PRD-016 §6.2 | `MASTER_DATA_CHANGED` replaced by the four Security master events (§7) | Next PRD-016 revision |
+| PRD-016 §6.2 | `MASTER_DATA_CHANGED` replaced by the four Security master events (§7). The consumer list is **narrower** than the PRD-016 WF-041 diagram (D03, D04, D05, D08, D09, D11): Portfolio, OMS and Compliance subscribe to none of them and `ISSUER_CHANGED` has no consumer yet, because these modules read security and issuer data from Security master by call at the time they need it (E14; for example Compliance reads issuer and issuer-group data when it runs a check, EA-003 §3.12). A module that later keeps a read model subscribes then | Next PRD-016 revision |
 | EA-005 §9 row "EA-007" | Envelope and workflow ID format now defined (§3, W1) | Next EA-005 revision |
 | QA-001 | Tests T-E1…T-E8; replay tests for auto-upgrade workflows (VW2) | QA-001 next revision |
 | INT-001 | Per provider: acknowledgement time limit, status query, manual check where none (§9.3 A2) | Step 14 |
@@ -563,6 +570,8 @@ NFR IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [D
 | G5 | Provider acknowledgement limits and status queries are unknown until INT-001 | Step 14 |
 | G6 | Archive retention by classification | REG-001, Step 25 **[VAL]** |
 | G7 | The contract tests do not run in CI until the owner adds the job (§13) | Owner |
+| G9 | Only six kind-P workflows have step designs (§10). The other 15 are listed in §9.1 only. Their designs come with the specification that owns the process: WF-017 with FE-01 (Step 20); WF-008 with FE-02 (Step 21); WF-018, WF-026 with FE-06 and WF-009, WF-036 with FE-07, WF-033 with FE-05 (Step 22); WF-040 with FE-08 (Step 23); WF-016 with REG-001 and WF-019…WF-022 with SEC-001 (Step 25); WF-029, WF-030 in an EA-007 revision before the Step 27 consistency review | Steps 20–25, 27 |
+| G10 | Trade allocation and distributor flow totals (`figure_source` MODULE_AGGREGATION, E7) are calculations without an FE engine ID; allocation needs a specification (fair allocation, BA-004 WF-004 **[REG — VAL]**) | FE-06 or an Execution specification, Steps 22; owner |
 | G8 | Payload fields are a first design taken from the PRDs; field lists will be checked against DA-001 tables and the FE specifications and changed under rule V1 or V2 | Steps 15, 20–23 |
 
 ## Sources
@@ -579,5 +588,6 @@ NFR IDs continue from the next free numbers in LOOP_STATE. All are **Proposed [D
 | S8 | Temporal, "Worker Versioning", https://docs.temporal.io/worker-versioning, and "Announcing GA for Worker Versioning and Public Preview for Upgrade on Continue-as-New", 30 Mar 2026, https://temporal.io/blog/ga-worker-versioning-public-preview-upgrade-on-continue-as-new (both read 22 Nov 2026) | Pinned and Auto-Upgrade behaviour; GA date; upgrade on Continue-As-New in preview |
 | S9 | Temporal, "Workflow Execution limits", https://docs.temporal.io/workflow-execution/limits (read 22 Nov 2026) | 51,200 events / 50 MB limit, warning at 10,240 / 10 MB |
 | S10 | Temporal, "Self-hosted Temporal Service defaults", https://docs.temporal.io/self-hosted-guide/defaults (read 22 Nov 2026) | Same limits as configurable defaults; termination on violation |
+| S13 | Temporal, "Workflow Id and Run Id", https://docs.temporal.io/workflow-execution/workflowid-runid (read 22 Nov 2026) | Workflow ID reuse policy (default Allow Duplicate; checks only closed runs kept within retention) and conflict policy |
 | S11 | Proposal branch `proposal/ai-orchestration-architecture`, EA-102 §2, §4, §6 (input only) | Unknown-outcome procedure (adopted in changed form, §9.3, §10.6) |
-| S12 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions | D-16, D-26, D-30, D-32, D-36, D-37, D-42, D-44, D-45, D-48, D-53, D-56, D-59, D-60, D-70, D-72, D-75 |
+| S12 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions | D-16, D-26, D-30, D-32, D-36, D-37, D-42, D-44, D-45, D-48, D-53, D-56, D-58, D-59, D-60, D-70, D-75 |

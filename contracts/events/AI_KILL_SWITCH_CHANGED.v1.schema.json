@@ -39,10 +39,32 @@
       "items": {
         "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
       },
-      "minItems": 1
+      "minItems": 1,
+      "uniqueItems": true
     },
     "scope_ref_id": {
       "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "new_state": {
+            "const": "ON"
+          }
+        },
+        "required": [
+          "new_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "changed_by_user_ids": {
+            "minItems": 2
+          }
+        }
+      }
+    }
+  ]
 }

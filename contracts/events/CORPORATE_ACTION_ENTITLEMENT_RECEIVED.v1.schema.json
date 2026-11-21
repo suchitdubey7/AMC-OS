@@ -9,7 +9,8 @@
     "producer": "OPERATIONS",
     "aggregate_type": "operations.ca_entitlement",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "EXTERNAL_SOURCE"
   },
   "type": "object",
   "additionalProperties": false,

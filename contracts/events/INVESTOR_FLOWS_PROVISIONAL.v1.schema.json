@@ -9,7 +9,8 @@
     "producer": "INVESTOR",
     "aggregate_type": "investor.flow_batch",
     "event_class": "FINANCIAL",
-    "data_classification": "CONFIDENTIAL"
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "EXTERNAL_SOURCE"
   },
   "type": "object",
   "additionalProperties": false,
