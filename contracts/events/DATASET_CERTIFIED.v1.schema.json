@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:DATASET_CERTIFIED.v1.schema.json",
+  "title": "DATASET_CERTIFIED.v1",
+  "description": "Payload of event DATASET_CERTIFIED.v1. Producer: REPORTING module. A dataset for a date is certified. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "DATASET_CERTIFIED",
+    "event_version": 1,
+    "producer": "REPORTING",
+    "aggregate_type": "analytics.dataset_certification",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dataset_id",
+    "dataset_version",
+    "certified_for_date"
+  ],
+  "properties": {
+    "dataset_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "dataset_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "certified_for_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    }
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:UNIVERSE_CHANGED.v1.schema.json",
+  "title": "UNIVERSE_CHANGED.v1",
+  "description": "Payload of event UNIVERSE_CHANGED.v1. Producer: INVESTMENT module. A security enters, leaves or changes in the approved universe. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "UNIVERSE_CHANGED",
+    "event_version": 1,
+    "producer": "INVESTMENT",
+    "aggregate_type": "investment.universe_member",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "universe_id",
+    "change_type",
+    "security_id",
+    "effective_at"
+  ],
+  "properties": {
+    "universe_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "change_type": {
+      "type": "string",
+      "enum": [
+        "ADDED",
+        "REMOVED",
+        "AMENDED"
+      ]
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

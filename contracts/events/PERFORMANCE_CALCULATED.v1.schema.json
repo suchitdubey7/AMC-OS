@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:PERFORMANCE_CALCULATED.v1.schema.json",
+  "title": "PERFORMANCE_CALCULATED.v1",
+  "description": "Payload of event PERFORMANCE_CALCULATED.v1. Producer: PORTFOLIO module. A performance and attribution run completes (FE-10, WF-032). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "PERFORMANCE_CALCULATED",
+    "event_version": 1,
+    "producer": "PORTFOLIO",
+    "aggregate_type": "portfolio.performance_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "performance_run_id",
+    "scheme_ids",
+    "period_start",
+    "period_end",
+    "engine_version"
+  ],
+  "properties": {
+    "performance_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1
+    },
+    "period_start": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "period_end": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "engine_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/engine_version"
+    }
+  }
+}

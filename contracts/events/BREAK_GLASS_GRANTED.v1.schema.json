@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:BREAK_GLASS_GRANTED.v1.schema.json",
+  "title": "BREAK_GLASS_GRANTED.v1",
+  "description": "Payload of event BREAK_GLASS_GRANTED.v1. Producer: IDENTITY module. An approved break-glass grant starts (WF-022, SOD-09). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "BREAK_GLASS_GRANTED",
+    "event_version": 1,
+    "producer": "IDENTITY",
+    "aggregate_type": "identity.break_glass_grant",
+    "event_class": "ACCESS",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant_id",
+    "operator_user_id",
+    "scope_code",
+    "expires_at",
+    "approval_request_id"
+  ],
+  "properties": {
+    "grant_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "operator_user_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scope_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "expires_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

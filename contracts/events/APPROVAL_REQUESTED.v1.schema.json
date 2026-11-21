@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:APPROVAL_REQUESTED.v1.schema.json",
+  "title": "APPROVAL_REQUESTED.v1",
+  "description": "Payload of event APPROVAL_REQUESTED.v1. Producer: WORKFLOW module. An approval request is opened (CAP-D12-011). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "APPROVAL_REQUESTED",
+    "event_version": 1,
+    "producer": "WORKFLOW",
+    "aggregate_type": "workflow.approval_request",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "approval_request_id",
+    "subject_module",
+    "subject_type",
+    "subject_id",
+    "approval_chain_code",
+    "requested_by_user_id"
+  ],
+  "properties": {
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "subject_module": {
+      "type": "string",
+      "enum": [
+        "TENANT",
+        "IDENTITY",
+        "WORKFLOW",
+        "DOCUMENTS",
+        "SECURITY_MASTER",
+        "PRODUCT",
+        "INVESTMENT",
+        "PORTFOLIO",
+        "OMS",
+        "EXECUTION",
+        "SETTLEMENT",
+        "COMPLIANCE",
+        "RISK",
+        "ACCOUNTING",
+        "VALUATION",
+        "NAV",
+        "OPERATIONS",
+        "INVESTOR",
+        "DISTRIBUTION",
+        "FINANCE",
+        "REPORTING",
+        "AI"
+      ]
+    },
+    "subject_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "subject_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "approval_chain_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "requested_by_user_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "subject_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "process_workflow_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/workflow_id"
+    }
+  }
+}

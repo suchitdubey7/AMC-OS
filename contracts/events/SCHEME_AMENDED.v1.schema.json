@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:SCHEME_AMENDED.v1.schema.json",
+  "title": "SCHEME_AMENDED.v1",
+  "description": "Payload of event SCHEME_AMENDED.v1. Producer: PRODUCT module. An approved scheme change takes effect (WF-029), including TER and load changes. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "SCHEME_AMENDED",
+    "event_version": 1,
+    "producer": "PRODUCT",
+    "aggregate_type": "product.scheme",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scheme_id",
+    "scheme_version_id",
+    "change_kind",
+    "changed_sections",
+    "effective_from"
+  ],
+  "properties": {
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_version_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "change_kind": {
+      "type": "string",
+      "enum": [
+        "FUNDAMENTAL",
+        "NON_FUNDAMENTAL"
+      ]
+    },
+    "changed_sections": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+      },
+      "minItems": 1
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    }
+  }
+}

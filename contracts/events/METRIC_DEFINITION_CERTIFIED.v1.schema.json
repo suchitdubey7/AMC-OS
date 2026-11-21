@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:METRIC_DEFINITION_CERTIFIED.v1.schema.json",
+  "title": "METRIC_DEFINITION_CERTIFIED.v1",
+  "description": "Payload of event METRIC_DEFINITION_CERTIFIED.v1. Producer: REPORTING module. A metric definition version is certified (WF-042, D-59). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "METRIC_DEFINITION_CERTIFIED",
+    "event_version": 1,
+    "producer": "REPORTING",
+    "aggregate_type": "analytics.metric_definition",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "metric_id",
+    "metric_version",
+    "is_regulatory",
+    "effective_from",
+    "approval_request_id"
+  ],
+  "properties": {
+    "metric_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "metric_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "is_regulatory": {
+      "type": "boolean"
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

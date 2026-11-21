@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COMPLIANCE_CHECK_COMPLETED.v1.schema.json",
+  "title": "COMPLIANCE_CHECK_COMPLETED.v1",
+  "description": "Payload of event COMPLIANCE_CHECK_COMPLETED.v1. Producer: COMPLIANCE module. A pre-trade, post-trade or end-of-day check finishes. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COMPLIANCE_CHECK_COMPLETED",
+    "event_version": 1,
+    "producer": "COMPLIANCE",
+    "aggregate_type": "compliance.check_run",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check_id",
+    "check_kind",
+    "subject_type",
+    "subject_id",
+    "result",
+    "rule_versions",
+    "breach_ids"
+  ],
+  "properties": {
+    "check_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "check_kind": {
+      "type": "string",
+      "enum": [
+        "PRE_TRADE",
+        "POST_TRADE",
+        "END_OF_DAY"
+      ]
+    },
+    "subject_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "subject_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "WARN",
+        "BLOCK"
+      ]
+    },
+    "rule_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/rule_version_ref"
+      },
+      "minItems": 1
+    },
+    "breach_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 0
+    }
+  }
+}

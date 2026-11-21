@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ALLOCATION_COMPLETED.v1.schema.json",
+  "title": "ALLOCATION_COMPLETED.v1",
+  "description": "Payload of event ALLOCATION_COMPLETED.v1. Producer: EXECUTION module. Fills of an order or block are allocated to schemes. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ALLOCATION_COMPLETED",
+    "event_version": 1,
+    "producer": "EXECUTION",
+    "aggregate_type": "execution.allocation",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "allocation_id",
+    "allocations",
+    "deviates_from_intent"
+  ],
+  "properties": {
+    "allocation_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "allocations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "scheme_id",
+          "order_id",
+          "quantity",
+          "average_price"
+        ],
+        "properties": {
+          "scheme_id": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+          },
+          "order_id": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+          },
+          "quantity": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+          },
+          "average_price": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "deviates_from_intent": {
+      "type": "boolean"
+    },
+    "block_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

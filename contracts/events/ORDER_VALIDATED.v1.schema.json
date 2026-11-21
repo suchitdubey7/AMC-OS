@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ORDER_VALIDATED.v1.schema.json",
+  "title": "ORDER_VALIDATED.v1",
+  "description": "Payload of event ORDER_VALIDATED.v1. Producer: OMS module. Order validation and the pre-trade check give a result (WF-004, WF-005). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ORDER_VALIDATED",
+    "event_version": 1,
+    "producer": "OMS",
+    "aggregate_type": "trading.order",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order_id",
+    "order_version",
+    "result",
+    "compliance_check_id"
+  ],
+  "properties": {
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "result": {
+      "type": "string",
+      "enum": [
+        "PASS",
+        "WARN",
+        "BLOCK"
+      ]
+    },
+    "compliance_check_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

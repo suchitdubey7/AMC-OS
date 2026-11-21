@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:envelope.v1.schema.json",
+  "title": "AMC OS event envelope v1",
+  "description": "Every AMC OS event is this envelope with the payload of its event type (catalogue.yaml). Status: Draft (EA-007 §3). The envelope never carries investor personal data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["envelope_version", "event_id", "event_type", "event_version", "tenant_id", "producer", "aggregate_type", "aggregate_id", "aggregate_seq", "occurred_at", "correlation_id", "actor", "data_classification", "payload"],
+  "properties": {
+    "envelope_version": {"const": 1},
+    "event_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid", "description": "Unique per event; consumers de-duplicate on it"},
+    "event_type": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/event_type"},
+    "event_version": {"type": "integer", "minimum": 1},
+    "tenant_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid", "description": "Must equal the tenant of the outbox row it was written with (EA-005 §8 test 13)"},
+    "producer": {"enum": ["TENANT", "IDENTITY", "WORKFLOW", "DOCUMENTS", "SECURITY_MASTER", "PRODUCT", "INVESTMENT", "PORTFOLIO", "OMS", "EXECUTION", "SETTLEMENT", "COMPLIANCE", "RISK", "ACCOUNTING", "VALUATION", "NAV", "OPERATIONS", "INVESTOR", "DISTRIBUTION", "FINANCE", "REPORTING", "AI"]},
+    "aggregate_type": {"type": "string", "pattern": "^[a-z][a-z0-9_]*\\.[a-z][a-z0-9_]*$", "description": "Fully qualified table of the aggregate root, <schema>.<table> (GOV-001 §4)"},
+    "aggregate_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"},
+    "aggregate_seq": {"type": "integer", "minimum": 1, "description": "Increases by one for each event of the same aggregate; consumers use it to keep order"},
+    "occurred_at": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp", "description": "Time the business change was committed"},
+    "business_date": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"},
+    "correlation_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid", "description": "Same value across the request, events, workflow and audit rows of one business action"},
+    "causation_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid", "description": "event_id or request ID that directly caused this event"},
+    "process_workflow_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/workflow_id"},
+    "actor": {
+      "type": "object", "additionalProperties": false, "required": ["actor_type", "actor_id"],
+      "properties": {
+        "actor_type": {"enum": ["USER", "SERVICE_ACCOUNT", "PROCESS_WORKFLOW", "SYSTEM_WORKER", "AI_ASSISTANT"]},
+        "actor_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"},
+        "on_behalf_of_user_id": {"$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"}
+      }
+    },
+    "data_classification": {"enum": ["INTERNAL", "CONFIDENTIAL"], "description": "PRD-016 FR-D16-008 classes; PUBLIC is not used for events and RESTRICTED_PII is never allowed"},
+    "payload": {"type": "object"}
+  }
+}

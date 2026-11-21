@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:PERIOD_REOPENED.v1.schema.json",
+  "title": "PERIOD_REOPENED.v1",
+  "description": "Payload of event PERIOD_REOPENED.v1. Producer: ACCOUNTING module. A closed period is reopened by CFO and Head of Fund Accounting (D-42). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "PERIOD_REOPENED",
+    "event_version": 1,
+    "producer": "ACCOUNTING",
+    "aggregate_type": "accounting.period",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "period_id",
+    "reason_code",
+    "approval_request_id"
+  ],
+  "properties": {
+    "period_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

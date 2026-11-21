@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ORDER_CREATED.v1.schema.json",
+  "title": "ORDER_CREATED.v1",
+  "description": "Payload of event ORDER_CREATED.v1. Producer: OMS module. An order is created in DRAFT (WF-004). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ORDER_CREATED",
+    "event_version": 1,
+    "producer": "OMS",
+    "aggregate_type": "trading.order",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order_id",
+    "scheme_id",
+    "security_id",
+    "side",
+    "order_type",
+    "origin"
+  ],
+  "properties": {
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "order_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "origin": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "amount": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    }
+  }
+}

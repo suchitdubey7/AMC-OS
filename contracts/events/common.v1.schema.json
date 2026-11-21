@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:common.v1.schema.json",
+  "title": "Common types for AMC OS event contracts v1",
+  "description": "Shared value types used by the event envelope and every event payload. Status: Draft (EA-007 §3). Money and quantities are decimal strings, never JSON numbers, so no consumer parses them as binary floating point (master prompt §3.2, ADR-0005).",
+  "$defs": {
+    "uuid": {"type": "string", "format": "uuid", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"},
+    "timestamp": {"type": "string", "format": "date-time", "description": "RFC 3339 timestamp with offset, for example 2026-11-20T18:35:02.123+05:30"},
+    "business_date": {"type": "string", "format": "date", "description": "Business date (YYYY-MM-DD) in the tenant's calendar"},
+    "decimal_string": {"type": "string", "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$", "description": "Exact decimal as a string. Scale is set by the producing engine's precision rules (FE specs), never by the transport"},
+    "currency": {"type": "string", "pattern": "^[A-Z]{3}$", "description": "ISO 4217 currency code"},
+    "money": {
+      "type": "object", "additionalProperties": false, "required": ["amount", "currency"],
+      "properties": {
+        "amount": {"$ref": "#/$defs/decimal_string"},
+        "currency": {"$ref": "#/$defs/currency"}
+      }
+    },
+    "code": {"type": "string", "minLength": 1, "maxLength": 100, "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:@/-]*$", "description": "A code from the owning module's reference list or state model; values are defined there, not in the event contract"},
+    "event_type": {"type": "string", "pattern": "^[A-Z][A-Z0-9_]*$"},
+    "rule_version_ref": {"type": "string", "pattern": "^RULE-[A-Z0-9_]+@v[1-9][0-9]*$", "description": "Executable compliance rule version, GOV-001 §4"},
+    "engine_version": {"type": "string", "pattern": "^FE-(0[1-9]|10)@[0-9A-Za-z.+-]+$", "description": "Financial engine and version that produced the figures, for example FE-01@1.4.0"},
+    "workflow_id": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/WF-[0-9]{3}/[A-Za-z0-9_.:@-]+(/[A-Za-z0-9_.:@-]+)*$", "description": "Temporal workflow ID: <tenant_id>/<WF-nnn>/<business key> (EA-007 §9.2)"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "isin": {"type": "string", "pattern": "^[A-Z]{2}[A-Z0-9]{9}[0-9]$"}
+  }
+}

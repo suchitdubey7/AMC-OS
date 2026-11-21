@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:SCHEME_WOUND_UP.v1.schema.json",
+  "title": "SCHEME_WOUND_UP.v1",
+  "description": "Payload of event SCHEME_WOUND_UP.v1. Producer: PRODUCT module. A scheme ends by merger, winding-up or maturity (WF-030). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "SCHEME_WOUND_UP",
+    "event_version": 1,
+    "producer": "PRODUCT",
+    "aggregate_type": "product.scheme",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scheme_id",
+    "end_kind",
+    "effective_date"
+  ],
+  "properties": {
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "end_kind": {
+      "type": "string",
+      "enum": [
+        "MERGED",
+        "WOUND_UP",
+        "MATURED"
+      ]
+    },
+    "effective_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "successor_scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

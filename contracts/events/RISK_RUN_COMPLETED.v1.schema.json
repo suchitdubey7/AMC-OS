@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RISK_RUN_COMPLETED.v1.schema.json",
+  "title": "RISK_RUN_COMPLETED.v1",
+  "description": "Payload of event RISK_RUN_COMPLETED.v1. Producer: RISK module. A risk run finishes (WF-033). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RISK_RUN_COMPLETED",
+    "event_version": 1,
+    "producer": "RISK",
+    "aggregate_type": "risk.risk_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "risk_run_id",
+    "business_date",
+    "run_kind",
+    "scheme_ids",
+    "snapshot_id",
+    "model_versions"
+  ],
+  "properties": {
+    "risk_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "business_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "run_kind": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1
+    },
+    "snapshot_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "model_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+      },
+      "minItems": 1
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:PRICES_LOADED.v1.schema.json",
+  "title": "PRICES_LOADED.v1",
+  "description": "Payload of event PRICES_LOADED.v1. Producer: VALUATION module. A price file or feed for a date is loaded. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "PRICES_LOADED",
+    "event_version": 1,
+    "producer": "VALUATION",
+    "aggregate_type": "valuation.price_load",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "price_load_id",
+    "price_date",
+    "source_code",
+    "prices_count"
+  ],
+  "properties": {
+    "price_load_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "price_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "source_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "prices_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

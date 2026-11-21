@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ORDER_APPROVED.v1.schema.json",
+  "title": "ORDER_APPROVED.v1",
+  "description": "Payload of event ORDER_APPROVED.v1. Producer: OMS module. An order is approved (or needs no approval under the tenant threshold). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ORDER_APPROVED",
+    "event_version": 1,
+    "producer": "OMS",
+    "aggregate_type": "trading.order",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order_id",
+    "order_version",
+    "approval_needed"
+  ],
+  "properties": {
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "approval_needed": {
+      "type": "boolean"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

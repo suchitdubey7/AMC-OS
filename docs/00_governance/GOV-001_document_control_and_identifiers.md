@@ -184,6 +184,7 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | EA-004 | Deployment and cell architecture | Draft | WP3 / Step 12 |
 | EA-005 | Multi-tenant architecture | Draft | WP3 / Step 12 |
 | EA-006 | Control plane and data plane | Draft | WP3 / Step 12 |
+| EA-007 | Event architecture and process workflows (event catalogue v1, 103 events, in `contracts/events/`) | Draft | WP3 / Step 13 |
 | EA-008 | Configuration over customisation | Draft | WP3 / Step 11 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |

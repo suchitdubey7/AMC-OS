@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:INVESTMENT_POLICY_APPROVED.v1.schema.json",
+  "title": "INVESTMENT_POLICY_APPROVED.v1",
+  "description": "Payload of event INVESTMENT_POLICY_APPROVED.v1. Producer: INVESTMENT module. An investment policy version is approved (WF-031). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "INVESTMENT_POLICY_APPROVED",
+    "event_version": 1,
+    "producer": "INVESTMENT",
+    "aggregate_type": "investment.investment_policy",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "policy_id",
+    "policy_version",
+    "scheme_ids",
+    "effective_from",
+    "approval_request_id"
+  ],
+  "properties": {
+    "policy_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "policy_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:SERVICE_REQUEST_CLOSED.v1.schema.json",
+  "title": "SERVICE_REQUEST_CLOSED.v1",
+  "description": "Payload of event SERVICE_REQUEST_CLOSED.v1. Producer: INVESTOR module. An investor service request is closed (WF-038). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "SERVICE_REQUEST_CLOSED",
+    "event_version": 1,
+    "producer": "INVESTOR",
+    "aggregate_type": "investor.service_request",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "service_request_id",
+    "request_type",
+    "outcome",
+    "closed_at"
+  ],
+  "properties": {
+    "service_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "request_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "outcome": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "closed_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

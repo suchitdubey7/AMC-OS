@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:DOCUMENT_VERSION_APPROVED.v1.schema.json",
+  "title": "DOCUMENT_VERSION_APPROVED.v1",
+  "description": "Payload of event DOCUMENT_VERSION_APPROVED.v1. Producer: DOCUMENTS module. The owning module's approval of a document version is recorded. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "DOCUMENT_VERSION_APPROVED",
+    "event_version": 1,
+    "producer": "DOCUMENTS",
+    "aggregate_type": "documents.document_version",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_id",
+    "document_version_id",
+    "owner_module",
+    "approval_request_id"
+  ],
+  "properties": {
+    "document_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "document_version_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "owner_module": {
+      "type": "string",
+      "enum": [
+        "TENANT",
+        "IDENTITY",
+        "WORKFLOW",
+        "DOCUMENTS",
+        "SECURITY_MASTER",
+        "PRODUCT",
+        "INVESTMENT",
+        "PORTFOLIO",
+        "OMS",
+        "EXECUTION",
+        "SETTLEMENT",
+        "COMPLIANCE",
+        "RISK",
+        "ACCOUNTING",
+        "VALUATION",
+        "NAV",
+        "OPERATIONS",
+        "INVESTOR",
+        "DISTRIBUTION",
+        "FINANCE",
+        "REPORTING",
+        "AI"
+      ]
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

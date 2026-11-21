@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RISK_ALERT_ESCALATED.v1.schema.json",
+  "title": "RISK_ALERT_ESCALATED.v1",
+  "description": "Payload of event RISK_ALERT_ESCALATED.v1. Producer: RISK module. An unactioned risk alert is escalated (D-37). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RISK_ALERT_ESCALATED",
+    "event_version": 1,
+    "producer": "RISK",
+    "aggregate_type": "risk.risk_alert",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "alert_id",
+    "escalation_level",
+    "escalated_to_role_code"
+  ],
+  "properties": {
+    "alert_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "escalation_level": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "escalated_to_role_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

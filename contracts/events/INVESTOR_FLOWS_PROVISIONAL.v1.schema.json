@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:INVESTOR_FLOWS_PROVISIONAL.v1.schema.json",
+  "title": "INVESTOR_FLOWS_PROVISIONAL.v1",
+  "description": "Payload of event INVESTOR_FLOWS_PROVISIONAL.v1. Producer: INVESTOR module. Provisional subscription and redemption totals for a date (cash planning). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "INVESTOR_FLOWS_PROVISIONAL",
+    "event_version": 1,
+    "producer": "INVESTOR",
+    "aggregate_type": "investor.flow_batch",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "flow_batch_id",
+    "scheme_id",
+    "flow_date",
+    "plans",
+    "source_feed_id"
+  ],
+  "properties": {
+    "flow_batch_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "flow_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "plan_id",
+          "inflow_amount",
+          "outflow_amount"
+        ],
+        "properties": {
+          "plan_id": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+          },
+          "inflow_amount": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+          },
+          "outflow_amount": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+          },
+          "net_units": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "source_feed_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COMPLAINT_RECEIVED.v1.schema.json",
+  "title": "COMPLAINT_RECEIVED.v1",
+  "description": "Payload of event COMPLAINT_RECEIVED.v1. Producer: INVESTOR module. An investor complaint is received (WF-038). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COMPLAINT_RECEIVED",
+    "event_version": 1,
+    "producer": "INVESTOR",
+    "aggregate_type": "investor.complaint",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "complaint_id",
+    "source_channel",
+    "category",
+    "received_at"
+  ],
+  "properties": {
+    "complaint_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "source_channel": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "category": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "received_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "due_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

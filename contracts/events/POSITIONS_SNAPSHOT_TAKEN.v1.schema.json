@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:POSITIONS_SNAPSHOT_TAKEN.v1.schema.json",
+  "title": "POSITIONS_SNAPSHOT_TAKEN.v1",
+  "description": "Payload of event POSITIONS_SNAPSHOT_TAKEN.v1. Producer: PORTFOLIO module. A frozen positions snapshot is taken (intraday or end of day). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "POSITIONS_SNAPSHOT_TAKEN",
+    "event_version": 1,
+    "producer": "PORTFOLIO",
+    "aggregate_type": "portfolio.position_snapshot",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "snapshot_id",
+    "business_date",
+    "snapshot_kind",
+    "scheme_ids"
+  ],
+  "properties": {
+    "snapshot_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "business_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "snapshot_kind": {
+      "type": "string",
+      "enum": [
+        "INTRADAY",
+        "END_OF_DAY"
+      ]
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1
+    }
+  }
+}

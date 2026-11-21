@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:DISTRIBUTOR_STATUS_CHANGED.v1.schema.json",
+  "title": "DISTRIBUTOR_STATUS_CHANGED.v1",
+  "description": "Payload of event DISTRIBUTOR_STATUS_CHANGED.v1. Producer: DISTRIBUTION module. A distributor's status changes (WF-039). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "DISTRIBUTOR_STATUS_CHANGED",
+    "event_version": 1,
+    "producer": "DISTRIBUTION",
+    "aggregate_type": "distribution.distributor",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "distributor_id",
+    "new_status",
+    "reason_code",
+    "effective_at"
+  ],
+  "properties": {
+    "distributor_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "new_status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "previous_status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:FAIR_VALUE_DECIDED.v1.schema.json",
+  "title": "FAIR_VALUE_DECIDED.v1",
+  "description": "Payload of event FAIR_VALUE_DECIDED.v1. Producer: VALUATION module. A Valuation Committee fair-value decision is recorded (WF-035, D-45). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "FAIR_VALUE_DECIDED",
+    "event_version": 1,
+    "producer": "VALUATION",
+    "aggregate_type": "valuation.fair_value_case",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fair_value_case_id",
+    "security_id",
+    "valuation_date",
+    "fair_value",
+    "currency",
+    "committee_minute_ref",
+    "approval_request_id"
+  ],
+  "properties": {
+    "fair_value_case_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "valuation_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "fair_value": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "currency": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/currency"
+    },
+    "committee_minute_ref": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

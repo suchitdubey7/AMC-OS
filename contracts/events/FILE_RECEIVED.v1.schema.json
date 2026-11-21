@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:FILE_RECEIVED.v1.schema.json",
+  "title": "FILE_RECEIVED.v1",
+  "description": "Payload of event FILE_RECEIVED.v1. Producer: OPERATIONS module. An inbound file lands on a tenant's connection (EA-003 T16). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "FILE_RECEIVED",
+    "event_version": 1,
+    "producer": "OPERATIONS",
+    "aggregate_type": "operations.inbound_file",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file_id",
+    "connection_id",
+    "file_type",
+    "received_at",
+    "sha256",
+    "size_bytes"
+  ],
+  "properties": {
+    "file_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "connection_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "file_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "received_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "sha256": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/sha256"
+    },
+    "size_bytes": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

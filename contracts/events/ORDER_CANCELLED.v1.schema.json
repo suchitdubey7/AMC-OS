@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ORDER_CANCELLED.v1.schema.json",
+  "title": "ORDER_CANCELLED.v1",
+  "description": "Payload of event ORDER_CANCELLED.v1. Producer: OMS module. An order is cancelled. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ORDER_CANCELLED",
+    "event_version": 1,
+    "producer": "OMS",
+    "aggregate_type": "trading.order",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order_id",
+    "order_version",
+    "reason_code"
+  ],
+  "properties": {
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

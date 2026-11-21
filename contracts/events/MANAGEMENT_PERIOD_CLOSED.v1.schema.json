@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:MANAGEMENT_PERIOD_CLOSED.v1.schema.json",
+  "title": "MANAGEMENT_PERIOD_CLOSED.v1",
+  "description": "Payload of event MANAGEMENT_PERIOD_CLOSED.v1. Producer: FINANCE module. The monthly management reporting close completes (WF-040). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "MANAGEMENT_PERIOD_CLOSED",
+    "event_version": 1,
+    "producer": "FINANCE",
+    "aggregate_type": "finance.management_period",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "management_period_id",
+    "period_start",
+    "period_end",
+    "closed_at"
+  ],
+  "properties": {
+    "management_period_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "period_start": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "period_end": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "closed_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

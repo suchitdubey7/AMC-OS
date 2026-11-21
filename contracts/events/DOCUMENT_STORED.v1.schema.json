@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:DOCUMENT_STORED.v1.schema.json",
+  "title": "DOCUMENT_STORED.v1",
+  "description": "Payload of event DOCUMENT_STORED.v1. Producer: DOCUMENTS module. A document version is stored with its hash. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "DOCUMENT_STORED",
+    "event_version": 1,
+    "producer": "DOCUMENTS",
+    "aggregate_type": "documents.document_version",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_id",
+    "document_version_id",
+    "owner_module",
+    "document_type",
+    "classification",
+    "sha256",
+    "retention_class"
+  ],
+  "properties": {
+    "document_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "document_version_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "owner_module": {
+      "type": "string",
+      "enum": [
+        "TENANT",
+        "IDENTITY",
+        "WORKFLOW",
+        "DOCUMENTS",
+        "SECURITY_MASTER",
+        "PRODUCT",
+        "INVESTMENT",
+        "PORTFOLIO",
+        "OMS",
+        "EXECUTION",
+        "SETTLEMENT",
+        "COMPLIANCE",
+        "RISK",
+        "ACCOUNTING",
+        "VALUATION",
+        "NAV",
+        "OPERATIONS",
+        "INVESTOR",
+        "DISTRIBUTION",
+        "FINANCE",
+        "REPORTING",
+        "AI"
+      ]
+    },
+    "document_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "PUBLIC",
+        "INTERNAL",
+        "CONFIDENTIAL",
+        "RESTRICTED_PII"
+      ]
+    },
+    "sha256": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/sha256"
+    },
+    "retention_class": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

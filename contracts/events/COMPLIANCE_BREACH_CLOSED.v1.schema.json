@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COMPLIANCE_BREACH_CLOSED.v1.schema.json",
+  "title": "COMPLIANCE_BREACH_CLOSED.v1",
+  "description": "Payload of event COMPLIANCE_BREACH_CLOSED.v1. Producer: COMPLIANCE module. A breach reaches RESOLVED (WF-014). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COMPLIANCE_BREACH_CLOSED",
+    "event_version": 1,
+    "producer": "COMPLIANCE",
+    "aggregate_type": "compliance.breach",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "breach_id",
+    "scheme_id",
+    "closure_route",
+    "closed_at"
+  ],
+  "properties": {
+    "breach_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "closure_route": {
+      "type": "string",
+      "enum": [
+        "CURED",
+        "REGULARISED"
+      ]
+    },
+    "closed_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

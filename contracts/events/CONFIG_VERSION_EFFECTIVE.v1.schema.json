@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:CONFIG_VERSION_EFFECTIVE.v1.schema.json",
+  "title": "CONFIG_VERSION_EFFECTIVE.v1",
+  "description": "Payload of event CONFIG_VERSION_EFFECTIVE.v1. Producer: TENANT module. An approved configuration version takes effect (EA-008). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "CONFIG_VERSION_EFFECTIVE",
+    "event_version": 1,
+    "producer": "TENANT",
+    "aggregate_type": "platform.config_version",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "config_item_key",
+    "config_version_id",
+    "version_no",
+    "effective_at"
+  ],
+  "properties": {
+    "config_item_key": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "config_version_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "version_no": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "scope_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "scope_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

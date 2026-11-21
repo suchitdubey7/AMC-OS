@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:CALENDAR_CHANGED.v1.schema.json",
+  "title": "CALENDAR_CHANGED.v1",
+  "description": "Payload of event CALENDAR_CHANGED.v1. Producer: TENANT module. The holiday calendar master changes (CAP-D01-009, EA-003 T17). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "CALENDAR_CHANGED",
+    "event_version": 1,
+    "producer": "TENANT",
+    "aggregate_type": "platform.business_calendar",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "calendar_id",
+    "calendar_code",
+    "changed_dates"
+  ],
+  "properties": {
+    "calendar_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "calendar_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "changed_dates": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+      },
+      "minItems": 1
+    }
+  }
+}

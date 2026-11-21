@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:USER_PROVISIONED.v1.schema.json",
+  "title": "USER_PROVISIONED.v1",
+  "description": "Payload of event USER_PROVISIONED.v1. Producer: IDENTITY module. A user or service identity is created (WF-020). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "USER_PROVISIONED",
+    "event_version": 1,
+    "producer": "IDENTITY",
+    "aggregate_type": "identity.app_user",
+    "event_class": "ACCESS",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "user_id",
+    "is_service_identity",
+    "provisioned_via"
+  ],
+  "properties": {
+    "user_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "is_service_identity": {
+      "type": "boolean"
+    },
+    "provisioned_via": {
+      "type": "string",
+      "enum": [
+        "IDP_PUSH",
+        "ADMIN"
+      ]
+    }
+  }
+}

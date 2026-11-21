@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:SETTLEMENT_STATUS_CHANGED.v1.schema.json",
+  "title": "SETTLEMENT_STATUS_CHANGED.v1",
+  "description": "Payload of event SETTLEMENT_STATUS_CHANGED.v1. Producer: SETTLEMENT module. Settlement status changes on custodian, bank or clearing information. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "SETTLEMENT_STATUS_CHANGED",
+    "event_version": 1,
+    "producer": "SETTLEMENT",
+    "aggregate_type": "settlement.settlement",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settlement_id",
+    "scheme_id",
+    "new_status",
+    "status_source",
+    "status_at"
+  ],
+  "properties": {
+    "settlement_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "new_status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "status_source": {
+      "type": "string",
+      "enum": [
+        "CUSTODIAN",
+        "BANK",
+        "CLEARING",
+        "MANUAL"
+      ]
+    },
+    "status_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "trade_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "previous_status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "settled_quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "settled_amount": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    }
+  }
+}

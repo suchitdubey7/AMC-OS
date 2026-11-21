@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TASK_OVERDUE.v1.schema.json",
+  "title": "TASK_OVERDUE.v1",
+  "description": "Payload of event TASK_OVERDUE.v1. Producer: WORKFLOW module. A task passes its due time. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TASK_OVERDUE",
+    "event_version": 1,
+    "producer": "WORKFLOW",
+    "aggregate_type": "workflow.task",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "task_id",
+    "due_at"
+  ],
+  "properties": {
+    "task_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "due_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "escalated_to_role_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

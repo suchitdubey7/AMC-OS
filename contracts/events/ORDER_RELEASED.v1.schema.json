@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ORDER_RELEASED.v1.schema.json",
+  "title": "ORDER_RELEASED.v1",
+  "description": "Payload of event ORDER_RELEASED.v1. Producer: OMS module. An approved order is released to the dealing desk / Execution. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ORDER_RELEASED",
+    "event_version": 1,
+    "producer": "OMS",
+    "aggregate_type": "trading.order",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "order_id",
+    "order_version",
+    "scheme_id",
+    "security_id",
+    "side",
+    "order_type"
+  ],
+  "properties": {
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "order_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "amount": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "limit_price": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "block_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

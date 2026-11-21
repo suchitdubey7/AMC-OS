@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COMMISSION_RUN_APPROVED.v1.schema.json",
+  "title": "COMMISSION_RUN_APPROVED.v1",
+  "description": "Payload of event COMMISSION_RUN_APPROVED.v1. Producer: DISTRIBUTION module. Finance approves a commission run (D-56, WF-013). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COMMISSION_RUN_APPROVED",
+    "event_version": 1,
+    "producer": "DISTRIBUTION",
+    "aggregate_type": "distribution.commission_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "commission_run_id",
+    "period_start",
+    "period_end",
+    "total_commission",
+    "approval_request_id"
+  ],
+  "properties": {
+    "commission_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "period_start": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "period_end": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "total_commission": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

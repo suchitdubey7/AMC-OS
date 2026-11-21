@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COST_ALLOCATION_RUN_APPROVED.v1.schema.json",
+  "title": "COST_ALLOCATION_RUN_APPROVED.v1",
+  "description": "Payload of event COST_ALLOCATION_RUN_APPROVED.v1. Producer: FINANCE module. A cost allocation run is approved. Renamed from candidate ALLOCATION_RUN_APPROVED. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COST_ALLOCATION_RUN_APPROVED",
+    "event_version": 1,
+    "producer": "FINANCE",
+    "aggregate_type": "finance.allocation_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "allocation_run_id",
+    "period_start",
+    "period_end",
+    "allocation_key_version",
+    "approval_request_id"
+  ],
+  "properties": {
+    "allocation_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "period_start": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "period_end": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "allocation_key_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TENANT_SUSPENDED.v1.schema.json",
+  "title": "TENANT_SUSPENDED.v1",
+  "description": "Payload of event TENANT_SUSPENDED.v1. Producer: TENANT module. Tenant suspended (WF-019, PRD-001). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TENANT_SUSPENDED",
+    "event_version": 1,
+    "producer": "TENANT",
+    "aggregate_type": "platform.tenant",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "reason_code",
+    "effective_at"
+  ],
+  "properties": {
+    "reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

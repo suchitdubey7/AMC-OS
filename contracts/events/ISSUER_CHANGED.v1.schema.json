@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ISSUER_CHANGED.v1.schema.json",
+  "title": "ISSUER_CHANGED.v1",
+  "description": "Payload of event ISSUER_CHANGED.v1. Producer: SECURITY_MASTER module. An approved change to an issuer or issuer-group record (WF-041). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ISSUER_CHANGED",
+    "event_version": 1,
+    "producer": "SECURITY_MASTER",
+    "aggregate_type": "master.issuer",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "issuer_id",
+    "record_version",
+    "changed_attributes",
+    "effective_from",
+    "change_request_id"
+  ],
+  "properties": {
+    "issuer_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "record_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "changed_attributes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+      },
+      "minItems": 1
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "change_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

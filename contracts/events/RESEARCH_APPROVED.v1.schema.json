@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RESEARCH_APPROVED.v1.schema.json",
+  "title": "RESEARCH_APPROVED.v1",
+  "description": "Payload of event RESEARCH_APPROVED.v1. Producer: INVESTMENT module. A research note or recommendation is approved (WF-002). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RESEARCH_APPROVED",
+    "event_version": 1,
+    "producer": "INVESTMENT",
+    "aggregate_type": "investment.research_note",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "research_note_id",
+    "note_version",
+    "approval_request_id"
+  ],
+  "properties": {
+    "research_note_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "note_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "issuer_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

@@ -1,5 +1,14 @@
 # contracts/events
 
-Versioned event catalogue and schemas (e.g., NAV_APPROVED.v1). From WP3.
+Versioned event catalogue (GOV-001 §4: `<NAME>.v<n>`). Status: **Draft** — designed in [EA-007](/docs/04_enterprise_architecture/EA-007_event_architecture_and_process_workflows.md) (WP3 / Step 13); nothing here is Approved.
 
-Status: nothing here yet. See [GOV-005](/docs/00_governance/GOV-005_work_package_plan.md).
+| File | What it is |
+| --- | --- |
+| `envelope.v1.schema.json` | The envelope every event has (EA-007 §3) |
+| `common.v1.schema.json` | Shared types: UUID, dates, decimal strings, money, rule and engine version references, workflow ID |
+| `<NAME>.v1.schema.json` | The payload of one event (103 events) |
+| `catalogue.yaml` | Machine-readable list: producer, aggregate, class, data classification, consumers. Twin of EA-007 §8 |
+
+Rules (EA-007 §2, §6): only the owning module publishes; money and quantities are decimal strings, never JSON numbers; no personal data; adding an optional field keeps the version, any other change is a new version published side by side for at least one release.
+
+Checks: `python3 -m pytest -q tests/contracts` (needs `pytest`, `jsonschema`, `PyYAML`).

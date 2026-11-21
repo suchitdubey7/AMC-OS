@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RATING_CHANGED.v1.schema.json",
+  "title": "RATING_CHANGED.v1",
+  "description": "Payload of event RATING_CHANGED.v1. Producer: SECURITY_MASTER module. A credit rating or outlook changes (FR-D16-014). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RATING_CHANGED",
+    "event_version": 1,
+    "producer": "SECURITY_MASTER",
+    "aggregate_type": "master.credit_rating",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rated_entity_type",
+    "rated_entity_id",
+    "agency_code",
+    "rating_scale",
+    "new_rating",
+    "effective_from"
+  ],
+  "properties": {
+    "rated_entity_type": {
+      "type": "string",
+      "enum": [
+        "SECURITY",
+        "ISSUER"
+      ]
+    },
+    "rated_entity_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "agency_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "rating_scale": {
+      "type": "string",
+      "enum": [
+        "LONG_TERM",
+        "SHORT_TERM"
+      ]
+    },
+    "new_rating": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "previous_rating": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "outlook": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}
