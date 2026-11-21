@@ -102,7 +102,7 @@ flowchart LR
 | 11 🔄 in review (branch `wp3-step11-service-catalogue`: EA-003 service catalogue, EA-008 configuration over customisation; stacked on Step 10) | EA-003 domain boundaries & service catalogue; configuration-over-customisation design | 3.6, 5 | 10 |
 | 12 🔄 in review (branch `wp3-step12-deployment-cells`: EA-004 deployment and cells, EA-005 multi-tenant, EA-006 control plane / data plane; stacked on Step 11) | EA-004 deployment & cell architecture; EA-005 multi-tenant; EA-006 control plane / data plane | 6 | 10 |
 | 13 🔄 in review (branch `wp3-step13-events-workflows`: EA-007 event architecture and process workflows, `contracts/events/` v1 catalogue (103 events), contract tests; `contracts/` is owner-only, so the owner merges; stacked on Step 12) | EA-007 event architecture + `contracts/events/` catalogue (all events, v1 schemas); Temporal workflow designs | 5 L4 | 11 |
-| 14 | INT-001 integration architecture + one spec per provider with all 14 fields (confirmed facts only) | 10 | 11 |
+| 14 🔄 in review (branch `wp3-step14-integrations`: INT-001 integration architecture, INT-002…INT-018 provider specifications; stacked on Step 13) | INT-001 integration architecture + one spec per provider with all 14 fields (confirmed facts only) | 10 | 11 |
 | **Stage C — data and database** | | | |
 | 15 | DA-001 canonical enterprise data model; ERDs per domain in `architecture/erds/` | 7 | Stage B |
 | 16 | DDL additions: missing ~30 tables, `risk` and `finance` schemas, external-ID crosswalk, source-system IDs, `platform.cell`, regulatory control registry fields; tests extended | 7, 9 | 15 |
