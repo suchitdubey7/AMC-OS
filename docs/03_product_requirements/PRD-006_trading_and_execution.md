@@ -2,19 +2,19 @@
 id: PRD-006
 title: Trading and Execution (D06) — Product Requirements
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
 step: 8
-last_updated: 2026-11-20
+last_updated: 2026-11-21
 ---
 
 # PRD-006 — Trading and Execution (D06)
 
 This document states what AMC OS must do between the moment an approved order is released to the dealing desk and the moment a confirmed trade is handed to settlement: talk to brokers, capture fills, allocate block fills fairly to schemes, match broker contract notes, reconcile orders, fills and contract notes, and handle trade exceptions. It also covers the broker panel. It re-keys the execution part of PRD-000 v0.9 Module 04 (FR-04-09…11) and the trade part of Module 05 (FR-05-01…03, FR-05-07 and the broker part of FR-05-11) to the GOV-001 identifiers (`FR-04-nn` / `FR-05-nn` → `FR-D06-nnn`, `BR-04-n` / `BR-05-n` → `BRL-D06-nnn`, `US-STL-01` and Module 04/05 stories → `US-D06-nnn`). This closes PRD-005 open point C5.
 
-**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Modules 04, 05 and 10 (FR-10-02 only as a reference), Chapter 4 (W4, W6b), Chapter 5, Chapter 6, Chapter 9; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D06, §4, §5; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) §4; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-004, WF-018, WF-023, WF-024, WF-025; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md); [PRD-005](PRD-005_order_management.md); [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md); DDL-000 v0.9 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. Owner decision D-18 (no SoD waivers except SOD-03 and small-team mode) is applied.
+**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Modules 04, 05 and 10 (FR-10-02 only as a reference), Chapter 4 (W4, W6b), Chapter 5, Chapter 6, Chapter 9; [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D06, §4, §5; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) §4; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) WF-004, WF-018, WF-023, WF-024, WF-025; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md); [PRD-005](PRD-005_order_management.md); [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md); DDL-000 v0.9 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. Owner decisions D-18 (no SoD waivers except SOD-03 and small-team mode), D-28 (allocation remainder rule set by the Head of Dealing per tenant) and D-29 (versioned trade-charges table, Operations updates, Compliance checks) are applied.
 
 **What this document is not:** order creation, approval, compliance calls and release (D05, [PRD-005](PRD-005_order_management.md)); rule evaluation (D08, FE-04); settlement instructions, SSIs, payments and fails (D07, PRD-007); the reconciliation engine itself (D12, CAP-D12-003, FE-07) and broker statements and brokerage bills (D12, CAP-D12-005); counterparty golden records (D16, CAP-D16-004); algorithmic execution (PS-001 §3); AI that sends, executes or allocates (ADR-0008). **Rule for engineers (PRD-000):** no regulatory number, tax rate, tolerance or limit is hard-coded; each is a versioned parameter or configuration.
 
@@ -83,7 +83,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | FR-D06-013 | M | CAP-D06-006 (.1) | **Broker order and fill messages:** send released orders, blocks, amendments and cancels to the broker, and receive acknowledgements, rejects and execution reports. The protocol and message format are agreed with each broker (PRD-000 FR-10-02 assumes FIX **[ASSUMPTION]**) — confirm with each broker in INT-001 (Step 14). After a lost connection, messages are recovered by sequence so that no fill is lost or doubled |
 | FR-D06-014 | M | CAP-D06-006 (.2) | **Contract-note intake:** receive contract notes as files or as emailed PDF documents (PRD-000 FR-10-02) — formats confirmed with each broker; parsing is deterministic; a note that cannot be read completely goes to the break queue, never to an auto-match |
 | FR-D06-015 | M | CAP-D06-006 | **Raw message archive:** every message to and from a broker, and every contract note as received, is stored raw, unchanged and linked to the fill, order or trade it concerns (BRL-D06-002) |
-| FR-D06-016 | M | CAP-D06-004 (.2) | **Allocation fairness check:** after allocation the system compares each scheme's allocated quantity and price with the intent; any difference beyond the allocation rule (for example rounding to lot size, open point C6) is a deviation that blocks hand-off until approved under FR-D06-002 |
+| FR-D06-016 | M | CAP-D06-004 (.2) | **Allocation fairness check:** after allocation the system compares each scheme's allocated quantity and price with the intent; any difference beyond the allocation rule (for example rounding to lot size; the remainder rule of BRL-D06-008, owner decision D-28) is a deviation that blocks hand-off until approved under FR-D06-002 |
 | FR-D06-017 | M | CAP-D06-008 (.1) | **Trade break queue:** one queue for D06 breaks (contract-note mismatch, reconciliation breaks, unreadable contract notes, late fills after cancel) with reason, owner, ageing and link to the item; breaks also appear in the operations exception queue (CAP-D12-008) |
 | FR-D06-018 | M | CAP-D06-008 (.2) | **Trade cancel or correct:** a trade is cancelled or corrected only by a reversal and a new trade, with maker-checker (`execution.trade.correct`, Head of Dealing as checker); a correction after allocation re-runs post-trade compliance (D08, through D05 FR-D05-009) and leads to a reversal and a new entry in accounting (WF-025) |
 | FR-D06-019 | M | CAP-D06-007 (.3) | **Hand-off to settlement:** a trade goes to D07 only when it is matched to its contract note within tolerance (WF-025), or, for an externally booked type with no contract note, when the checker has confirmed it against its evidence (WF-024) |
@@ -120,12 +120,12 @@ The transition `CHECKER_PENDING → AWAITING_CONTRACT_NOTE` is **(changed from W
 | --- | --- | --- |
 | BRL-D06-001 (BR-04-3, after the fill) | Block fills are allocated by the pre-trade intent recorded in D05 unless an approved deviation exists (Head of Dealing and Compliance Officer) | **[DES]** (PRD-000 unlabelled); fair allocation **[REG — VAL exact clause]** (FR-04-10) |
 | BRL-D06-002 (BR-04-5) | Every message to or from a broker is stored raw for at least the retention period; raw messages are never changed or deleted before then | **[VAL period]** |
-| BRL-D06-003 (BR-05-4) | Expected charges (STT, stamp duty, GST, exchange charges) are calculated from a versioned rate table and compared with the broker's values within tolerance; this document states no rate | **[REG — tax rates; VAL]** |
+| BRL-D06-003 (BR-05-4) | Expected charges (STT, stamp duty, GST, exchange fees) are calculated from a versioned, effective-dated trade-charges table and compared with the broker's values within tolerance; this document states no rate. An Operations user updates the table (maker) and a Compliance Officer checks it (checker); a change takes effect only after the check | Owner decision D-29; rates **[REG — tax rates; VAL]** |
 | BRL-D06-004 | Fills and confirmed trades are never edited: a broker bust or correction is an adjustment fill; an AMC correction is a reversal and a new trade | **[DES]** (DA-000 Ch 1 principle 3) |
 | BRL-D06-005 | All schemes in one block allocation receive the same average price of the block's fills | **[DES]** (from PRD-000 Module 04 point 18) |
 | BRL-D06-006 | Only a broker in status `ACTIVE`, within its approved limits, may receive an order | **[DES]** |
 | BRL-D06-007 | A trade goes to settlement only when confirmed (FR-D06-019) | **[DES]** |
-| BRL-D06-008 | Broker limits, brokerage rate schedules, matching tolerances and the allocation rounding rule are tenant configuration changed only through maker-checker (WF-021 for configuration) | **[DES]**; values **[ASSUMPTION — confirm: Head of Dealing and DEP-06 of the pilot AMC]** |
+| BRL-D06-008 | Broker limits, brokerage rate schedules, matching tolerances and the allocation rounding rule are tenant configuration changed only through maker-checker (WF-021 for configuration). The rule for leftover shares or lots from an uneven pro-rata split is set by the Head of Dealing for each tenant; each version is recorded and audited, and every allocation records which version it used | **[DES]**; remainder rule: owner decision D-28; values **[ASSUMPTION — confirm: Head of Dealing and DEP-06 of the pilot AMC]** |
 
 ## 6. Workflows
 
@@ -149,13 +149,15 @@ From BA-005 §3 (D06 column) and §4, narrowed to each capability (BA-005 §7 C2
 | CAP-D06-001 Broker management | Dealer — Head of Dealing proposes (WF-023) | Body named in the AMC's broker policy **[ASSUMPTION]** (`execution.broker.approve`, SOD-14); limits and rate schedules: a second person per maker-checker **[DES]** |
 | CAP-D06-002 Execution management | System (fills); Dealer (blocks at the desk) | — |
 | CAP-D06-003 Trade confirmation | System; Operations Analyst (confirmation) | — (force-match follows WF-015: Operations Manager) |
+| CAP-D06-003 Trade confirmation — trade-charges table (BRL-D06-003) | Operations Analyst† | Compliance Officer† (D-29) |
 | CAP-D06-004 Trade allocation | System allocates; Dealer requests a deviation | Head of Dealing **and** Compliance Officer (`execution.allocation.approve_deviation`) |
+| CAP-D06-004 Trade allocation — remainder rule (BRL-D06-008) | Head of Dealing† (D-28) | A second person per maker-checker **[DES]** |
 | CAP-D06-005 Execution reconciliation | System; Operations Analyst works breaks | — |
 | CAP-D06-006 Broker communication | System | — |
 | CAP-D06-007 Trade lifecycle; external trades | Dealer or Operations Analyst | A second Dealer, or the Operations Manager (`execution.trade.approve_external`) |
 | CAP-D06-008 Trade exception handling; cancel or correct | Dealer or Operations Analyst | Head of Dealing (`execution.trade.correct`) |
 
-All makers and checkers above match the BA-005 §3 D06 cells (Dealer "R C U S (route, block, allocate, external trades)", Operations Analyst "R C U S (confirmation, breaks, external trades)"); no right is added. The Fund Manager has read only on D06 (BA-005 §3), so the FM who originated an order cannot act on its execution (SOD-03).
+All makers and checkers above match the BA-005 §3 D06 cells (Dealer "R C U S (route, block, allocate, external trades)", Operations Analyst "R C U S (confirmation, breaks, external trades)"), except the rows marked †: the trade-charges table (Operations updates, Compliance Officer checks — owner decision D-29) and the allocation remainder rule (Head of Dealing — owner decision D-28) are rights added beyond BA-005 §3 and §4 for the next BA-005 revision **[DES]**. The Fund Manager has read only on D06 (BA-005 §3), so the FM who originated an order cannot act on its execution (SOD-03).
 
 ## 8. User stories and acceptance criteria
 
@@ -227,8 +229,8 @@ Within PRD-000 C8 and ADR-0008 (read and propose only):
 | C3 | DA-000 and DDL-000 keep trades and charges in `settlement.trade` (D07 schema) while BA-001 gives trade lifecycle and confirmation to D06 (BA-001 §5 C3, BA-004 §5.2 C2) | EA-003 (Step 11), DA-001 (Step 15) |
 | C4 | Where allocation results live and who writes them (PRD-005 C9): §10 proposes D06 in `execution`, with D05 updated by events | EA-003 (Step 11), DA-001 (Step 15) |
 | C5 | Re-route after `REJECTED_BY_BROKER`: D06 side settled here (FR-D06-021); whether D05 creates a new order or a new order version stays PRD-005 C4 | PRD-005 revision or DA-001 |
-| C6 | Allocation rounding rule when pro-rata quantities are not whole lots or shares (who gets the remainder) **[ASSUMPTION]** | Owner question Q22 in [LOOP_STATE.md](../../LOOP_STATE.md); pilot discovery (Head of Dealing, Compliance) |
-| C7 | Who owns the statutory charges rate table (BRL-D06-003) — D06, D10 or reference data in D16 — who updates it when rates change, and the matching tolerances **[ASSUMPTION]** | Owner question Q23 in [LOOP_STATE.md](../../LOOP_STATE.md); EA-003 (Step 11); values: pilot discovery |
+| C6 | Allocation rounding rule when pro-rata quantities are not whole lots or shares (who gets the remainder) | **Closed by owner decision D-28** (Q22): the Head of Dealing sets the rule per tenant; it is recorded and audited (BRL-D06-008). The rule itself is chosen by each AMC |
+| C7 | Who owns the statutory charges rate table (BRL-D06-003) — D06, D10 or reference data in D16 — who updates it when rates change, and the matching tolerances | Who updates and checks it: **closed by owner decision D-29** (Q23) — versioned table, Operations updates, Compliance checks. Which domain's schema holds it: EA-003 (Step 11). Tolerance values: pilot discovery |
 | C8 | Broker evaluation criteria and review frequency, broker limits and brokerage schedules (FR-D06-008…010) **[ASSUMPTION]** | Pilot discovery (Head of Dealing) |
 | C9 | Order, fill and contract-note protocols and formats per broker (FR-D06-013, -014) | INT-001 (Step 14) — confirm with each broker |
 | C10 | Trade states (§4.3) are proposed; not in PRD-000 or DDL-000 | DA-001 / DDL (Steps 15–16) |
@@ -252,4 +254,4 @@ All sources are inside this repository; no external facts are introduced.
 | R4 | [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3, §4, §5 | Rights, approvers, SoD |
 | R5 | [PRD-005](PRD-005_order_management.md) §2, §4.3, §9, §13 | D05 boundary; open points C4, C5, C9 |
 | R6 | [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 1 principle 3, Ch 2, Ch 7; DDL-000 v0.9 (`execution.fill`, `trading.block_allocation`, `settlement.trade`) | Schema ownership, existing tables |
-| R7 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, D-18 | Building on Drafts; SoD waivers |
+| R7 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, D-18, D-28, D-29 | Building on Drafts; SoD waivers; allocation remainder rule; trade-charges table |

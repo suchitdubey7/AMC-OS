@@ -2,12 +2,12 @@
 id: PRD-003
 title: Investment Management (D03) — Product Requirements
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
 step: 7
-last_updated: 2026-11-20
+last_updated: 2026-11-21
 ---
 
 # PRD-003 — Investment Management (D03)
@@ -218,7 +218,7 @@ Within PRD-000 C8 and ADR-0008 (read and propose only): the **Research copilot**
 | --- | --- | --- |
 | C1 | Exact Master Circular clause for documenting investment decisions (FR-D03-010) and AMFI market-cap list refresh dates (BRL-D03-004) **[VAL]** | REG-001 (Step 25) |
 | C2 | Quorum size, delegated authority of the Head of Research, policy review frequency, rating-downgrade threshold **[ASSUMPTION]** | Pilot discovery |
-| C3 | Ownership of the security and issuer records moves to D16 (BA-001 §5 C2); PRD-016 must take over FR-D03-001 and FR-D03-002 as owner requirements | Closed by PRD-016 (Step 9c: FR-D16-012, FR-D16-013); `master` schema ownership open (Q59) |
+| C3 | Ownership of the security and issuer records moves to D16 (BA-001 §5 C2); PRD-016 must take over FR-D03-001 and FR-D03-002 as owner requirements | Closed by PRD-016 (Step 9c: FR-D16-012, FR-D16-013); `master` schema owned by D16 (owner decision D-65) |
 | C4 | Fund Manager create right on decision records (§7 †) is not in BA-005 §3 | Next BA-005 revision |
 | C5 | BA-004 register gets WF-031 (row added in this step); the full card lives here until BA-004's next revision | Next BA-004 revision |
 | C6 | Whether the AMC board or trustees must see each reviewed investment policy (WF-031) **[VAL]** | REG-001 (Step 25) |

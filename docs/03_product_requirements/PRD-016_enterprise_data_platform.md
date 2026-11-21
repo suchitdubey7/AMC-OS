@@ -2,7 +2,7 @@
 id: PRD-016
 title: Enterprise Data Platform (D16) — Product Requirements
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
@@ -14,9 +14,9 @@ last_updated: 2026-11-21
 
 This document states what AMC OS must do to give every domain, report and AI assistant one governed, traceable source of data: ingestion, master data (golden records), a canonical model, data quality, lineage, a catalogue, governance, the warehouse and lake, the metric registry and the semantic layer. It re-keys PRD-000 v0.9 Module 14 to the GOV-001 identifiers (`FR-14-nn` → `FR-D16-nnn`, `BR-14-n` → `BRL-D16-nnn`, Module 14 stories → `US-D16-nnn`), **takes over the security and issuer records from D03** (PRD-003 FR-D03-001 and FR-D03-002, PRD-003 C3), proposes that D16 owns the `master` schema (BA-001 §5 C2), and adds new **[DES]** requirements for the capability with no v0.9 source, the **data catalogue (CAP-D16-008)** (GOV-001 §3 gap), and for the external identifier crosswalk (CAP-D16-004 (.4), GOV-006 §2). It adds two D16 workflows: **WF-041 Master data change** (§6.2) and **WF-042 Metric definition change and certification** (§6.3).
 
-**Boundary:** D16 moves, checks, describes and serves data; it does **not** compute official financial numbers. NAV, accounting, AUM, unit balances, commission, revenue, risk and compliance results come from the owning domain's deterministic engine (master prompt §3.1); D16 stores, aggregates (by certified metric definitions) and traces them. D16 **writes only its own schemas** (`analytics`, and `master` if C1 is agreed); other domains read master data and certified datasets through APIs and events (AGENTS.md §2 rule 3). Raw files from outside parties are registered by D12 (`operations.inbound_file`, DA-000 Ch 8) and stored write-once in the lake.
+**Boundary:** D16 moves, checks, describes and serves data; it does **not** compute official financial numbers. NAV, accounting, AUM, unit balances, commission, revenue, risk and compliance results come from the owning domain's deterministic engine (master prompt §3.1); D16 stores, aggregates (by certified metric definitions) and traces them. D16 **writes only its own schemas** (`analytics` and `master`, owner decision D-65); other domains read master data and certified datasets through APIs and events (AGENTS.md §2 rule 3). Raw files from outside parties are registered by D12 (`operations.inbound_file`, DA-000 Ch 8) and stored write-once in the lake.
 
-**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 14, Chapter 6, Chapter 7, Chapter 9; [DA-000 v0.9](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 1, Ch 2, Ch 8; [ADR-0007](../../architecture/adrs/ADR-0007_data_stores.md); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D16, §5 C2; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-17, §4, §5; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3 (D16 column), ROLE-23; [PRD-001](PRD-001_platform_administration.md) §11; [PRD-003](PRD-003_investment_management.md) FR-D03-001, FR-D03-002, C3; [PRD-015](PRD-015_finance_and_management_reporting.md) BRL-D15-001 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. PRD-017 is written in the same step (Step 9c).
+**Builds on Draft documents:** [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 14, Chapter 6, Chapter 7, Chapter 9; [DA-000 v0.9](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 1, Ch 2, Ch 8; [ADR-0007](../../architecture/adrs/ADR-0007_data_stores.md); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D16, §5 C2; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-17, §4, §5; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md) §5; [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3 (D16 column), ROLE-23; [PRD-001](PRD-001_platform_administration.md) §11; [PRD-003](PRD-003_investment_management.md) FR-D03-001, FR-D03-002, C3; [PRD-015](PRD-015_finance_and_management_reporting.md) BRL-D15-001 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. PRD-017 is written in the same step (Step 9c). Owner decisions D-54 (named Grievance Officer and DPO per AMC), D-57 (commission by type), D-59 (metric approval), D-62 (reference data per AMC) and D-65 (D16 owns `master`) are applied (21 Nov 2026, [LOOP_STATE.md](../../LOOP_STATE.md)).
 
 **What this document is not:** the canonical model and table design (DA-001, DBE, DDL — Steps 15–16); integration adapters and provider file layouts (INT-001, Step 14); technology choices beyond ADR-0007 (Step 10 onward); the metric list itself (each owning PRD names its metrics; FE specs define their formulas); ML model governance (AIML-002, Step 26). **Rule for engineers:** no data-quality threshold, retention period, source precedence or metric formula is hard-coded; each is versioned configuration approved by a person.
 
@@ -85,9 +85,9 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | FR-D16-020 | M | CAP-D16-008 (.1) | **Data catalogue:** searchable list of every dataset, table, metric and report with owner, plain-language description, classification, freshness, quality status, lineage link and how to request access; generated from the registry, lineage and governance metadata, not typed by hand |
 | FR-D16-021 | M | CAP-D16-005 (.1), (.2) | **Canonical data model:** one versioned canonical model (conformed keys, SCD2 dimensions) that every curated table follows; a model change is versioned and impact-assessed through lineage before release (DA-001, Step 15) |
 | FR-D16-022 | M | CAP-D16-002 (.1), (.2); CAP-D16-003 (.1), (.2) | **Integration and validation:** each provider feed goes through an adapter to the canonical interface (INT-001); schema validated against the schema registry; control totals (row count, amount totals, trailer records) checked; schema drift, a failed control total or an unmapped code quarantines the load and alerts the feed owner (PRD-000 Module 14 point 14) |
-| FR-D16-023 | M | CAP-D16-012 (.1) | **Metric certification:** a new or changed metric definition is drafted by a Data Steward, tested on history, and certified by the metric's business owner (checker ≠ maker); certification is per version with an effective date; a report for a past period uses the version effective then unless the user chooses "restated" (AC-US-D16-003-1); WF-042 runs this |
+| FR-D16-023 | M | CAP-D16-012 (.1) | **Metric certification:** a new or changed metric definition is drafted by a Data Steward, tested on history, and certified by the metric's business owner (checker ≠ maker); a metric defined by regulation is also signed off by a Compliance Officer (owner decision D-59); certification is per version with an effective date; a report for a past period uses the version effective then unless the user chooses "restated" (AC-US-D16-003-1); WF-042 runs this |
 | FR-D16-024 | M | CAP-D16-007 (.2) | **Certified versus uncertified outputs:** each dataset and metric value carries a certification state for its business date; a blocking DQ failure or late source marks dependent outputs "uncertified" with the reason, shown as a badge wherever the figure appears (AC-US-D16-004-1); the state changes back only when the rule passes or a steward records an accepted exception |
-| FR-D16-025 | M | CAP-D16-009 (.3) | **Access to restricted datasets:** access to Restricted-PII datasets is requested with a purpose tag and approved by the data owner and the Data Protection Officer (PRD-000 Module 14 point 13; who holds the DPO authority is owner question Q48); grants expire and are reviewed in recertification (WF-020); every read is logged |
+| FR-D16-025 | M | CAP-D16-009 (.3) | **Access to restricted datasets:** access to Restricted-PII datasets is requested with a purpose tag and approved by the data owner and the Data Protection Officer (PRD-000 Module 14 point 13; each AMC names its DPO, proposed with the Compliance Officer — owner decision D-54) **[ASSUMPTION — reading of D-54: the DPO role is suggested to the Compliance Officer; confirm: project owner, Q61]**; grants expire and are reviewed in recertification (WF-020); every read is logged |
 | FR-D16-026 | M | CAP-D16-009 (.1), CAP-D16-010 | **Tenant isolation in analytics:** lake paths, warehouse tables, marts, semantic-layer queries, caches and extracts are separated per tenant and filtered by the tenant in the caller's identity, never by a query parameter (master prompt §3.4; NFR-SEC-001); cross-tenant benchmarks such as industry market share use only public data (for example AMFI disclosures) |
 | FR-D16-027 | M | CAP-D16-011 (.1) | **Serving AI:** D17 tools read only the semantic layer and certified datasets through the D16 query API with the calling user's scope (BRL-D16-010); the raw and standardised zones are never exposed to AI |
 | FR-D16-028 | M | CAP-D16-009 (.2) | **Retention and erasure:** retention per dataset class from the regulatory register (REG-001, Step 25) **[VAL]**; personal data is held in the lake in a form that can be made unreadable on erasure (for example tokenised keys with a deletable key) while the write-once file stays intact (C5) **[DES]** |
@@ -169,14 +169,14 @@ flowchart TD
 
 | Field | Detail |
 | --- | --- |
-| Trigger | A new metric is needed, or an owner asks to change a definition (for example a regulatory change to an AUM category, or Q51 settling the net-yield definition) |
+| Trigger | A new metric is needed, or an owner asks to change a definition (for example a regulatory change to an AUM category, or a change in how commission is booked by type under owner decision D-57) |
 | Initiator | Metric business owner or Data Steward |
 | Departments | **DEP-17 Data and analytics** — accountable; the metric's business owner department (for example DEP-14 for yields, DEP-12 for sales metrics, DEP-09 where the metric is a regulatory definition) |
 | Capabilities | CAP-D16-012, CAP-D16-011, CAP-D16-006, CAP-D16-007, CAP-D16-008, CAP-D15-009, CAP-D14-009 |
 | Hand-offs (outside) | None |
 | Preconditions | Business owner named; data sources available in the curated zone |
 | Final state | New metric version certified with effective date and shown in the catalogue; or rejected |
-| Approvals | Maker: Data Steward (definition, formula, tests). Checker: the metric's business owner (certifies). Where the metric is defined by regulation, a Compliance Officer also checks (§7 †) |
+| Approvals | Maker: Data Steward (definition, formula, tests). Checker: the metric's business owner (certifies). Where the metric is defined by regulation, a Compliance Officer also signs off (§7 †). No council (owner decision D-59) |
 | Exceptions | Back-test on history differs from the current version beyond an owner-set tolerance → owner must accept the difference and choose whether earlier closed periods are restated (restatement then runs in the owning domain, for example WF-040); formula reads an uncertified dataset → certification blocked |
 | Audit | Draft, test results, approvals, effective date, consumers listed through lineage, notification to consumers |
 | Source | **new** (PRD-000 Module 14 point 13 approvals; FR-14-05) |
@@ -207,11 +207,11 @@ From BA-005 §3 (D16 column, new in BA-005) and §5. Checker ≠ maker (SOD-01).
 | CAP-D16-004 source precedence rules | Data Steward | CTO (technical) and the data owner of the entity type† |
 | CAP-D16-012 metric definition and certification (WF-042) | Data Steward | Metric business owner† (any role named as owner); Compliance Officer† for regulatory definitions |
 | CAP-D16-007 DQ rules and thresholds | Data Steward | Dataset owner† (PRD-000 Module 14 point 13: "Steward") |
-| CAP-D16-009 access to Restricted-PII datasets | Requesting user | Data owner and Data Protection Officer† (Q48) |
+| CAP-D16-009 access to Restricted-PII datasets | Requesting user | Data owner and Data Protection Officer† (named per AMC, D-54) |
 | CAP-D16-001, -002, -010 pipelines and connections | Technology Administrator | CTO |
 | CAP-D16-005 canonical model version | Data Steward | CTO |
 
-**Rights added beyond BA-005 (†):** BA-005 gives no D16 approval right to business roles. This PRD adds: the metric business owner as certifier (PRD-000 Module 14 point 13 "Metric Owner"); the dataset owner as checker of DQ thresholds; Compliance Officer checks on issuer group, sponsor-group flag and regulatory metric definitions; Operations Manager as checker for security operational fields (BA-002 §4 DEP-06 supports CAP-D16-004); the Data Protection Officer for restricted-data access (role not in BA-005, Q48). PRD-000 also names a "Data Governance Council"; BA-005 has no such body — owner question Q53.
+**Rights added beyond BA-005 (†):** BA-005 gives no D16 approval right to business roles. This PRD adds: the metric business owner as certifier (PRD-000 Module 14 point 13 "Metric Owner"); the dataset owner as checker of DQ thresholds; Compliance Officer checks on issuer group, sponsor-group flag and regulatory metric definitions; Operations Manager as checker for security operational fields (BA-002 §4 DEP-06 supports CAP-D16-004); the Data Protection Officer for restricted-data access (role not in BA-005; a named person per AMC, owner decision D-54). PRD-000 also names a "Data Governance Council"; no such body is created — metric definitions are drafted by a Data Steward and approved by the business owner, with Compliance sign-off for regulatory metrics (owner decision D-59).
 
 ## 8. User stories and acceptance criteria
 
@@ -249,7 +249,7 @@ Definition of done: as PRD-000 Chapter 5.
 
 ## 10. Data and interfaces
 
-**Owned schema:** `analytics` (GOV-001 §3). **Proposed:** `master` (BA-001 §5 C2; DA-000 places it under a "Master Data service" with no domain) — changing GOV-001 §3 is the owner's (C1). No database change is made in this step.
+**Owned schema:** `analytics` (GOV-001 §3). **Also owned:** `master` (owner decision D-65; GOV-001 §3 updated 21 Nov 2026; DA-000 had placed it under a "Master Data service" with no domain). Reference data is held once per AMC because vendor licences are per AMC; only `master.currency` is shared (owner decision D-62). No database change is made in this step.
 
 | Exists in DDL-000 | Not yet in DDL-000 (for DA-001 / DDL, Steps 15–16) **[DES]** |
 | --- | --- |
@@ -280,20 +280,20 @@ Within PRD-000 C8 and [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md
 
 | # | Point | Where closed |
 | --- | --- | --- |
-| C1 | The `master` schema has no owning domain in GOV-001 §3; this PRD proposes D16 (BA-001 §5 C2). Changing GOV-001 §3 is the owner's — owner question Q59 | Owner (Q59); EA-003 (Step 11) |
+| C1 | The `master` schema had no owning domain in GOV-001 §3; this PRD proposed D16 (BA-001 §5 C2) | Closed by owner decision D-65 (D16 owns `master`; GOV-001 §3 updated); EA-003 (Step 11) |
 | C2 | PRD-000 FR-14-04 lists distributor, investor and employee / RM golden records; here those records stay with D14, D13 and D01 and D16 only matches and checks them (FR-D16-004). Confirm in EA-003 | EA-003 (Step 11) |
 | C3 | PRD-003 C3 is closed by FR-D16-012 and FR-D16-013; PRD-003 keeps FR-D03-001 and -002 as "what D03 needs" | Closed here |
-| C4 | Can reference data be shared across tenants (for example public identifiers), or must every tenant hold its own copy because vendor licences are per AMC (DDL-000 §04 comment)? Default: per tenant, except `master.currency` — owner question Q56 | Owner (Q56); EA-003; vendor contracts |
+| C4 | Can reference data be shared across tenants (for example public identifiers), or must every tenant hold its own copy because vendor licences are per AMC (DDL-000 §04 comment)? | Closed by owner decision D-62 (one copy per AMC; only currencies shared); EA-003; vendor contracts |
 | C5 | Write-once raw zone (BRL-D16-001) versus erasure of personal data under the DPDP Act: proposed tokenisation / deletable keys **[DES]**; legal view needed | REG-001 (Step 25); SEC (Step 25) |
 | C6 | DA-000 Ch 2 rule 4 asks for bi-temporal master data; DDL-000 master tables have `valid_from` only | DA-001 / DDL (Steps 15–16) |
 | C7 | Data Steward assistant (PRD-000 Module 14 point 16) is not a named D17 capability | AIML-001 (Step 26); PRD-017 C3 |
-| C8 | Who approves metric definitions beyond the business owner: a Data Governance Council (PRD-000) has no role in BA-005 — owner question Q53 | Owner (Q53); next BA-005 revision |
+| C8 | Who approves metric definitions beyond the business owner: a Data Governance Council (PRD-000) has no role in BA-005 | Closed by owner decision D-59 (Data Steward drafts, business owner approves, Compliance also signs off regulatory metrics; no new council); next BA-005 revision |
 | C9 | DQ thresholds, T+0 / T+1 deadlines and retention periods are tenant configuration or VAL; no values shipped | Pilot discovery; REG-001 |
 | C10 | WF-041 adds a rule for D05 — no order on a security without an approved golden record **[DES]**. PRD-005 does not state it, and it interacts with the PRD-005 emergency universe override (FR-D05-012), where a new security may be needed quickly (a fast-track WF-041 path may be needed) | EA-003 (Step 11); next PRD-005 revision |
 
 ## Sources
 
-Repository sources: [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 14, Ch 6, Ch 7; [DA-000 v0.9](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 1, Ch 2, Ch 8, Ch 9; [ADR-0007](../../architecture/adrs/ADR-0007_data_stores.md); [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D16, §5 C2; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-17, §4; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md); [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3, §5; [PRD-001](PRD-001_platform_administration.md) §11; [PRD-003](PRD-003_investment_management.md) FR-D03-001, FR-D03-002, C3; [PRD-015](PRD-015_finance_and_management_reporting.md); [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, Q2.
+Repository sources: [PRD-000 v0.9](PRD-000_master_prd_v0.9.md) Module 14, Ch 6, Ch 7; [DA-000 v0.9](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 1, Ch 2, Ch 8, Ch 9; [ADR-0007](../../architecture/adrs/ADR-0007_data_stores.md); [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md); [BA-001](../02_business_architecture/BA-001_business_capability_map.md) D16, §5 C2; [BA-002](../02_business_architecture/BA-002_amc_operating_model.md) DEP-17, §4; [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md); [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md) §3, §5; [PRD-001](PRD-001_platform_administration.md) §11; [PRD-003](PRD-003_investment_management.md) FR-D03-001, FR-D03-002, C3; [PRD-015](PRD-015_finance_and_management_reporting.md); [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-3, Q2, D-54, D-57, D-59, D-62, D-65.
 
 External source:
 

@@ -2,12 +2,12 @@
 id: BA-004
 title: End-to-End Business Workflows
 status: Draft
-version: 0.1
+version: 0.2
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
 step: 4
-last_updated: 2026-11-20
+last_updated: 2026-11-21
 ---
 
 # BA-004 — End-to-End Business Workflows
@@ -359,7 +359,7 @@ flowchart LR
 | Audit | Run record, every component, validation results, approver, publication acknowledgments |
 | Source | W7 |
 
-**Variant for outsourced fund accounting (owner decision D-16).** Where the custodian calculates the NAV, AMC OS does not replace that calculation: it receives the custodian's NAV and components, recalculates independently, and reconciles the two (CAP-D11-015, through CAP-D12-003). Differences become breaks. Who approves and publishes in this arrangement (the AMC on the custodian's figure, or the custodian under the AMC's oversight) varies by contract **[ASSUMPTION]** — confirm: Product Manager, pilot discovery.
+**Variant for outsourced fund accounting (owner decision D-16).** Where the custodian calculates the NAV, AMC OS does not replace that calculation: it receives the custodian's NAV and components, recalculates independently, and reconciles the two (CAP-D11-015, through CAP-D12-003). Differences become breaks. The AMC accepts the custodian's NAV in AMC OS after these checks; who submits it to AMFI (the AMC or the custodian) is a tenant setting (owner decision D-44; PRD-011).
 
 ```mermaid
 flowchart TD
@@ -394,7 +394,7 @@ flowchart TD
 | Approvals | Head of Fund Accounting approves the monthly close; reopening needs CFO + Head of Fund Accounting with a reason, and every posting during a reopen is tagged |
 | Exceptions | Trial balance variance unexplained → back to true-ups |
 | Audit | Checklist, true-up entries, reconciliation results, sign-off, any reopen with reason |
-| Source | W8. Variant for outsourced fund accounting (D-16): the books stay with the custodian; AMC OS mirrors the trial balance and reconciles it (CAP-D10-012), and the monthly sign-off records the AMC's review **[ASSUMPTION]** — confirm in pilot discovery |
+| Source | W8. Variant for outsourced fund accounting (D-16): the books stay with the custodian; AMC OS loads the custodian's books daily and rechecks the key items (accruals, unit capital, NAV), with no full shadow ledger (owner decision D-40; PRD-010 FR-D10-024), and reconciles the trial balance (CAP-D10-012); the monthly sign-off records the AMC's review **[ASSUMPTION]** — confirm in pilot discovery |
 
 ```mermaid
 flowchart LR
@@ -476,15 +476,15 @@ sequenceDiagram
 | --- | --- |
 | Trigger | Redemption request (at the RTA) |
 | Initiator | Investor or distributor |
-| Departments | **DEP-08**; DEP-06 (scheme cash and payout), DEP-07 (payables), DEP-02 / DEP-03 (cash ladder) |
-| Capabilities | CAP-D13-005, CAP-D13-011, CAP-D13-016, CAP-D02-006 (.2), CAP-D11-013, CAP-D10-010, CAP-D04-002 (.4), CAP-D12-002 (.2), CAP-D12-009 |
-| Hand-offs (outside) | RTA (request, time-stamp, computation); bank (payout) |
+| Departments | **DEP-08**; DEP-06 (scheme cash; payout tracking), DEP-07 (payables), DEP-02 / DEP-03 (cash ladder) |
+| Capabilities | CAP-D13-005, CAP-D13-011, CAP-D13-016, CAP-D02-006 (.2), CAP-D11-013, CAP-D10-010, CAP-D04-002 (.4), CAP-D12-002 (.2) |
+| Hand-offs (outside) | RTA (request, time-stamp, computation, payout file — owner decision D-52); bank (payout) |
 | Preconditions | Units free of lock-in and lien; KYC not on hold |
 | Final state | Units extinguished; payout `PAID` within the regulatory timeline **[VAL]** |
-| Approvals | Payout file released by two authorisers (CAP-D12-009) |
-| Exceptions | Units not available → `REJECTED` with reason; bank failure → `PAYOUT_FAILED`, bank-detail check, re-initiate; timeline missed → delay-interest calculation **[VAL]** |
+| Approvals | The payout file is prepared and sent by the RTA, not by AMC OS (owner decision D-52); AMC OS tracks and checks the payout (CAP-D13-016, CAP-D13-005 (.2); PRD-013 FR-D13-020) |
+| Exceptions | Units not available → `REJECTED` with reason; bank failure → `PAYOUT_FAILED`; the RTA re-initiates; AMC OS records the exception and follows up (PRD-012 FR-D12-008, D-52); timeline missed → delay-interest calculation **[VAL]** |
 | Audit | Request, cut-off applied, NAV used, load and tax, payout file, bank result |
-| Source | W11. Under mirror mode (Q2) the RTA computes the redemption; AMC OS recomputes as a check. Whether the payout file goes from AMC OS to the AMC's bank or is sent by the RTA is **[ASSUMPTION]** — confirm: Product Manager, pilot discovery. TDS for NRI investors is **[VAL]** |
+| Source | W11. Under mirror mode (Q2) the RTA computes the redemption; AMC OS recomputes as a check. The RTA sends the payout file; AMC OS tracks and checks it (owner decision D-52). TDS for NRI investors is **[VAL]** |
 
 ```mermaid
 flowchart TD
@@ -493,9 +493,9 @@ flowchart TD
   B -- yes --> D[Applicable NAV by cut-off rule]
   D --> E[Gross = units x NAV; exit load by lot age FIFO; TDS if NRI]
   E --> F[Redemption payable posted; cash ladder updated]
-  F --> G[Payout file to bank - two authorisers]
+  F --> G[RTA sends payout file - D-52; AMC OS tracks]
   G --> H{Bank success?}
-  H -- no --> I[PAYOUT_FAILED: bank-detail check, re-initiate]
+  H -- no --> I[PAYOUT_FAILED: RTA re-initiates; AMC OS follows up]
   H -- yes --> J[PAID; timeline met? else delay-interest calc]
 ```
 
@@ -687,7 +687,7 @@ flowchart TD
 | Hand-offs (outside) | Custodian (instructions out; acknowledgment, matched, settled or failed status in). The custodian deals with the clearing corporation and depository **[ASSUMPTION]** — confirm with each custodian |
 | Preconditions | Valid SSI for the counterparty (WF-028); settlement date from the calendar (WF-026) |
 | Final state | `SETTLED`; holdings and cash final; accounting events posted |
-| Approvals | None for straight-through instructions; re-instruction after a fail follows WF-027 |
+| Approvals | Every instruction, system-generated or manual, needs a second approver before it is sent; no amount threshold (owner decision D-31; PRD-007 FR-D07-017, BRL-D07-007); re-instruction after a fail follows WF-027 |
 | Exceptions | `FAILED` or `PARTIALLY_SETTLED` → WF-027 |
 | Audit | Instruction, every status message, journals posted |
 | Source | W6b. Status sequence from PRD-000 FR-05-05: `PENDING_INSTRUCTION → INSTRUCTED → ACKNOWLEDGED → MATCHED → SETTLED / PARTIALLY_SETTLED / FAILED`. PRD-000 put contract-note matching in this workflow; it moves to WF-025 because BA-001 places trade confirmation in D06 (§5, C3) |
@@ -722,11 +722,11 @@ These workflows are proposed here; nothing in PRD-000 Chapter 4 describes them. 
 | Preconditions | Contract signed; isolation tier chosen (shared or dedicated cell, ADR-0003); subscription plan and modules recorded |
 | Final state | Onboarding: tenant `ACTIVE`, first Tenant Administrator signed in, organisation hierarchy and calendars set. Offboarding: tenant `OFFBOARDED`, data exported to the AMC and then deleted or retained as the contract and law require |
 | Approvals | Activation needs confirmation from both the platform operator and the AMC's Tenant Administrator. The platform operator never reads tenant business data during set-up (SOD-09) |
-| Exceptions | Identity connection test fails → stays in `SETUP`; no capacity in the chosen cell → new cell (EA-004); export not confirmed by the AMC → tenant stays `SUSPENDED` until the time limit in the contract **[ASSUMPTION]**, then `OFFBOARDED` with records kept as the law requires **[VAL]** |
+| Exceptions | Identity connection test fails → stays in `SETUP`; no capacity in the chosen cell → new cell (EA-004); export not confirmed by the AMC → tenant stays `SUSPENDED` until the collection period in the contract ends (owner decision D-27), then `OFFBOARDED` with records kept as the law requires **[VAL]** |
 | Audit | Tenant record versions, plan and modules, placement, identity test results, activation confirmations, export and deletion evidence |
 | Source | **new** |
 
-The organisation hierarchy starts from the BA-002 reference model (departments DEP-01…DEP-19) as an editable template; the AMC changes it to match its own structure (BA-002 §3). Export format, the time the AMC has to take its data, and how long records are kept after exit are **[ASSUMPTION]** — confirm: project owner (contract terms) and REG-001 (record-retention rules, **[VAL]**).
+The organisation hierarchy starts from the BA-002 reference model (departments DEP-01…DEP-19) as an editable template; the AMC changes it to match its own structure (BA-002 §3). On exit the data is exported in documented open formats with checksums; the collection period and how long records are kept after exit follow the contract and the law (owner decision D-27; PRD-001 FR-D01-004). Legal retention periods are confirmed in REG-001 **[VAL]**.
 
 ```mermaid
 stateDiagram-v2
@@ -1052,9 +1052,9 @@ BA-002 §7 processes P1–P13 each map to at least one workflow (§2 register); 
 | --- | --- | --- |
 | C1 | PRD-000 Chapter 4 says "seventeen workflows" but contains 18 (W1–W17 plus W6b). GOV-001 §4 maps only W1–W17; W6b becomes WF-018 here | PRD re-key (Steps 6–9) marks PRD-000 Chapter 4 superseded by BA-004 |
 | C2 | PRD-000 W6b puts contract-note matching inside settlement, and DA-000 puts trades and contract notes in the `settlement` schema; BA-001 places trade confirmation in D06. BA-004 follows BA-001 (WF-025 before WF-018) | EA-003 (Step 11), DA-001 (Step 15) — same as BA-001 §5 C3 |
-| C3 | PRD-000 W10 and W11 describe AMC OS computing units and redemption amounts; under owner decision Q2 (mirror the RTA) these are checks of the RTA's figures. Who sends the redemption payout file is not known | Closed by PRD-013 (Step 9a: FR-D13-013, FR-D13-019) except who sends the payout file — owner question Q46 |
+| C3 | PRD-000 W10 and W11 describe AMC OS computing units and redemption amounts; under owner decision Q2 (mirror the RTA) these are checks of the RTA's figures. Who sends the redemption payout file is not known | Closed by PRD-013 (Step 9a: FR-D13-013, FR-D13-019) ; who sends the payout file closed by owner decision D-52 (the RTA sends; AMC OS tracks and checks) |
 | C4 | Event names in PRD-000 (lower-case, dotted, e.g. `trading.trade.confirmed`) differ from the GOV-001 §4 format `<NAME>.v<n>` (e.g. `NAV_APPROVED.v1`) | EA-007 event catalogue (Step 13) |
-| C5 | PRD-000 W3 names a "Portfolio Agent" that is not in the brief's D17 list | AIML-001 (Step 26) — same as BA-001 §5 C4; PRD-017 (Step 9c) leaves it unplaced pending owner question Q57 |
+| C5 | PRD-000 W3 names a "Portfolio Agent" that is not in the brief's D17 list | AIML-001 (Step 26) — same as BA-001 §5 C4; later release, not release 1 (owner decision D-63, PRD-017 C4) |
 | C6 | D09 Risk and D15 Finance have no end-to-end workflow in PRD-000; BA-002 P13 has no workflow | Closed: D09 by PRD-009 (Step 8, WF-033); D15 and P13 by PRD-015 (Step 9b, WF-040) |
 | C7 | Approval thresholds, delegated authority, recertification and review frequencies, tolerances and escalation limits named in the cards are tenant configuration with no values yet **[ASSUMPTION]** | Pilot discovery; BA-005 (Step 5) for who approves |
 | C8 | QA-001 still limits end-to-end workflow tests to WF-001…WF-017; BA-004 defines WF-001…WF-043 (WF-029…WF-043 cards in PRD-002…PRD-004, PRD-008, PRD-009, PRD-011…PRD-017), including the control workflows WF-020, WF-022 and WF-028 | Next QA-001 revision |

@@ -2,19 +2,19 @@
 id: PRD-001
 title: Platform Administration (D01) — Product Requirements
 status: Draft
-version: 0.2
+version: 0.3
 owner: Product Manager
 approver: Project owner (interim ARB)
 work_package: WP2
 step: 6
-last_updated: 2026-11-20
+last_updated: 2026-11-21
 ---
 
 # PRD-001 — Platform Administration (D01)
 
 This document states what AMC OS must do to run the platform for each AMC: set up and close tenants, let the right people in (and keep everyone else out), hold the AMC's organisation, subscription and configuration, keep a tamper-evident audit trail, and run environments and releases. PRD-000 v0.9 had no module for this domain (GOV-001 §3 gap); everything here is newly written from the capabilities in [BA-001](../02_business_architecture/BA-001_business_capability_map.md) (CAP-D01-001…011), the workflows WF-019…WF-022 in [BA-004](../02_business_architecture/BA-004_end_to_end_workflows.md), the roles and segregation-of-duties (SoD) rules in [BA-005](../02_business_architecture/BA-005_roles_and_permissions.md), and the common rules C1–C8, Chapter 5 (US-PLT-01…03), Chapter 6 and Chapter 7 of [PRD-000 v0.9](PRD-000_master_prd_v0.9.md).
 
-**Builds on Draft documents:** PRD-000, BA-001, BA-002, BA-003, BA-004, BA-005, GOV-001, ADR-0003 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. Owner decisions D-7 (AWS Mumbai, Hyderabad for disaster recovery), D-8 (each AMC's own identity provider, Keycloak otherwise), D-11 (new AMCs first), D-14 (D01 "subscription" = the AMC's subscription to AMC OS) and D-17…D-25 (role IDs, no SoD waivers, small-team mode) are applied ([LOOP_STATE.md](../../LOOP_STATE.md)).
+**Builds on Draft documents:** PRD-000, BA-001, BA-002, BA-003, BA-004, BA-005, GOV-001, ADR-0003 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). No document used here is Approved. Owner decisions D-7 (AWS Mumbai, Hyderabad for disaster recovery), D-8 (each AMC's own identity provider, Keycloak otherwise), D-11 (new AMCs first), D-14 (D01 "subscription" = the AMC's subscription to AMC OS) D-17…D-25 (role IDs, no SoD waivers, small-team mode), D-26 (lapsed module read-only, data never deleted, metered measures) and D-27 (exit export in documented open formats with checksums; collection period and retention per contract and law) are applied ([LOOP_STATE.md](../../LOOP_STATE.md)).
 
 **What this document is not:** the identity design (token claims, policy engine — EA-002, Step 10), the configuration-over-customisation design (EA-003, Step 11), cell and control-plane design (EA-004…EA-006, Step 12), table definitions (DA-001 / DDL, Steps 15–16), API contracts (Step 24) or the security architecture and threat model (SEC-001/002, Step 25). It adds **no new regulatory fact**; labels carried from PRD-000 keep their **[VAL]** qualifiers.
 
@@ -57,7 +57,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 - **FR-D01-001 (M) Tenant register.** Each tenant has: legal name of the AMC and of the mutual fund trust, regulator registration references (format **[VAL]** — confirm: Compliance), isolation tier (shared or dedicated cell, ADR-0003), cell, hosting region (AWS Mumbai with Hyderabad for disaster recovery, D-7), subscription (§4.6) and status. Status follows WF-019: `DRAFT → PROVISIONING → SETUP → ACTIVE → SUSPENDED → OFFBOARDED`.
 - **FR-D01-002 (M) Two-sided activation.** A tenant becomes `ACTIVE` only when the Platform Operator (ROLE-20) and the AMC's Tenant Administrator (ROLE-19) have both confirmed; the operator can never be the only confirmer (SOD-15).
 - **FR-D01-003 (M) Tenant settings and feature flags.** Tenant-level settings and feature flags are configuration items (§4.8): versioned, effective-dated, maker-checker.
-- **FR-D01-004 (M) Offboarding and data export.** On exit the tenant becomes `SUSPENDED` (read-only), a complete export of the tenant's data is delivered in documented, non-proprietary formats with a manifest and checksums **[DES]**, and the AMC confirms receipt. Deletion or retention afterwards follows the contract and record-retention law. Export format, the time the AMC has to take its data and how long records are kept after exit are **[ASSUMPTION]** — confirm: project owner (Q21) and REG-001 for retention **[VAL]**.
+- **FR-D01-004 (M) Offboarding and data export.** On exit the tenant becomes `SUSPENDED` (read-only), a complete export of the tenant's data is delivered in documented, non-proprietary formats with a manifest and checksums **[DES]**, and the AMC confirms receipt. Deletion or retention afterwards follows the contract and record-retention law. Export formats are documented, open formats, each file with a checksum (owner decision D-27). The time the AMC has to take its data and how long records are kept after exit are set by the contract and the law (D-27): AMC OS holds them as per-tenant contract settings, not fixed values **[DES]**; legal retention periods come from REG-001 **[VAL]**.
 - **FR-D01-005 (M) Tenant isolation.** Every tenant record carries `tenant_id`, every tenant table has forced row-level security and composite `(tenant_id, id)` keys (AGENTS.md non-negotiable 4; DDL-000). A request for another tenant's object returns "not found" and raises a cross-tenant alert (US-D01-003). Isolation also covers events, object storage, caches, AI retrieval, logs, analytics and backups (master prompt §3.4); the design is EA-005 (Step 12).
 
 ### 4.2 User management (CAP-D01-002) — BR-D01-002
@@ -95,8 +95,8 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 ### 4.6 Subscription management (CAP-D01-006) — BR-D01-006 (D-14)
 
 - **FR-D01-026 (M) Plan and module entitlements.** Each tenant has a subscription plan and a list of entitled modules (domains or features), effective-dated. Entitlements decide which domains, APIs and screens are switched on for the tenant.
-- **FR-D01-027 (S) Usage metering.** AMC OS counts agreed usage measures per tenant per period and shows them to the Tenant Administrator. Which measures are counted (for example named users, schemes, API calls, storage) is a commercial decision **[ASSUMPTION — confirm: project owner, Q20]**. Metering counts only; it never reads business content.
-- **FR-D01-028 (S) Plan changes and renewals.** Upgrades, downgrades and renewals take effect on a stated date. A downgrade or lapse never deletes data; whether a lapsed module becomes read-only or hidden is **[ASSUMPTION — confirm: project owner, Q20]**.
+- **FR-D01-027 (S) Usage metering.** AMC OS counts agreed usage measures per tenant per period and shows them to the Tenant Administrator. The measures counted are users, schemes, API calls and storage (owner decision D-26). Metering counts only; it never reads business content.
+- **FR-D01-028 (S) Plan changes and renewals.** Upgrades, downgrades and renewals take effect on a stated date. A downgrade or lapse never deletes data; a lapsed or downgraded module becomes read-only — its data can still be viewed but not changed (owner decision D-26); it can also be exported **[DES]**.
 
 ### 4.7 Organization hierarchy (CAP-D01-007) — BR-D01-007
 
@@ -146,7 +146,7 @@ Every requirement also obeys PRD-000 common rules C1–C8 (tenancy, audit, maker
 | BRL-D01-007 | A configuration version applies only from its effective date after approval; past versions are never edited | PRD-000 C4 **[DES]** |
 | BRL-D01-008 | Audit events are never updated or deleted | PRD-000 C2, Chapter 7 |
 | BRL-D01-009 | An AI agent identity can never hold an approval authority or an approve, override, post, publish or execute permission | SOD-10; master prompt §3.1 |
-| BRL-D01-010 | A subscription downgrade, lapse or offboarding never deletes data before the export is confirmed (or the contract time limit passes) and the legal retention period is respected | **[ASSUMPTION — confirm: project owner, Q20, Q21]**; retention **[VAL]** |
+| BRL-D01-010 | A subscription downgrade or lapse never deletes data; the affected modules become read-only (D-26). On offboarding, data is exported in documented open formats with checksums, and the collection period and retention after exit follow the contract and the law (D-27) | Owner decisions D-26, D-27; retention **[VAL]** |
 
 ## 6. Workflows
 
@@ -216,7 +216,7 @@ Definition of done for every story: as PRD-000 Chapter 5 (unit and integration t
 | --- | --- |
 | Identity-provider connection test fails during onboarding | Tenant stays in `SETUP` (WF-019) |
 | No capacity in the chosen cell | New cell or other cell, decided in EA-004 (Step 12) |
-| AMC does not confirm its export | Tenant stays `SUSPENDED` until the contract time limit **[ASSUMPTION — confirm: project owner, Q21]** |
+| AMC does not confirm its export | Tenant stays `SUSPENDED` until the time limit in the AMC's contract (owner decision D-27; value per contract) |
 | Role request conflicts with an SoD rule | Refused with the rule shown (FR-D01-018) |
 | Small-team mode: Information Security Officer rejects a grant | Grant never takes effect; rejection in the SOD-11 report (FR-D01-019, D-24) |
 | Small-team mode: the AMC is no longer small and the grace period ends | Mode switched off; Tenant Administrators give up business roles (FR-D01-019, D-25); grace period and who detects the change set in pilot discovery **[VAL]** |
@@ -265,8 +265,8 @@ No D01 AI feature is proposed. AI agents act through ROLE-26 identities governed
 | --- | --- | --- |
 | C1 | BA-005 §7 C7 (US-PLT-01 maker) — **closed here** by FR-D01-016 and US-D01-001 | — |
 | C2 | Small new AMCs may not have three people with no business role (BRL-D01-005) | Closed by owner decisions D-19…D-25 (small-team mode); the "small" test and grace period are set in pilot discovery |
-| C3 | Which usage measures are metered; what a lapsed module looks like | Owner Q20 |
-| C4 | Offboarding: export format, time to take data, retention after exit | Owner Q21; REG-001 (Step 25) |
+| C3 | Which usage measures are metered; what a lapsed module looks like | **Closed by owner decision D-26** (Q20): users, schemes, API calls and storage are metered; a lapsed or downgraded module is read-only; data is never deleted |
+| C4 | Offboarding: export format, time to take data, retention after exit | **Closed by owner decision D-27** (Q21): documented open formats with checksums; collection period and retention per contract and law. Legal retention periods: REG-001 (Step 25) **[VAL]** |
 | C5 | Session time-outs, leaver revocation time, maintenance notice, bulk-export threshold have no values | EA-002 (Step 10), SEC-001 (Step 25), pilot discovery |
 | C6 | Configuration catalogue schema (`platform` or a separate `config` schema) is not decided | EA-003 (Step 11) |
 | C7 | TRACE-001 seed row "BR-D12-001 … FR-D01-0xx (SOD rules)" can now point to FR-D01-018 | TRACE-002 (Step 27) |
@@ -287,4 +287,4 @@ All sources are inside this repository; no external facts are introduced.
 | R6 | [GOV-001](../00_governance/GOV-001_document_control_and_identifiers.md) §3–§4; [TRACE-001](../00_governance/TRACE-001_traceability_matrix.md) §2 | IDs, seed rows |
 | R7 | [DA-000 v0.9](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 2, §4 register; `database/ddl/DDL-000_core_schema_v0.9.sql` | Schemas and existing tables |
 | R8 | [ADR-0003](../../architecture/adrs/ADR-0003_multi_tenancy_and_cells.md), [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md) | Isolation tiers, AI proposals |
-| R9 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-7, D-8, D-11, D-14, D-17…D-25 | Hosting, identity, segment, subscription meaning, role IDs, SoD waivers, small-team mode |
+| R9 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions D-7, D-8, D-11, D-14, D-17…D-27 | Hosting, identity, segment, subscription meaning, role IDs, SoD waivers, small-team mode, lapsed modules and metering, exit export |
