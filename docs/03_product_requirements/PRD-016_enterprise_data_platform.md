@@ -34,6 +34,7 @@ This document states what AMC OS must do to give every domain, report and AI ass
 | BR-14-1 … BR-14-4 | BRL-D16-001 … BRL-D16-004 | Wording kept, except **(changed)** BRL-D16-001 (personal data in the raw zone, see C5) |
 | Module 14 point 7 (two stories) | US-D16-001, US-D16-002 | Kept |
 | Module 14 point 18 (two acceptance criteria) | AC-US-D16-003-1, AC-US-D16-004-1 | Kept |
+| Ch 5 US-DAT-01 | US-D16-013 | Acceptance criterion kept |
 | Module 14 points 4, 11–15, 17 | §7, §9, §10, §11 | |
 | PRD-003 FR-D03-001, FR-D03-002 (security and issuer data) | FR-D16-012, FR-D16-013 | **Taken over** as owner requirements (PRD-003 C3); PRD-003 keeps them as "what D03 needs" |
 | — | FR-D16-014 … FR-D16-030, BRL-D16-005 … 011, US-D16-005 … 012, WF-041, WF-042 | **New** **[DES]** |
@@ -73,7 +74,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 
 | ID | Pri | Capability | Requirement |
 | --- | --- | --- | --- |
-| FR-D16-012 (was FR-D03-001) | M | CAP-D16-004 (.1) | **Security golden record:** ISIN, symbol per exchange, instrument type (equity, bond, CP, CD, T-bill, G-sec, SDL, REIT/InvIT, ETF, MF unit, derivative, repo/TREPS), face value, coupon schedule, maturity, call/put dates, day-count convention, lot and tick size, listing status, sector (AMFI / industry classification), market-cap category (from the AMFI half-yearly list), issuer link and rating history; effective-dated and versioned (PRD-000 C4). Label carried from PRD-003: market-cap category source **[REG — AMFI list as adopted by SEBI; VAL]** |
+| FR-D16-012 (was FR-D03-001) **(changed)** | M | CAP-D16-004 (.1) | **Security golden record:** ISIN, symbol per exchange, instrument type (equity, bond, CP, CD, T-bill, G-sec, SDL, REIT/InvIT, ETF, MF unit, derivative, repo/TREPS), face value, coupon schedule, maturity, call/put dates, day-count convention, lot and tick size, listing status, sector (AMFI / industry classification), market-cap category (from the AMFI half-yearly list), issuer link and rating history; effective-dated and versioned (PRD-000 C4). Label carried from PRD-003: market-cap category source **[REG — AMFI list as adopted by SEBI; VAL]**. *Changed:* lot and tick size, issuer link and effective dating / versioning added (DDL-000 `master.security`; PRD-000 C4) |
 | FR-D16-013 (was FR-D03-002) | M | CAP-D16-004 (.1) | **Issuer and issuer-group golden record:** legal entity, LEI, CIN, issuer group (for group exposure), sector, sponsor-group flag (for related-party limits), ratings by agency. A change to the issuer group or the sponsor-group flag affects compliance limits and needs a Compliance Officer as checker (§7 †) |
 | FR-D16-014 | M | CAP-D16-004 (.1) | **Credit ratings:** rating, outlook, scale (long / short term) and agency per security or issuer with validity dates, loaded from the rating agencies or a licensed vendor ("Confirm with provider", INT-001); history never overwritten; a rating change raises a `RATING_CHANGED` event for D03, D08, D09 and D11 (name finalised in EA-007) |
 | FR-D16-015 | M | CAP-D16-004 (.1) | **Counterparty golden record:** brokers, custodians, banks, clearing corporations and other counterparties with legal entity, LEI, registrations and identifiers; D06 empanelment (WF-023) and D07 settlement instructions (WF-028) reference it; D16 holds identity data only, not empanelment status or bank details (those stay in D06 / D07) |
@@ -230,6 +231,7 @@ Priority: **C** critical (release-blocking), **O** optional — as PRD-000 Chapt
 | US-D16-010 | As a Data Protection Officer, I want personal-data access controlled | C | **AC-US-D16-010-1** Given a request to read a Restricted-PII dataset, when only the data owner has approved, then access is not granted; after both approvals it is granted until the expiry date and every read is logged. |
 | US-D16-011 | As an Auditor, I want any past report reproduced | C | **AC-US-D16-011-1** Given a report produced on a past date, when it is re-run as-of that date, then it returns the same figures using the data, master-data and metric versions of that date. |
 | US-D16-012 | As an Analyst, I want to find data without asking around | O | **AC-US-D16-012-1** Given a search for "AUM", when I open the catalogue, then I see each AUM dataset and metric with owner, description, freshness, quality state and lineage link. |
+| US-D16-013 (was Ch 5 US-DAT-01) | As an Analyst, I want certified metrics only on CXO dashboards | C | **AC-US-D16-013-1** (from US-DAT-01) Given an uncertified metric, when added to a CXO dashboard, then publish is refused. |
 
 Definition of done: as PRD-000 Chapter 5.
 
@@ -253,7 +255,7 @@ Definition of done: as PRD-000 Chapter 5.
 | --- | --- |
 | `master.currency` (global reference, not tenant-scoped), `master.issuer_group`, `master.issuer`, `master.security`, `master.credit_rating`, `master.benchmark`; `analytics.metric_definition` | Counterparty; identifier crosswalk; benchmark levels and constituents; security coupon and call schedules; steward requests and match candidates; source precedence rules; DQ rules, results and exceptions; dataset register (owner, classification, retention, purpose tags); catalogue entries; access requests and grants; certification state per dataset and date; pipeline run log; lineage pointers. `master.security` and `master.issuer` have `valid_from` only, not full bi-temporal history (DA-000 Ch 2 rule 4) — C6 |
 
-The lake, warehouse and lineage graph are outside PostgreSQL (ADR-0007: object storage with Iceberg, ClickHouse, OpenLineage); their designs are in DA-001.
+The lake, warehouse and lineage graph are outside PostgreSQL (ADR-0007: object storage with Iceberg, ClickHouse; lineage with OpenLineage per FR-D16-007); their designs are in DA-001.
 
 **Interfaces (indicative, not contracts):** PRD-000 Module 14 point 11 names `data-platform` resources `/datasets`, `/metrics`, `/lineage`, `/dq-results` and a semantic-layer query API; this PRD adds `/securities`, `/issuers`, `/counterparties`, `/benchmarks`, `/identifiers`, `/steward-requests`, `/catalog`, `/access-requests`. Names become `API-D16-nnn` in Step 24 and events `<NAME>.v<n>` in EA-007 (Step 13). Outside parties: data vendors, rating agencies, exchanges, index providers — "Confirm with provider" (INT-001, Step 14); none is fabricated here.
 
@@ -287,6 +289,7 @@ Within PRD-000 C8 and [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md
 | C7 | Data Steward assistant (PRD-000 Module 14 point 16) is not a named D17 capability | AIML-001 (Step 26); PRD-017 C3 |
 | C8 | Who approves metric definitions beyond the business owner: a Data Governance Council (PRD-000) has no role in BA-005 — owner question Q53 | Owner (Q53); next BA-005 revision |
 | C9 | DQ thresholds, T+0 / T+1 deadlines and retention periods are tenant configuration or VAL; no values shipped | Pilot discovery; REG-001 |
+| C10 | WF-041 adds a rule for D05 — no order on a security without an approved golden record **[DES]**. PRD-005 does not state it, and it interacts with the PRD-005 emergency universe override (FR-D05-012), where a new security may be needed quickly (a fast-track WF-041 path may be needed) | EA-003 (Step 11); next PRD-005 revision |
 
 ## Sources
 

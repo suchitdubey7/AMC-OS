@@ -12,7 +12,7 @@ last_updated: 2026-11-21
 
 # PRD-017 — AI and Decision Intelligence (D17)
 
-This document states what AMC OS must do to let people in every department ask questions, get explanations and receive drafts from governed AI assistants and ML models — while every number stays deterministic and every decision stays human. It re-keys PRD-000 v0.9 Module 15 and Chapter 9 to the GOV-001 identifiers (`FR-15-nn` → `FR-D17-nnn`, `BR-15-n` → `BRL-D17-nnn`, Module 15 acceptance criteria → `AC-US-D17-nnn-n`), places each PRD-000 agent under its BA-001 capability, and adds the two assistants the brief lists but PRD-000 does not: the **Dealing assistant (CAP-D17-004)** and the **Risk assistant (CAP-D17-006)** (BA-001 §5 C4; GOV-006 §2 point 5). It adds new **[DES]** requirements for **anomaly detection (CAP-D17-015)** and **forecasting (CAP-D17-016)** (GOV-001 §3 gaps), and one D17 workflow, **WF-043 AI assistant and model release and change** (§6.2).
+This document states what AMC OS must do to let people in every department ask questions, get explanations and receive drafts from governed AI assistants and ML models — while every number stays deterministic and every decision stays human. It re-keys PRD-000 v0.9 Module 15 and Chapter 9 to the GOV-001 identifiers (`FR-15-nn` → `FR-D17-nnn`, `BR-15-n` → `BRL-D17-nnn`, Module 15 acceptance criteria → `AC-US-D17-nnn-n`), places nine of the eleven PRD-000 agents under their BA-001 capabilities, and adds the two assistants the brief lists but PRD-000 does not: the **Dealing assistant (CAP-D17-004)** and the **Risk assistant (CAP-D17-006)** (BA-001 §5 C4; GOV-006 §2 point 5). It adds new **[DES]** requirements for **anomaly detection (CAP-D17-015)** and **forecasting (CAP-D17-016)** (GOV-001 §3 gaps), and one D17 workflow, **WF-043 AI assistant and model release and change** (§6.2).
 
 **Boundary (master prompt §3.1, §11; [ADR-0008](../../architecture/adrs/ADR-0008_ai_boundary.md)):** AI may read, explain, summarise, classify, forecast and draft **proposals**. AI never executes trades, approves transactions, publishes NAV, modifies accounting records, changes approved regulatory rules, overrides compliance controls or edits history. Every number an assistant states comes from a tool call to a deterministic engine or a certified metric (D16). An ML score or forecast is an advisory signal, labelled as such, never an official figure. No financial workflow waits on an AI call. The AMC's own business owner of each assistant decides what it may be used for (BA-002 §4).
 
@@ -33,10 +33,11 @@ This document states what AMC OS must do to let people in every department ask q
 | FR-15-01 … FR-15-08 | FR-D17-001 … FR-D17-008 | Same order; capability added |
 | BR-15-1 … BR-15-4 | BRL-D17-001 … BRL-D17-004 | Wording kept |
 | Module 15 point 18 (two acceptance criteria) | AC-US-D17-001-1, AC-US-D17-002-1 | Kept |
-| Ch 9 §9.1 four-layer boundary and hard rules | §4.4, BRL-D17-001, -003, -005 … -008 | Kept |
+| Ch 5 US-AI-01, US-AI-02 | US-D17-013, US-D17-014 | Acceptance criteria kept. US-AI-02 is also reflected in PRD-008 US-D08-007 and PRD-010 US-D10-011 for their domains |
+| Ch 9 §9.1 four-layer boundary and hard rules | §4.4, FR-D17-005, BRL-D17-001, -003, -004, -007, -010 | Kept |
 | Ch 9 §9.2 model requirements | FR-D17-018, FR-D17-013 | Kept; **[VAL]** carried |
 | Ch 9 §9.3 agents (11) | §4.3 table: 9 agents placed under CAP-D17-002, -003, -005, -007 … -012 | Names follow BA-001 (BA-004 §3 rule 2). **Not placed:** Portfolio Agent, Product Intelligence Agent (C4) |
-| Ch 9 §9.4 release gates | FR-D17-020, NFR-SEC-005, NFR-PERF-027, WF-043 | Kept |
+| Ch 9 §9.4 release gates | FR-D17-020, NFR-SEC-005, NFR-PERF-027, WF-043 | **(changed)**: "AI Governance Committee sign-off" replaced by named WF-043 checkers until the committee is defined (Q54) |
 | — | FR-D17-009 … FR-D17-027 (except as above), BRL-D17-005 … 012, US-D17-003 … 012, WF-043 | **New** **[DES]**; Dealing assistant and Risk assistant new (brief) |
 
 ## 3. Business requirements
@@ -82,7 +83,7 @@ Every requirement also obeys PRD-000 common rules C1–C8. Labels from PRD-000 a
 | FR-D17-018 | M | CAP-D17-001 (.1) | **Model access and pinning:** models reached through an abstraction layer so a model can be swapped per agent; each agent version pinned to one model version; providers used only on private endpoints in India where available, with contractual zero data retention and no training on tenant data (PRD-000 §9.2) **[VAL — data-localisation needs under CSCRF / SEBI cloud framework; provider "Confirm with provider", Q55]** |
 | FR-D17-019 | M | CAP-D17-001 | **No dependency of financial processing on AI:** if the AI gateway, a model provider or the vector store is down, every financial workflow (orders, settlement, NAV, accounting, compliance) runs unchanged; screens show that the assistant is unavailable (ADR-0008 decision 4) |
 | FR-D17-020 | M | CAP-D17-001 (.5) | **Release gates:** an agent version becomes `ACTIVE` only after passing the PRD-000 §9.4 gates — golden-set accuracy threshold, 0 cross-tenant leakage on the red-team set, 0 permission escalations, the prompt-injection pack, latency p95 — and approval through WF-043; agent status follows DDL-000 `ai.agent` (`DRAFT → APPROVED → ACTIVE → SUSPENDED → RETIRED`) |
-| FR-D17-021 | M | CAP-D17-001 (.1) | **AI inventory for oversight:** a report of every AI/ML system in use per tenant (purpose, business owner, model and version, data used, controls, evaluation results, incidents) that Compliance can use for regulatory reporting on AI/ML use by mutual funds (§5 note, S1) and for trustees and auditors; AMC OS prepares, Compliance files (Q58) **[REG — reporting duty exists; VAL content and frequency]** |
+| FR-D17-021 | M | CAP-D17-001 (.1) | **AI inventory for oversight:** a report of every AI/ML system in use per tenant (purpose, business owner, model and version, data used, controls, evaluation results, incidents) that Compliance can use for regulatory reporting on AI/ML use by mutual funds (§5 note, S1) and for trustees and auditors; AMC OS prepares, Compliance files (Q58). The 2019 circular exists **[REG]**; whether it still applies, and its content and frequency, are **[VAL]** |
 | FR-D17-022 | M | CAP-D17-001 (.4) | **Feedback:** users can rate an answer, flag an error and state the correct source; flags reach the agent's business owner and the next evaluation set |
 | FR-D17-023 | S | CAP-D17-001 (.3) | **Usage and cost limits:** per tenant, agent and user — limits on requests, tokens and spend; a reached limit stops new AI calls, never financial work; usage counts feed subscription metering (PRD-001, Q20) |
 | FR-D17-024 | M | CAP-D17-001 (.1) | **Tenant enablement:** each tenant chooses which agents are enabled; every enabled agent has a per-tenant service identity (ROLE-26, DDL-000 `ai.agent.service_user_id`) with no A, O, post, publish or execute permission (SOD-10) |
@@ -195,13 +196,13 @@ From BA-005 §3 (D17 column) and §5. Checker ≠ maker (SOD-01). Business roles
 
 | Capability | Maker | Checker(s) |
 | --- | --- | --- |
-| CAP-D17-001 agent version release and change (WF-043) | Technology Administrator | Business owner†, CTO, Information Security Officer†, Compliance Officer† (where needed) |
-| CAP-D17-014 … -016 model release (WF-043) | Model developer in DEP-17 (Data Steward role or a new role, C6) | Risk Manager† (validation), business owner†, CTO |
+| CAP-D17-001 agent version release and change (WF-043) | Technology Administrator | Business owner†, CTO†, Information Security Officer†, Compliance Officer† (where needed) |
+| CAP-D17-014 … -016 model release (WF-043) | Model developer in DEP-17 (Data Steward role or a new role, C6) | Risk Manager† (validation), business owner†, CTO†, Information Security Officer† |
 | CAP-D17-001 (.3) kill switch | CTO, Information Security Officer† or Tenant Administrator† | None to suspend; WF-043 to re-enable |
 | CAP-D17-013 corpus document approval | Document owner in the business department | Business owner of the assistant using it† |
 | CAP-D17-017 proposals | AI agent identity (draft only) | The owning domain's normal maker / checker |
 
-**Rights added beyond BA-005 (†):** BA-005 §3 gives business roles only "R use" in D17. This PRD adds approval (A) in WF-043 for the business owner of each assistant (BA-002 §4 makes them accountable), the Information Security Officer (security gates), the Risk Manager (model validation, BA-002 §4 DEP-11 support) and the Compliance Officer; and the kill-switch right for the ISO and Tenant Administrator. BA-005 has no role for model developers or for the "AI Product Owner" and "AI Governance Committee" named in PRD-000 Module 15 point 4 (C6, Q54).
+**Rights added beyond BA-005 (†):** BA-005 §3 gives business roles only "R use" in D17. This PRD adds approval (A) in WF-043 for the business owner of each assistant (BA-002 §4 makes them accountable), the CTO (BA-005 gives the CTO only R X(config) in D17), the Information Security Officer (security gates), the Risk Manager (model validation, BA-002 §4 DEP-11 support) and the Compliance Officer; and the kill-switch right for the ISO and Tenant Administrator. BA-005 has no role for model developers or for the "AI Product Owner" and "AI Governance Committee" named in PRD-000 Module 15 point 4 (C6, Q54).
 
 ## 8. User stories and acceptance criteria
 
@@ -214,13 +215,15 @@ Priority: **C** critical (release-blocking), **O** optional — as PRD-000 Chapt
 | US-D17-003 | As a Dealer, I want to understand why my order is held | C | **AC-US-D17-003-1** Given an order blocked by pre-trade compliance, when I ask the Dealing assistant, then it shows the failing rule and figures from the D08 result and offers no action that changes the order. |
 | US-D17-004 | As a Risk Manager, I want to know why VaR moved | C | **AC-US-D17-004-1** Given today's and yesterday's D09 results, when I ask the Risk assistant, then the drivers it lists add up to the change shown by D09 and each cites its result. |
 | US-D17-005 | As the CCO, I want AI never to activate a rule | C | **AC-US-D17-005-1** Given the Compliance copilot drafts a rule change, when it is saved, then it exists only as a proposal in WF-034 and the rule registry is unchanged until a person approves it. |
-| US-D17-006 | As the CTO, I want an agent stopped at once if something goes wrong | C | **AC-US-D17-006-1** Given an active agent, when the ISO presses the kill switch with a reason, then new calls to that agent for that tenant are refused within one minute and re-enabling needs WF-043 approval by someone else. |
+| US-D17-006 | As the CTO, I want an agent stopped at once if something goes wrong | C | **AC-US-D17-006-1** Given an active agent, when the ISO presses the kill switch with a reason, then new calls to that agent for that tenant are refused within one minute **[DES]** and re-enabling needs WF-043 approval by someone else. |
 | US-D17-007 | As the COO, I want NAV to run when AI is down | C | **AC-US-D17-007-1** Given the AI gateway is unavailable, when the daily NAV run (WF-007) executes, then it completes as normal and only the assistant panel shows "unavailable". |
 | US-D17-008 | As the CTO, I want no untested agent version live | C | **AC-US-D17-008-1** Given a new prompt version that failed the injection test pack, when someone tries to activate it, then activation is refused and the failing cases are listed. |
 | US-D17-009 | As a Risk Manager, I want ML models validated | C | **AC-US-D17-009-1** Given a churn model with no recorded independent validation, when activation is requested, then it is refused. |
 | US-D17-010 | As an Investor Service Executive, I want personal data protected in AI drafts | C | **AC-US-D17-010-1** Given I do not hold the unmask right, when the assistant drafts a reply, then the model call contains masked identifiers only and the draft shows masked values. |
 | US-D17-011 | As the CCO, I want an inventory of AI use | O | **AC-US-D17-011-1** Given the quarter end, when I open the AI inventory, then every active agent and model appears with purpose, owner, model version, evaluation results and incidents for the period. |
 | US-D17-012 | As an Auditor, I want to see that a person decided | C | **AC-US-D17-012-1** Given a reconciliation match accepted from an AI proposal, when I open its record, then I see the proposal, the accepting user, the time and any change the user made. |
+| US-D17-013 (was Ch 5 US-AI-01) | As the CEO, I want to ask "why did AUM fall?" in plain language | O | **AC-US-D17-013-1** (from US-AI-01) Given the question, when answered, then the answer cites metric IDs and dates and contains no uncited number. |
+| US-D17-014 (was Ch 5 US-AI-02) | As Compliance, I want AI never to execute or approve | C | **AC-US-D17-014-1** (from US-AI-02) Given any agent identity, when it calls an approve / post / publish endpoint, then 403 is returned and a security alert raised. |
 
 Definition of done: as PRD-000 Chapter 5.
 
@@ -244,7 +247,7 @@ Definition of done: as PRD-000 Chapter 5.
 
 | Exists in DDL-000 | Not yet in DDL-000 (for DA-001 / DDL, Steps 15–16) **[DES]** |
 | --- | --- |
-| `ai.agent` (per tenant: model, prompt version, allowed tools, risk tier LOW / MEDIUM / HIGH, status), `ai.tool_call_log` (insert-only, partitioned), `ai.proposal` | Agent versions history; prompt versions; tool registry; sessions and messages; retrieved-chunk log; feedback; evaluation suites and results; model registry, validation and monitoring records; corpus documents with source metadata; embeddings (separate pgvector cluster, ADR-0007); kill-switch log; usage and cost counters; AI inventory snapshots. The meaning of risk tiers is not defined anywhere yet (C7) |
+| `ai.agent` (per tenant: model, prompt version, allowed tools, risk tier LOW / MEDIUM / HIGH, status), `ai.tool_call_log` (insert-only, partitioned), `ai.proposal` | Agent versions history; proposal target workflow, evidence links and expiry time (DDL-000 `ai.proposal` has `target_module` and status `EXPIRED` only); prompt versions; tool registry; sessions and messages; retrieved-chunk log; feedback; evaluation suites and results; model registry, validation and monitoring records; corpus documents with source metadata; embeddings (separate pgvector cluster, ADR-0007); kill-switch log; usage and cost counters; AI inventory snapshots. The meaning of risk tiers is not defined anywhere yet (C7) |
 
 **Interfaces (indicative, not contracts):** PRD-000 Module 15 point 11 names `ai-svc` resources `/agents`, `/sessions`, `/messages`, `/tool-calls`, `/proposals`, `/evaluations`; this PRD adds `/models`, `/corpus-documents`, `/feedback`, `/kill-switch`, `/inventory`. Names become `API-D17-nnn` in Step 24 and events `<NAME>.v<n>` in EA-007 (Step 13). Outside parties: LLM, embedding and vector-store providers — "Confirm with provider" (Q55); none is named or fabricated here.
 
