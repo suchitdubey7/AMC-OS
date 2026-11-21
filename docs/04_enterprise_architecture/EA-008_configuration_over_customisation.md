@@ -13,7 +13,7 @@ last_updated: 2026-11-21
 
 Master prompt §3.6 says: "Support AMC-specific configuration through governed metadata and configuration systems. Avoid separate code forks for individual customers." This document designs that system: what an AMC may change, what it may never change, how a change is made, approved, dated, promoted and read, and where it is stored. It completes GOV-006 Step 11 together with [EA-003](EA-003_domain_boundaries_and_service_catalogue.md) and gives the "full design" that BA-004 WF-021 and PRD-001 §4.8 point to.
 
-**Builds on Draft documents:** PRD-001 §4.8 (FR-D01-033…037, BRL-D01-004, BRL-D01-007), BA-004 WF-021, BA-005 (`platform.config.approve`, SOD-12), PRD-005, PRD-008, PRD-010, PRD-011, PRD-014, PRD-016, PRD-017, ADR-0017, EA-002, EA-003 — allowed by owner decision D-3. Nothing used here is Approved. Owner decisions used: D-16, D-18, D-19, D-21, D-26, D-28, D-29, D-32, D-33, D-34, D-37, D-41, D-43, D-44, D-46, D-50, D-59, D-60, D-73 ([LOOP_STATE.md](../../LOOP_STATE.md)).
+**Builds on Draft documents:** PRD-001 §4.8 (FR-D01-033…037, BRL-D01-004, BRL-D01-007), BA-004 WF-021, BA-005 (`platform.config.approve`, SOD-12), PRD-005, PRD-008, PRD-010, PRD-011, PRD-014, PRD-016, PRD-017, ADR-0017, EA-002, EA-003 — allowed by owner decision D-3. Nothing used here is Approved. Owner decisions used: D-14, D-16, D-18, D-19, D-21, D-26, D-28, D-29, D-32, D-33, D-34, D-37, D-41, D-43, D-44, D-46, D-50, D-59, D-60, D-73 ([LOOP_STATE.md](../../LOOP_STATE.md)).
 
 **Status of every decision here:** **[DES]** unless marked otherwise. No regulatory fact is stated; where a setting is a regulatory parameter its value is never shipped by AMC OS (D-46).
 
@@ -43,8 +43,9 @@ flowchart TB
 
 | Kind | Examples | Owner and store | Change process |
 | --- | --- | --- | --- |
-| **K1 Settings** | Price and NAV tolerances (D-46); approval amounts above which a second approver is needed (D-41, D-50); age bands (D-43); maximum length of a limit exemption (D-34); escalation path for unactioned risk alerts (D-37); leftover-share rule for block splits (D-28); accounting mode and NAV mode per scheme (D-16, D-44); who submits NAV to AMFI (D-44); module entitlements (D-26); assistant switch-on per AMC (D-73); small-team mode (D-19, D-21); cut-off times | Tenant module, `platform` schema (EA-003 T14) | WF-021: maker, checker from the owning department, plus a Compliance Officer for a regulatory parameter (SOD-12), the CTO for technical settings; small-team mode needs both an Information Security Officer and a Compliance Officer (D-21) — BA-005 `platform.config.approve` |
+| **K1 Settings** | Price and NAV tolerances (D-46); approval amounts above which a second approver is needed (D-41, D-50); age bands (D-43); maximum length of a limit exemption (D-34); escalation path for unactioned risk alerts (D-37); leftover-share rule for block splits (D-28); accounting mode and NAV mode per scheme (D-16, D-44 — a change of mode is not a plain switch: it is approved through WF-021 only together with a migration plan, EA-003 §6 point 2); who submits NAV to AMFI (D-44); assistant switch-on per AMC (D-73); tenant feature flags (FR-D01-003, CAP-D01-001 (.3)); small-team mode (D-19, D-21); cut-off times | Tenant module, `platform` schema (EA-003 T14) | WF-021: maker, checker from the owning department, plus a Compliance Officer for a regulatory parameter (SOD-12), the CTO for technical settings; small-team mode needs both an Information Security Officer and a Compliance Officer (D-21) — BA-005 `platform.config.approve` |
 | **K2 Domain rule sets** | Compliance rules and versions (D08); internal risk limits (D09 inside the rule engine, D-33); posting rules (D10); valuation policy and price-source order (D11); reconciliation definitions (D12); commission and incentive structures (D14); trade-charges rate table (D06, D-29); metric definitions (D16, D-59); assistant definitions (D17, D-60) | The owning module, in its own schema (EA-003 T14) | The owning domain's lifecycle (§6), which meets the common contract of §6.1 |
+| **Not tenant settings** | Module entitlements — the AMC's subscription to AMC OS (CAP-D01-006, D-14), changed by the vendor under the contract, not by the AMC; a lapsed module becomes read-only (D-26). Release toggles used by the vendor to switch unfinished features on or off for all tenants | Tenant module (entitlements); the release itself (release toggles) | Subscription management (PRD-001) and the control plane (EA-006, Step 12) — never WF-021 |
 | **K3 Reference and master data** | Securities, issuers, benchmarks, counterparties (Security master); schemes and plans (Product); distributors (Distribution) | The owning module | That module's own maker-checker workflow (for example WF-041, WF-029); never treated as configuration |
 | **K4 Presentation preferences** | Saved views, column choices, personal dashboards; tenant default dashboards and labels; notification channel choices | Tenant module (tenant defaults) or the user's profile | Personal: no approval. Tenant defaults: Tenant Administrator, logged in the audit trail **[DES]**. Never an input to any engine or rule |
 | **Never allowed** | Code written for one AMC; scripts or formulas typed in by a tenant; a setting that changes an engine's method or rounding; removing maker-checker from a financial action; weakening segregation of duties (only SOD-03 may be switched off, and SOD-16 relaxed in small-team mode — D-18, D-19); anything touching tenant isolation, audit or the AI boundary (ADR-0008); changing compliance rules through K1 (they are K2, SOD-08) | — | A need here becomes a product change request for all tenants (FR-D01-037) |
@@ -144,14 +145,15 @@ Every rule set, whatever module owns it, must have:
 | Compliance rules and versions | Compliance | WF-034: a Compliance Officer drafts, only the CCO approves; tests must pass (SOD-08) | D-32; PRD-008 |
 | Internal risk limits | Compliance (rule engine), requested by Risk | Risk team writes, CRO approves, inside the rule engine | D-33; PRD-009 |
 | Posting rules | Accounting | WF-021 with maker-checker (Fund Accountant, Senior Fund Accountant); test cases before activation | FR-D10-018, BRL-D10-004 |
-| Valuation policy and price-source order | Valuation | Valuation Committee approval; further board or trustee approval **[VAL]** as PRD-011 says | FR-D11-016, BRL-D11-007 |
-| Reconciliation definitions | Operations | `operations.recon_definition.approve` (BA-005) | PRD-012 |
+| Valuation policy | Valuation | Valuation Committee approval; further board or trustee approval **[VAL]** as PRD-011 says | FR-D11-016, BRL-D11-007 |
+| Price-source order (source hierarchy) | Valuation | Head of Fund Accounting through WF-021; a change of order for a regulated asset class also needs the Valuation Committee | FR-D11-014, BRL-D11-007 |
+| Reconciliation definitions (including the sets for Settlement, Accounting, NAV and Investor checks) | Operations stores them in `operations`; each set is written through the Operations API by people of the owning department (for example Fund Accountants for D10/D11 sets), not by the owning module calling Operations (EA-003 tiers) | Owning department's checker and the Operations Manager (`operations.recon_definition.approve`†) | PRD-012 §7 |
 | Commission rates and incentive rules | Distribution | Head of Sales†, a Finance Officer or the CFO, and a Compliance Officer before the effective date | BRL-D14-005 |
 | Trade-charges rate table | Execution | Operations updates, Compliance checks | D-29; EA-003 T6 |
 | Metric definitions | Reporting | WF-042: Data Steward drafts, business owner approves; Compliance also for regulatory metrics | D-59 |
 | Assistant definitions and versions | AI | WF-043: business owner, CTO and Information Security Officer approve; Risk Manager validates | D-60; FR-D17-024 |
 
-† Not yet a BA-005 role (LOOP_STATE "BA-005 changes waiting").
+† Not yet in BA-005 (a role or a right waiting for the next BA-005 revision; LOOP_STATE "BA-005 changes waiting").
 
 ## 7. How modules read configuration
 
@@ -166,7 +168,7 @@ Settings live in the `platform` schema, owned by the Tenant module; no separate 
 
 | Table (proposed) | Rows | Tenant-scoped? |
 | --- | --- | --- |
-| `platform.config_item` | The catalogue (§3), loaded per release | No — product-level rows, like `platform.tenant`, which DA-000 already allows as the only non-tenant rows in `platform` |
+| `platform.config_item` | The catalogue (§3), loaded per release | No — product-level rows; DA-000 Ch 2 already makes `platform` the only schema allowed to hold non-tenant rows |
 | `platform.config_version` | One row per configuration version: maker, checker, approval reference, state, effective date, promotion record | Yes (forced RLS) |
 | `platform.config_value` | Value per key, scope (tenant or scheme ID) and version | Yes (forced RLS) |
 | `platform.config_promotion` | Each promotion between environments: bundle hash, source and target environment, time | Yes (forced RLS) |

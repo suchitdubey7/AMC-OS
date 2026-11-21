@@ -13,7 +13,7 @@ last_updated: 2026-11-21
 
 This document lists the 22 service modules of AMC OS (master prompt §5 L3), says what each one owns and does, which APIs and events it offers, which other modules it may call, and how the boundaries between them are kept. It also settles the ownership questions the business documents left open for this step. It is master prompt §14 Stage B items 3 ("Domain boundary diagrams") and 4 ("Service catalogue"). The configuration-over-customisation design (master prompt §3.6), the other half of GOV-006 Step 11, is [EA-008](EA-008_configuration_over_customisation.md).
 
-**Builds on Draft documents:** EA-001, EA-002, ADR-0002…ADR-0008, ADR-0016…ADR-0019, BA-001, BA-004, BA-005, PRD-001…PRD-017, DA-000, DDL-000 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). Nothing used here is Approved; EA-001, EA-002 and ADR-0016…ADR-0019 are still waiting for the owner to merge. Owner decisions used: Q2, D-16, D-29, D-40, D-44, D-52, D-53, D-55, D-58, D-61, D-62, D-65, D-70, D-73, D-74, D-75 ([LOOP_STATE.md](../../LOOP_STATE.md)). The proposal branch `proposal/ai-orchestration-architecture` (EA-101 system-of-record registry) was read as input only.
+**Builds on Draft documents:** EA-001, EA-002, ADR-0002…ADR-0008, ADR-0016…ADR-0019, BA-001, BA-004, BA-005, PRD-001…PRD-017, DA-000, DDL-000 — allowed by owner decision D-3 ([GOV-008](../00_governance/GOV-008_build_loop.md) §2 rule 3). Nothing used here is Approved; EA-001, EA-002 and ADR-0016…ADR-0019 are still waiting for the owner to merge. Owner decision Q2 ([GOV-006](../00_governance/GOV-006_gap_analysis_and_delivery_plan.md) §4) and owner decisions D-16, D-29, D-40, D-44, D-52, D-53, D-55, D-58, D-61, D-62, D-65, D-70, D-73, D-74, D-75 ([LOOP_STATE.md](../../LOOP_STATE.md)). The proposal branch `proposal/ai-orchestration-architecture` (EA-101 system-of-record registry) was read as input only.
 
 **Status of every decision in this document:** **[DES]** — a design proposal for the owner (interim ARB) to accept or change. No new regulatory fact is stated. API names are indicative resource groups taken from the PRDs (final paths and `API-Dxx-nnn` IDs: Step 24). Event names are **candidate** names in the master prompt §5 L4 style; final names, payloads and versions (`<NAME>.v<n>`, GOV-001 §4) are set in EA-007 (Step 13).
 
@@ -38,12 +38,12 @@ These rules apply to every module. They restate ADR-0002, ADR-0006 and DA-000 Ch
 | B1 | A module writes only its own schema(s) and connects with its own database role that cannot write any other schema | ADR-0002; AGENTS.md §2.3 |
 | B2 | Another module's data is read only through that module's public interface. Direct SQL reads across schemas are allowed only for the stable reference tables DA-000 already allows foreign keys to (`platform.tenant`, `master.*`, `product.*`) and for D16 data pipelines that extract to the analytical store. *New:* DA-000 Ch 2 allowed wider cross-schema read grants; this narrows them so a module can later move out without breaking callers | DA-000 Ch 2 (tightened) |
 | B3 | Synchronous calls follow the tier order of §4 and never form a cycle. Information that must flow the other way travels as an event. *New* | Master prompt §21 ("no circular domain dependencies") |
-| B4 | Events are written by the owning module in the same transaction as the change (outbox) and delivered to idempotent consumers. *New:* one outbox table **per owning schema**, not one shared `platform.outbox_event` (see §5 T15) | ADR-0006, D-70 |
+| B4 | Events are written by the owning module in the same transaction as the change (outbox) and delivered to idempotent consumers. *New:* one outbox table **per owning schema**, not one shared `platform.outbox_event`; each module runs its own relay under its own database role (see §5 T15) | ADR-0006, D-70 |
 | B5 | Process workflows (L4) may call any module's public interface; modules never write workflow state and only start a workflow or send it a signal | ADR-0006 §3 |
 | B6 | Each financial engine FE-01…FE-10 has exactly one owning module, which calls it as a library and passes in all its inputs; an engine never reads another domain's tables (§3) | EA-002 §5.3; GOV-001 §5 |
 | B7 | Approvals use the one approval mechanism of the Workflow module (CAP-D12-011); the owning module decides who may approve and what happens after | BA-001 §4 |
 | B8 | Audit records are written through the audit write function of the Tenant module (insert-only), never by a direct insert into `audit` tables (§5 T15) | NFR-AUD-001; *new* |
-| B9 | An integration adapter belongs to the module that owns the data it brings in or sends out; the Operations module owns only the shared plumbing (connection register, file register, expected-file schedule, raw landing) (§5 T16) | EA-001 §4 rules; EA-002 §5.1 |
+| B9 | An integration adapter belongs to the module that owns the data it brings in or sends out; the Operations module owns only the shared plumbing (connection register, file register, expected-file schedule, raw landing) (§5 T16). *New:* EA-002 §5.1 described adapters as separate modules owned by the domain that **uses** the data; here adapter code sits inside the module that **owns** the data | EA-001 §4 rules; changes EA-002 §5.1 |
 | B10 | AI assistants (D17) use only read tools and draft tools that the owning module registers; no module calls AI on the path of a financial transaction | ADR-0008; FR-D17-019 |
 | B11 | The browser (L1) may call any module through the gateway to show data or start an action, but never combines modules' data to calculate a financial number | Master prompt §3.5; EA-002 §3.3 |
 
@@ -120,7 +120,7 @@ flowchart TB
 
 ## 3. Service catalogue
 
-Each card says what the module is responsible for (BA-001 capabilities), the main API resource groups (from the PRD §10 tables, indicative), the candidate events it publishes and the main events it consumes, the modules it may call synchronously (beyond the Tenant and Identity modules, which every module may call), and the outside parties whose adapters it owns. "Calls" lists must match the §4 tier table.
+Each card says what the module is responsible for (BA-001 capabilities), the main API resource groups (from the PRD §10 tables, indicative), the candidate events it publishes and the main events it consumes, the modules it may call synchronously (every module above tier 1 may also call Tenant and Identity, and Identity may call Tenant; the cards list them only where that is all the module calls), and the outside parties whose adapters it owns. "Calls" lists must match the §4 tier table.
 
 ### 3.1 Tenant (D01)
 
@@ -144,7 +144,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | Consumes | `APPROVAL_DECIDED` for grants (WF-020, WF-022) |
 | Calls | Tenant |
 | Adapters | X01 AMC identity provider (sign-in through the Keycloak broker, ADR-0016; provisioning push where supported) |
-| Notes | Supplies grants and attributes to the policy engine (L2, ADR-0019); the policy engine itself is not a module. Approvals for grants are opened by the process workflow, as for Tenant |
+| Notes | Supplies grants and attributes to the policy engine (L2, ADR-0019); the policy engine itself is not a module. Approvals for grants and break-glass access (WF-020, WF-022) are opened by the process workflow, as for Tenant |
 
 ### 3.3 Workflow (D12)
 
@@ -154,9 +154,9 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | APIs (indicative) | Approval requests; decisions; tasks; inboxes; delegation |
 | Publishes (candidate) | `APPROVAL_REQUESTED`, `APPROVAL_DECIDED`, `TASK_ASSIGNED`, `TASK_OVERDUE` |
 | Consumes | `ROLE_REVOKED` (withdraw pending tasks of a leaver) |
-| Calls | Tenant, Identity, Documents |
+| Calls | Documents |
 | Adapters | None |
-| Notes | Owns the `workflow` schema (approval requests and decisions; DDL-000 `workflow.approval_request`, `workflow.approval_decision`). It is **not** the Temporal runtime: process workflows (L4) are platform infrastructure, and each process workflow's definition belongs to the module that owns the process (for example the daily NAV workflow belongs to NAV) |
+| Notes | Owns the `workflow` schema (approval requests and decisions; DDL-000 `workflow.approval_request`, `workflow.approval_decision`). It is **not** the Temporal runtime: process workflows (L4) are platform infrastructure, and each process workflow's definition belongs to the module that owns the process (for example the daily NAV workflow belongs to NAV). *New:* BA-001 CAP-D12-011 (.1) and DA-000 Ch 2 gave "workflow definitions" to D12; here D12 keeps approval-chain definitions and process workflow definitions move to their owning modules (§7) |
 
 ### 3.4 Documents (D12)
 
@@ -166,7 +166,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | APIs (indicative) | Documents; versions; retention classes; download links |
 | Publishes (candidate) | `DOCUMENT_STORED`, `DOCUMENT_VERSION_APPROVED` |
 | Consumes | — |
-| Calls | Tenant, Identity |
+| Calls | Tenant, Identity only |
 | Adapters | None (object storage is L6 infrastructure, ADR-0007) |
 | Notes | Content and its approval belong to the domain that owns it (SID/SAI/KIM to Product, evidence packs to Compliance) (BA-001 §4) |
 
@@ -178,7 +178,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | APIs (indicative) | Securities; issuers; counterparties; benchmarks and levels; identifiers; steward requests |
 | Publishes (candidate) | `SECURITY_APPROVED`, `SECURITY_CHANGED`, `ISSUER_CHANGED`, `RATING_CHANGED`, `COUNTERPARTY_CHANGED`, `BENCHMARK_LEVELS_LOADED` |
 | Consumes | — |
-| Calls | Tenant, Identity, Workflow, Documents |
+| Calls | Workflow, Documents |
 | Adapters | X10 data vendors (reference data), X11 rating agencies (ratings), index data — each "Confirm with provider" (INT-001, Step 14) |
 | Notes | One copy per AMC; only `master.currency` is shared (D-62). Distributor, investor and employee records stay with D14, D13 and D01; Security master only matches and checks them (§5 T9) |
 
@@ -258,7 +258,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | Responsible for | CAP-D08-001…013: rule registry and rule versions (rules are data), restrictions and limits, pre- and post-trade checks (FE-04), what-if, breaches, investigation, corrective actions, overrides and exemptions, evidence, compliance reports (PRD-008; WF-005, WF-006, WF-014, WF-016, WF-034) |
 | APIs (indicative) | Rules and versions; rule tests; pre-trade check; post-trade run; what-if; breaches; overrides; exemptions; evidence; regulatory reports |
 | Publishes (candidate) | `COMPLIANCE_CHECK_COMPLETED`, `COMPLIANCE_BREACH_DETECTED`, `COMPLIANCE_BREACH_CLOSED`, `RULE_VERSION_APPROVED`, `PRETRADE_OVERRIDE_APPROVED` |
-| Consumes | `ALLOCATION_COMPLETED` (start post-trade checks); `HOLDINGS_UPDATED`; `SCHEME_MANDATE_CHANGED`; `RESTRICTED_LIST_CHANGED`; `RISK_RUN_COMPLETED` (liquidity-stress inputs) |
+| Consumes | `ALLOCATION_COMPLETED` (start post-trade checks); `NAV_APPROVED` (end-of-day post-trade run after NAV approval and net assets for limits, FR-D08-009, FR-D08-002); `HOLDINGS_UPDATED`; `SCHEME_MANDATE_CHANGED`; `RESTRICTED_LIST_CHANGED`; `RISK_RUN_COMPLETED` (liquidity-stress inputs) |
 | Calls | Portfolio, Product, Investment, Security master, Workflow, Documents |
 | Adapters | X13 SEBI sources (circulars read by people; reports prepared for people to file) |
 | Notes | Never calls Risk: Risk sends limit requests to Compliance (§4.2). Owns the override record and approval (§5 T7) |
@@ -270,7 +270,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | Responsible for | CAP-D09-001…013: market, credit, liquidity, concentration and counterparty risk, duration and rate sensitivity, stress and scenarios, risk attribution, reporting and alerts (FE-05; PRD-009; WF-033) |
 | APIs (indicative) | Risk runs; metrics as of a date; stress scenarios and results; models; alerts; attribution |
 | Publishes (candidate) | `RISK_RUN_COMPLETED`, `RISK_ALERT_RAISED`, `RISK_ALERT_ESCALATED`, `RISK_MODEL_VALIDATED` |
-| Consumes | `POSITIONS_SNAPSHOT_TAKEN`; `PRICES_VALIDATED`; `RATING_CHANGED`; `COMPLIANCE_BREACH_DETECTED` (for the risk view) |
+| Consumes | `POSITIONS_SNAPSHOT_TAKEN`; `PRICES_VALIDATED`; `RATING_CHANGED`; `CORPORATE_ACTION_EFFECTIVE` (FR-D12-021); `COMPLIANCE_BREACH_DETECTED` (for the risk view) |
 | Calls | Portfolio, Valuation, Security master, Product, Compliance (limit requests; read-through of limits, BRL-D09-003), Investor (investor concentration), Workflow, Documents |
 | Adapters | Market data comes through Security master and Valuation; none of its own |
 
@@ -281,7 +281,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | Responsible for | CAP-D10-001…013: chart of accounts, journals, double-entry ledger, accruals, income and expense recognition, corporate-action accounting, receivables and payables, trial balance, accounting reconciliation rules, period close; book-of-record or mirror mode per scheme (FE-02; PRD-010; D-16, D-40; WF-008) |
 | APIs (indicative) | Chart of accounts; journal batches; periods; trial balance as of a date; accrual runs; receivables and payables; custodian ledger loads (mirror mode) |
 | Publishes (candidate) | `JOURNAL_POSTED`, `ACCRUALS_POSTED`, `ACCOUNTING_DAY_CLOSED`, `PERIOD_CLOSED`, `PERIOD_REOPENED` |
-| Consumes | `TRADE_CONFIRMED`, `TRADE_SETTLED`; `VALUATION_APPROVED`; `CORPORATE_ACTION_EFFECTIVE`, `ENTITLEMENT_RECEIVED`; `INVESTOR_FLOWS_FINAL`; `SCHEME_AMENDED` (TER and fee changes) |
+| Consumes | `TRADE_CONFIRMED`, `TRADE_SETTLED`, `SETTLEMENT_STATUS_CHANGED`; `VALUATION_APPROVED`; `CORPORATE_ACTION_EFFECTIVE`, `ENTITLEMENT_RECEIVED`; `INVESTOR_FLOWS_FINAL`; `SCHEME_AMENDED` (TER and fee changes) |
 | Calls | Valuation (approved valuation detail), Product, Security master, Workflow, Documents |
 | Adapters | X05 custodian ledger and trial balance in mirror mode — "Confirm with <custodian>" |
 
@@ -363,7 +363,7 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | APIs (indicative) | Datasets; metrics; lineage; data-quality results; catalogue; access requests; semantic-layer query |
 | Publishes (candidate) | `DATASET_CERTIFIED`, `DQ_EXCEPTION_RAISED`, `METRIC_DEFINITION_CERTIFIED` |
 | Consumes | Every module's events (for the analytical store); extracts under rule B2 |
-| Calls | Tenant, Identity only; it reads module data through pipelines, not through synchronous calls |
+| Calls | Workflow, Documents (approvals for WF-042 metric certification and data access requests, B7); it reads module data through pipelines, not through synchronous calls |
 | Adapters | None of its own (vendor data comes through Security master and Valuation) |
 | Notes | Domain reports with a business owner and approval (compliance reports, risk packs, board packs) stay with their domain; Reporting supplies certified data and the semantic layer |
 
@@ -376,23 +376,23 @@ Each card says what the module is responsible for (BA-001 capabilities), the mai
 | Publishes (candidate) | `AI_PROPOSAL_CREATED`, `AI_ANOMALY_FLAGGED`, `AI_KILL_SWITCH_CHANGED`, `ASSISTANT_VERSION_RELEASED` |
 | Consumes | `ROLE_REVOKED`; `ENTITLEMENT_CHANGED` |
 | Calls | Any module, but only through read tools and draft tools that module registers, and always through the L2 policy check (B10) |
-| Adapters | X14 AI model provider through the AI gateway only (D-61) |
+| Adapters | X14 AI model provider through the AI gateway only (EA-001 X14, CAP-D17-001); India-region private endpoint, zero data retention, no training on AMC data (D-61) |
 | Notes | Top tier: nothing calls AI on a financial path (FR-D17-019). A proposal enters the owning module's normal approval (ADR-0008 §3) |
 
 ## 4. Dependencies and tiers
 
 ### 4.1 Tier table
 
-Every module may also call Tenant and Identity. The table was checked for cycles by a topological sort while this document was written (no cycle found); any later change to a "Calls" row must keep it acyclic and be reflected in the architecture tests of ADR-0002.
+Every module above tier 1 may also call Tenant and Identity; Identity may call Tenant; Tenant calls nobody. The table was checked for cycles by a topological sort while this document was written (no cycle found); any later change to a "Calls" row must keep it acyclic and be reflected in the architecture tests of ADR-0002.
 
 | Tier | Modules | May call (besides Tenant, Identity) |
 | --- | --- | --- |
 | 0 | Tenant | — |
 | 1 | Identity | Tenant |
 | 2 | Documents | — |
-| 2 | Reporting | — (pipelines read data; rule B2) |
 | 3 | Workflow | Documents |
 | 4 | Security master | Workflow, Documents |
+| 4 | Reporting | Workflow, Documents (pipelines read data; rule B2) |
 | 5 | Product | Security master, Workflow, Documents |
 | 6 | Valuation | Security master, Product, Workflow, Documents |
 | 6 | Investment | Security master, Product, Workflow, Documents |
@@ -416,7 +416,7 @@ Process workflows (L4) and the browser (L1, through the gateway) are outside thi
 flowchart BT
   IDN[Identity 1] --> TEN[Tenant 0]
   DOC[Documents 2] --> IDN
-  RPT[Reporting 2] --> IDN
+  RPT[Reporting 4] --> WFL
   WFL[Workflow 3] --> DOC
   SEC[Security master 4] --> WFL
   PRD[Product 5] --> SEC
@@ -459,7 +459,7 @@ The diagram shows the main edges only; the table is complete. Arrows point from 
 | Accounting ↔ NAV | NAV needs the trial balance; accounting books the approved NAV-related figures | NAV calls Accounting; Accounting learns from events (`VALUATION_APPROVED`, flows) and never calls NAV |
 | NAV ↔ Investor | NAV needs units outstanding; investor checks need the applicable NAV | NAV calls Investor; Investor learns NAV from `NAV_PUBLISHED` |
 | Operations ↔ everyone | Day close and reconciliation read many modules; those modules need reconciliation status | Operations calls them for data; they learn status from `RECONCILIATION_COMPLETED` and `OPERATIONS_DAY_CLOSED`, or the screen shows Operations results directly |
-| Tenant, Identity ↔ Workflow | Configuration and grants need approval; Workflow needs grants | Approvals for configuration and grants are opened by the process workflow (WF-019…WF-021), not by Tenant or Identity |
+| Tenant, Identity ↔ Workflow | Configuration and grants need approval; Workflow needs grants | Approvals for configuration and grants are opened by the process workflow (WF-019…WF-022, including break-glass grants), not by Tenant or Identity |
 
 ### 4.3 Main event flows
 
@@ -508,7 +508,7 @@ Each row closes, or proposes how to close, an open point that earlier documents 
 | T12 | Engine for the investor unit, amount and IDCW checks | The checks are reconciliation sets that the Investor module defines and Operations runs with FE-07: expected values (for example expected units from amount, applicable NAV and charges) are computed by versioned expected-value rules inside FE-07 and compared with the RTA's figures; results flag the investor record (D-53). To be confirmed in the FE-07 specification (Step 22) | PRD-013 C8 |
 | T13 | Engine for staff sales incentives | FE-09 (Commission), owned by Distribution, which also owns CAP-D14-013; FE-08 (Revenue) stays with Finance | PRD-014 C5 |
 | T14 | Where configuration is stored | In `platform`, owned by the Tenant module; no new `config` schema. Domain rule sets (compliance rules, posting rules, commission structures, valuation policy, reconciliation definitions, risk models and limits, metric definitions, the trade-charges table) stay in their owning schemas. Design: EA-008 | PRD-001 C6; BA-001 CAP-D01-008 note; BA-004 WF-021 "full design" note |
-| T15 | Outbox, idempotency keys and audit writes | One outbox table and one idempotency-key table per owning schema (each module writes only its own); the relay in the Tenant module reads every outbox and marks rows sent. Audit records are written through an insert-only database function owned by the audit role (modules get permission to run the function, not to insert into the table), which keeps the per-tenant daily hash chain in one place. DDL-000 today has one shared `platform.outbox_event`, one `platform.idempotency_key` and a single `amc_app` role with write rights on every schema — all three change in Step 16 (per-module roles are what ADR-0002's validation already expects) | ADR-0002 validation; DA-000 Ch 2; new |
+| T15 | Outbox, idempotency keys and audit writes | One outbox table and one idempotency-key table per owning schema. Each module runs its own relay worker (shared code from the Tenant package, but connected with **that module's** database role), which reads only its own outbox and marks only its own rows sent — so no module, and no central relay, writes another schema. Outbox tables keep forced row-level security: the relay works tenant by tenant, reading the tenant list from `platform.tenant` (a reference table allowed by B2) and setting the tenant context (`SET LOCAL`) for each batch, exactly as a request does; no relay role bypasses row-level security. Audit records are written through an insert-only database function owned by the audit role (modules get permission to run the function, not to insert into the table), which keeps the per-tenant daily hash chain in one place. DDL-000 today has one shared `platform.outbox_event`, one `platform.idempotency_key` and a single `amc_app` role with write rights on every schema — all three change in Step 16 (per-module roles are what ADR-0002's validation already expects). These changes need an ADR first (§7, G8) | ADR-0002 validation; DA-000 Ch 2; new |
 | T16 | Integration adapters | Adapter code belongs to the module that owns the data (brokers → Execution; custodian instructions → Settlement; prices → Valuation; reference data → Security master; RTA feeds → Investor; ARN data → Distribution; ERP → Finance). Operations owns the shared connection register, file register, expected-file schedule and raw landing; after landing, an adapter loads data only through its owning module's interface | EA-002 §5.1; PRD-012 §10 |
 | T17 | Calendars | Tenant holds the one holiday calendar (CAP-D01-009); Settlement builds the settlement calendar and Operations the operational calendar and cut-offs on top of it, without copying holidays (BA-001 §4) | BA-001 §4 (confirmed) |
 | T18 | Other shared capabilities in BA-001 §4 | Confirmed as proposed there: compliance checks (D08), reconciliation engine (D12, with the D06 trade-date / D12 broker-statement split), accruals (D10 computes, NAV includes), unit balances (D13 investor grain, NAV scheme grain), approvals (Workflow), documents (Documents), exposure (three questions: D04, D08, D09), benchmarks (Security master data, D02 mapping), commission (D14) and revenue (D15), organisation units (Tenant) | BA-001 §4 |
@@ -516,7 +516,7 @@ Each row closes, or proposes how to close, an open point that earlier documents 
 
 ## 6. System-of-record register (EA-001 gap G4)
 
-The proposal's EA-101 suggests one generic per-tenant, per-object register (`platform.system_of_record`) that the policy engine checks on every write. This document recommends a smaller design **[DES]**:
+The proposal's EA-101 suggests one generic per-tenant, per-object register (`platform.system_of_record`) that the policy engine checks whenever a write tool in the AI tool registry is called (EA-101 §3 point 2). This document recommends a smaller design **[DES]**:
 
 1. **Fixed by the product, not configurable:** investor register and investor transactions (RTA, Q2), executions (broker and exchange), settlement status, custodian holdings and bank balances (custodian, depository, bank), KYC status (KRA, CKYC), published NAV on AMFI. AMC OS stores these only as checked copies. Orders, allocations, compliance results, approvals, workflow state and audit are always recorded in AMC OS (EA-001 §7).
 2. **Chosen per tenant, as named configuration items** in the EA-008 catalogue, each owned by one module that enforces it in its own code: accounting mode per scheme (book of record or custodian mirror, D-16, D-40 — Accounting), NAV mode per scheme (calculated in AMC OS, or custodian NAV loaded and checked, D-44 — NAV), and who submits NAV to AMFI (D-44 — NAV). A change of mode is a migration with its own plan, not a switch (as EA-101 also says).
@@ -529,12 +529,17 @@ Reason: the only data areas where the record holder really varies by tenant toda
 
 | Document | Change needed | When |
 | --- | --- | --- |
+| ADR-0020 (to be drafted; owner-only folder) | GOV-002 §2 needs an ADR before tables move between schemas and before the database role model changes: covers T1 and T3 (table moves), T15 (per-module roles, per-schema outbox and relays, audit write function) and B2 (narrower read grants) | Before DA-001 / DDL (Steps 15–16); owner merges |
 | DA-001, DDL | T1, T3, T15 table moves and per-module database roles; projection metadata (§6 point 3); configuration tables (EA-008 §8) | Steps 15–16 |
 | ADR-0002 | Read "one package per domain" together with §2 (sub-packages per module); architecture tests encode the §4.1 tier table | Owner (owner-only file); G1 |
-| DA-000 Ch 2 | Cross-schema read grants narrowed (B2); shared outbox replaced (T15) | Superseded by DA-001 (Step 15) |
-| BA-001 | CAP-D08-005 level-3 item for counterparty limits (T5); §4 marked "confirmed in EA-003" | Next BA-001 revision |
+| DA-000 Ch 2 | Cross-schema read grants narrowed (B2); shared outbox replaced (T15); process workflow definitions leave the `workflow` schema (§3.3) | Superseded by DA-001 (Step 15) |
+| BA-001 | CAP-D08-005 level-3 item for counterparty limits (T5); §4 marked "confirmed in EA-003"; CAP-D12-011 (.1) "workflow definitions" narrowed to approval chains (§3.3); CAP-D01-008 note to point to EA-008 | Next BA-001 revision |
 | PRD-005, PRD-006, PRD-007, PRD-008, PRD-012, PRD-013, PRD-014, PRD-016 | Open points named in §5 marked closed or answered | Next revision of each PRD |
-| GOV-001 §5 | FE-03 primary domain D11 (Valuation module) and FE-10 D04, as in §2 | Owner (owner-only file) |
+| GOV-001 §5 | FE-03 primary domain D11 (Valuation module) instead of "D11 / D04", as in §2 | Owner (owner-only file) |
+| EA-002 §5.1 | Adapters: code inside the owning module, not separate modules (B9) | Next EA-002 revision |
+| BA-004 WF-021, PRD-001 §1 and C6 | "Full design: EA-003" to read "EA-008" | Next revision of each |
+| GOV-005 WP3 row | Add EA-008 to the WP3 outputs | Owner (owner-only file) |
+| ADR-0017 Decision 6 | Cache time-to-live values are not set in EA-003; they are all deferred to DBE-002 | Next ADR-0017 revision (owner) |
 | EA-007 | Final event names, payloads, versions for every "candidate" event in §3 | Step 13 |
 | API-001 and OpenAPI | `API-Dxx-nnn` IDs for the resource groups in §3 | Step 24 |
 
@@ -549,6 +554,8 @@ Reason: the only data areas where the record holder really varies by tenant toda
 | G5 | Fast-track security approval for emergency orders (T10) | Owner question Q67 |
 | G6 | Exact split of process workflows (which module owns each L4 workflow definition) beyond the daily NAV | EA-007 (Step 13) |
 | G7 | Capacity and extraction triggers per module (when a module would leave the monolith, ADR-0002) | EA-004 (Step 12) |
+| G8 | Table moves and the new database role model (T1, T3, T15) need ADR-0020 before Steps 15–16 (GOV-002 §2) | ADR-0020, owner |
+| G9 | Cache time-to-live per use (ADR-0017 Decision 6 pointed to EA-003) | DBE-002 (Step 19) |
 
 ## Sources
 
@@ -562,4 +569,4 @@ Reason: the only data areas where the record holder really varies by tenant toda
 | S6 | PRD-001…PRD-017 §10 and §13 ([PRD folder](../03_product_requirements/README.md)) | Owned schemas, indicative interfaces, events named in the PRDs, open points |
 | S7 | [DA-000](../05_data_architecture/DA-000_data_and_database_architecture_v0.9.md) Ch 2; [DDL-000](../../database/ddl/DDL-000_core_schema_v0.9.sql) | Schema ownership, cross-schema rules, shared outbox and single application role |
 | S8 | Proposal branch `proposal/ai-orchestration-architecture`, EA-101 (read as input only, not in `main`) | System-of-record modes (§6) |
-| S9 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions | Q2, D-16, D-29, D-40, D-44, D-52, D-53, D-55, D-58, D-61, D-62, D-65, D-70, D-73…D-75 |
+| S9 | [LOOP_STATE.md](../../LOOP_STATE.md) owner decisions; [GOV-006](../00_governance/GOV-006_gap_analysis_and_delivery_plan.md) §4 for Q2 | Q2, D-16, D-29, D-40, D-44, D-52, D-53, D-55, D-58, D-61, D-62, D-65, D-70, D-73…D-75 |
