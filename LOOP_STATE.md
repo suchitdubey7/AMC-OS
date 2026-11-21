@@ -156,7 +156,7 @@ The owner decisions D-28…D-59 add or narrow rights that BA-005 does not yet ha
 - PRD-010 C3: reopening a closed month by CFO and Head of Fund Accounting (D-42); BA-005 §3 still gives the COO a reopen role.
 - PRD-011 §7, PRD-012 §7: Head of Fund Accounting accepts custodian NAV (D-44); break write-off above a tenant amount (D-50).
 - PRD-013 C3, PRD-016 §7: Grievance Officer and Data Protection Officer roles (D-54, Q61).
-- PRD-015, PRD-016, PRD-017 C6: Finance approval of commission (D-56); metric definition sign-offs (D-59); AI release approvals (D-60) and emergency switch-off (D-75).
+- PRD-014: Finance approval of commission paid (D-56). PRD-016, PRD-017 C6:; metric definition sign-offs (D-59); AI release approvals (D-60) and emergency switch-off (D-75).
 
 ## Waiting for owner (cannot be auto-merged)
 
