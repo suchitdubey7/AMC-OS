@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn as one box that **merges its anchor and the columns of its current version**; in the database the anchor holds only the key and the changing columns sit in the implied `_version` table (DA-001 §3.1 rule 1). Business-code unique keys on such entities (PAN keyed hash, ISIN) are exclusion constraints on the version table (rule 3), so they are not marked `UK` in the box. Keys of other bi-temporal tables also include `recorded_at` (rule 2), not shown. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Chart of accounts, journals and sub-ledgers
 
@@ -10,7 +10,7 @@ Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_da
 erDiagram
   ACCOUNT ||--o{ ACCOUNT : "parent of"
   ACCOUNT ||--o{ SCHEME_ACCOUNT : "used by scheme"
-  SCHEME_ACCOUNT ||--o{ JOURNAL_LINE : "posted to"
+  ACCOUNT ||--o{ JOURNAL_LINE : "posted to"
   POSTING_RULE ||--o{ POSTING_RULE_TEST : "tested by"
   POSTING_RULE ||--o{ JOURNAL_BATCH : "produced"
   JOURNAL_BATCH ||--|{ JOURNAL_LINE : "contains (balanced)"
@@ -20,10 +20,10 @@ erDiagram
   ACCOUNT {
     uuid tenant_id PK
     text account_code PK
-    daterange valid_period PK
+    daterange valid_period
     text account_class
     char normal_balance
-    text parent_code
+    text parent_code FK
     text statement_line
   }
   SCHEME_ACCOUNT {
@@ -71,7 +71,7 @@ erDiagram
     date accounting_date PK
     uuid line_id PK
     uuid batch_id FK
-    text account_code
+    text account_code FK
     char dr_cr
     numeric amount
   }
@@ -117,6 +117,6 @@ erDiagram
 
 ## Notes
 
-- `ACCOUNT` is effective-dated; a line's account must be valid on the line's date and active for the scheme in `SCHEME_ACCOUNT` (DM-12). Because `ACCOUNT`'s key includes `valid_period`, the line-to-account link is checked by the posting trigger, not by a plain foreign key.
+- `ACCOUNT` is drawn as its anchor (`account_code`), which journal lines, the parent link and `SCHEME_ACCOUNT` point at by foreign key, as in DDL-000. Its effective-dated versions are `accounting.account_version` (DA-001 §3.1 rule 1). The posting trigger also checks that the account is valid on the line's date and active for the scheme in `SCHEME_ACCOUNT` (DM-12).
 - `source_id` is an ID reference to the event's aggregate (trade, NAV run, investor flow …); `scheme_id` goes to `product.scheme`. Mirror tables are used only for schemes in custodian-mirror mode (D-16, D-40).
 - Not drawn here, to keep the diagram readable (listed in DA-001 §4): `accounting.load_run`, `accounting.trial_balance`.
