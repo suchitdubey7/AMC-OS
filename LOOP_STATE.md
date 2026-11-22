@@ -1,7 +1,7 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-22 08:55 IST
+**Updated:** 2026-11-22 09:07 IST
 **Chain tip:** `wp4-step15-canonical-data-model`
 
 ## Next action
@@ -79,7 +79,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 19 | `wp3-step12-deployment-cells` | Step 12: EA-004 deployment and cells, EA-005 multi-tenant, EA-006 control plane / data plane; NFR-SCAL-005/-006, NFR-DR-002/-003, NFR-AVAIL-003, NFR-SEC-006, NFR-OBS-003; owner questions Q69–Q72 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 6 Minor, 2 Nits — all fixed; round 1 had 5 Major, all fixed, and 10 Minor, 4 Nits fixed except the trailer Nit) | pass | no — waits behind Step 10 (gate G1) |
 | 20 | `wp3-step13-events-workflows` | Step 13: EA-007 event architecture and process workflows; `contracts/events/` v1 catalogue (103 events); contract tests; owner questions Q73–Q75 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 5 Nits — all fixed except Nit 10 (trailer); round 1 had 1 Major, 13 Minor, 6 Nits, all fixed except the trailer Nit) | pass | no — `contracts/` is owner-only (gate G2); also waits behind Step 10 (gate G1) |
 | 21 | `wp3-step14-integrations` | Step 14: INT-001 integration architecture; INT-002…INT-018 provider specifications (14 fields each); owner questions Q76–Q80 | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 3 Minor, 3 Nits — all fixed; round 1 had 3 Major, round 2 had 1 Major, all fixed) | pass | no — waits behind Step 10 (gate G1) |
-| 22 | `wp4-step15-canonical-data-model` | Step 15: DA-001 canonical enterprise data model; ERD annexes D01–D17 in `architecture/erds/`; owner questions Q81–Q83 | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 2 Nits — all fixed except Nit 4 (trailer); round 1 had 7 Major, 12 Minor, 7 Nits and round 2 had 1 Major, 6 Minor, 5 Nits, all fixed except the trailer Nit) | pending | no — waits behind Step 10 (gate G1) |
+| 22 | `wp4-step15-canonical-data-model` | Step 15: DA-001 canonical enterprise data model; ERD annexes D01–D17 in `architecture/erds/`; owner questions Q81–Q83 | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 2 Nits — all fixed except Nit 4 (trailer); round 1 had 7 Major, 12 Minor, 7 Nits and round 2 had 1 Major, 6 Minor, 5 Nits, all fixed except the trailer Nit) | pass | no — waits behind Step 10 (gate G1) |
 
 ## Owner decisions used by the loop
 
@@ -182,7 +182,7 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 
 | Branch | Why |
 | --- | --- |
-| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST, 16:52 IST (Step 11 run), 20:55 IST (Step 12 run), 22 Nov 00:58 IST (Step 13 run) and 22 Nov 05:30 IST (Step 14 run): **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). The branch also carries the wording fixes to ADR-0002 (one or more schemas), ADR-0006 (outbox first, Kafka later, D-70) and ADR-0007 (orchestrator choice in Step 19), made at the owner's request in chat on 21 Nov 2026; the loop is not permitted to merge owner-only files, so the owner merges this branch. If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
+| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST, 16:52 IST (Step 11 run), 20:55 IST (Step 12 run), 22 Nov 00:58 IST (Step 13 run) 22 Nov 05:30 IST (Step 14 run) and 22 Nov 09:07 IST (Step 15 run): **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). The branch also carries the wording fixes to ADR-0002 (one or more schemas), ADR-0006 (outbox first, Kafka later, D-70) and ADR-0007 (orchestrator choice in Step 19), made at the owner's request in chat on 21 Nov 2026; the loop is not permitted to merge owner-only files, so the owner merges this branch. If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
 | `wp3-step11-service-catalogue` | Stacked on Step 10, so it cannot pass gate G1 until the owner merges Step 10. It has no owner-only files of its own (GOV-001 register rows, GOV-006 status cell, `reviews/`, LOOP_STATE only), so the loop can merge it after Step 10 is in `main` |
 | `wp3-step12-deployment-cells` | Stacked on Step 11, so it waits behind Step 10 (gate G1). No owner-only files of its own (GOV-001 register rows, GOV-006 status cell, EA README, `reviews/`, LOOP_STATE only). It names two ADRs the owner should have drafted (ADR-0020 scope extended, ADR-0021 control plane) |
 | `wp3-step13-events-workflows` | Adds `contracts/events/` (owner-only in CODEOWNERS, gate G2) and stacks on Step 12, so the owner merges it. Also asks the owner to add a CI job for `tests/contracts` (`.github/` is owner-only) |
