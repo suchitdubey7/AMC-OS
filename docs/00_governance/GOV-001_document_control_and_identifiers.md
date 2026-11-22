@@ -193,6 +193,7 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
 | ADR-0016 – ADR-0019 | Identity provider and sign-in; cache; cloud and regions; API gateway and policy engine (evaluation) | Draft | WP3 / Step 10 |
+| ADR-0020 | Table moves between schemas, one database role per module, named system-worker exceptions (owner-requested proposal) | Draft | WP4 / before Step 16 |
 | PRD-000 | Master PRD v0.9 (input) | Draft — to be re-keyed | WP2 |
 | DA-000 | Data and database architecture v0.9 (input) | Draft — to be split | WP4 |
 | DDL-000 | Core schema v0.9 (tested on PostgreSQL 16.15) | Draft | WP4 |
