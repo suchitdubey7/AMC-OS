@@ -104,7 +104,7 @@ flowchart LR
 | 13 🔄 in review (branch `wp3-step13-events-workflows`: EA-007 event architecture and process workflows, `contracts/events/` v1 catalogue (103 events), contract tests; `contracts/` is owner-only, so the owner merges; stacked on Step 12) | EA-007 event architecture + `contracts/events/` catalogue (all events, v1 schemas); Temporal workflow designs | 5 L4 | 11 |
 | 14 🔄 in review (branch `wp3-step14-integrations`: INT-001 integration architecture, INT-002…INT-018 provider specifications; stacked on Step 13) | INT-001 integration architecture + one spec per provider with all 14 fields (confirmed facts only) | 10 | 11 |
 | **Stage C — data and database** | | | |
-| 15 | DA-001 canonical enterprise data model; ERDs per domain in `architecture/erds/` | 7 | Stage B |
+| 15 🔄 in review (branch `wp4-step15-canonical-data-model`: DA-001 canonical enterprise data model, ERD annexes D01–D17 in `architecture/erds/`; table moves wait for ADR-0020; stacked on Step 14) | DA-001 canonical enterprise data model; ERDs per domain in `architecture/erds/` | 7 | Stage B |
 | 16 | DDL additions: missing ~30 tables, `risk` and `finance` schemas, external-ID crosswalk, source-system IDs, `platform.cell`, regulatory control registry fields; tests extended | 7, 9 | 15 |
 | 17 | DBE-001 data dictionary for every table (incl. retention, sensitivity, example records) | 7 | 16 |
 | 18 | Alembic migrations reproducing the DDL (schema-diff check in CI); referential-integrity test suite; seeds | 7, 13 | 16 |
