@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Golden reference data (`master`)
 
@@ -18,7 +18,6 @@ erDiagram
   BENCHMARK ||--o{ BENCHMARK_CONSTITUENT : "made of"
   SECURITY ||--o{ BENCHMARK_CONSTITUENT : "in"
   IDENTIFIER_SCHEME ||--o{ EXTERNAL_IDENTIFIER : "types"
-  SECURITY ||--o{ EXTERNAL_IDENTIFIER : "known as"
   SECURITY ||--o{ STEWARD_REQUEST : "changed by"
   CURRENCY {
     char currency_code PK
@@ -143,10 +142,9 @@ erDiagram
   DATASET ||--o{ DQ_RULE : "checked by"
   DQ_RULE ||--o{ DQ_RESULT : "produces"
   DQ_RESULT ||--o| DQ_EXCEPTION : "raises"
-  DATASET ||--o{ CERTIFICATION : "certified"
+  DATASET ||--o{ DATASET_CERTIFICATION : "certified"
   DATASET ||--o{ ACCESS_REQUEST : "requested"
   PIPELINE_RUN ||--o{ LINEAGE_POINTER : "traced by"
-  METRIC_DEFINITION }o--o{ DATASET : "computed from"
   METRIC_DEFINITION {
     uuid tenant_id PK
     text metric_code PK
@@ -189,7 +187,7 @@ erDiagram
     text owner_module
     text state
   }
-  CERTIFICATION {
+  DATASET_CERTIFICATION {
     uuid tenant_id PK
     text dataset_code PK
     date business_date PK
@@ -220,4 +218,5 @@ erDiagram
 
 - `CURRENCY` is the only table here without a tenant column (D-62, DA-001 M3). Golden-record tables are bi-temporal (DM-1): `valid_period` + `recorded_at` / `superseded_at` (shown on `ISSUER`; the same on the others).
 - `EXTERNAL_IDENTIFIER` covers master entities only; Product, Distribution and Investor keep their own crosswalk tables of the same shape (DA-001 §3.4, DM-3). `COUNTERPARTY` is referenced by `execution.broker`, `settlement.ssi` and `risk.counterparty_exposure`.
-- `DQ_RESULT` is partitioned yearly, so `DQ_EXCEPTION.result_id` is a plain ID column. `METRIC_DEFINITION` to `DATASET` is many-to-many through the metric's definition (column detail in DBE-001).
+- `DQ_RESULT` is partitioned yearly, so `DQ_EXCEPTION.result_id` is a plain ID column. `EXTERNAL_IDENTIFIER` points at its entity by `(entity_type, entity_id)`, which cannot be a foreign key, so no line is drawn. Which datasets a metric is computed from is part of the metric definition; a link table, if needed, is set in DBE-001.
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `master.load_run`, `analytics.mv_daily_aum`.

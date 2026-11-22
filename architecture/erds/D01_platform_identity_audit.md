@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Tenant, cell, organisation and configuration (`platform`)
 
@@ -11,7 +11,7 @@ erDiagram
   CELL ||--o{ TENANT : "hosts"
   TENANT ||--o{ TENANT_STATUS_HISTORY : "changes"
   TENANT ||--o{ SUBSCRIPTION : "has"
-  TENANT ||--o{ ENTITLEMENT : "may use"
+  TENANT ||--o{ TENANT_ENTITLEMENT : "may use"
   TENANT ||--o{ ORGANISATION_UNIT : "organised as"
   ORGANISATION_UNIT ||--o{ ORGANISATION_UNIT : "parent of"
   ORGANISATION_UNIT ||--o{ REPORTING_LINE : "has"
@@ -49,7 +49,7 @@ erDiagram
     text plan_code
     daterange valid_period
   }
-  ENTITLEMENT {
+  TENANT_ENTITLEMENT {
     uuid tenant_id PK
     text module_code PK
     daterange valid_period PK
@@ -159,7 +159,7 @@ erDiagram
     uuid tenant_id PK
     uuid user_id PK
     text role_code PK
-    date valid_from PK
+    daterange valid_period PK
     uuid granted_by
     uuid approved_by
   }
@@ -167,7 +167,7 @@ erDiagram
     uuid tenant_id PK
     uuid user_id PK
     text role_code PK
-    date valid_from PK
+    daterange valid_period PK
     text attribute PK
     text value PK
   }
@@ -262,5 +262,6 @@ erDiagram
 
 ## Notes
 
-- `identity.permission`, `platform.config_item` and `platform.cell` have no tenant column (DA-001 M3).
+- `identity.permission`, `platform.config_item` and `platform.cell` have no tenant column (DA-001 M3). `CONFIG_VALUE` points at `CONFIG_ITEM` by `item_key` and the release of its version (column detail in DBE-001).
 - `identity.user_role.approved_by` and `granted_by` point at `identity.app_user` (SOD-05). Cross-schema user references from other modules (for example `created_by`) are ID references (DA-001 M4).
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `platform.usage_meter`, `platform.code_list`, `platform.code_value`, `platform.feature_flag`, `platform.environment_release`, `platform.notification_channel`.

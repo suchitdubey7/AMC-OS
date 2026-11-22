@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Investors, folios and transactions
 
@@ -17,6 +17,9 @@ erDiagram
   FOLIO ||--o{ INVESTOR_TXN : "transacts"
   PRODUCT_PLAN ||--o{ INVESTOR_TXN : "in"
   INVESTOR_TXN ||--|| TXN_DEDUP_KEY : "unique by"
+  TXN_DEDUP_KEY }o--|| TXN_CURRENT : "latest is"
+  INVESTOR_TXN ||--o{ DATA_FLAG : "flagged"
+  PRODUCT_PLAN ||--o{ FLOW_BATCH : "flows"
   INVESTOR_TXN ||--o{ TXN_CHECK_RESULT : "checked"
   INVESTOR_TXN ||--o| PAYOUT : "paid by"
   FOLIO ||--o{ UNIT_LOT : "holds units"
@@ -75,6 +78,7 @@ erDiagram
     uuid plan_id FK
     text txn_type
     text rta_txn_ref
+    uuid supersedes_txn_id
     text rta_status
     text check_status
     numeric net_amount
@@ -82,9 +86,34 @@ erDiagram
   }
   TXN_DEDUP_KEY {
     uuid tenant_id PK
+    text rta_code PK
+    text rta_txn_ref PK
+    text feed_kind PK
+    int rta_record_seq PK
+    date txn_date
+    uuid txn_id
+  }
+  TXN_CURRENT {
+    uuid tenant_id PK
+    text rta_code PK
     text rta_txn_ref PK
     date txn_date
     uuid txn_id
+  }
+  DATA_FLAG {
+    uuid tenant_id PK
+    uuid flag_id PK
+    text object_type
+    uuid object_id
+    text state
+  }
+  FLOW_BATCH {
+    uuid tenant_id PK
+    uuid flow_batch_id PK
+    uuid plan_id FK
+    date flow_date
+    text feed_kind
+    text state
   }
   TXN_CHECK_RESULT {
     uuid tenant_id PK
@@ -213,5 +242,6 @@ erDiagram
 ## Notes
 
 - `FOLIO_REF` and `INVESTOR_REF` are the `FOLIO` and `INVESTOR` entities of the first diagram, repeated so the second diagram stays readable.
-- Release 1 mirrors the RTA (Q2, D-53): every loaded row carries `load_run_id` and provenance (DA-001 M9). `rta_status`, `check_status` and `PAYOUT` replace the DDL-000 single `state` (DM-13). `TXN_DEDUP_KEY` stops duplicates across monthly partitions (DM-9).
+- Release 1 mirrors the RTA (Q2, D-53): every loaded row carries `load_run_id` and provenance (DA-001 M9). `rta_status`, `check_status` and `PAYOUT` replace the DDL-000 single `state` (DM-13). `TXN_DEDUP_KEY` refuses exact replays across monthly partitions while newer RTA versions are stored as new rows linked by `supersedes_txn_id`; `TXN_CURRENT` points at the latest (DM-9). `DATA_FLAG.object_id` may point at an investor, folio or transaction (shown on the transaction only).
 - Personal data columns are encrypted with tenant data keys and searched by keyed hash (DA-001 M22). `PAYOUT.txn_id` is a plain ID column because the partitioned transaction key includes `txn_date`.
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `investor.unit_balance`, `investor.platform_file`, `investor.platform_file_attempt`, `investor.external_identifier`, `investor.load_run`.

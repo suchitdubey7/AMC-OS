@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Broker orders, fills, trades and contract notes
 
@@ -20,7 +20,7 @@ erDiagram
   BROKER ||--o{ CONTRACT_NOTE : "sends"
   CONTRACT_NOTE ||--o{ CONTRACT_NOTE_MATCH : "matched in"
   TRADE ||--o{ CONTRACT_NOTE_MATCH : "confirmed by"
-  TRADE ||--o{ TRADE_BREAK : "breaks"
+  TRADE ||--o{ TRADE_EXCEPTION : "breaks"
   BROKER {
     uuid tenant_id PK
     uuid broker_id PK
@@ -121,7 +121,7 @@ erDiagram
     uuid trade_id FK
     text outcome
   }
-  TRADE_BREAK {
+  TRADE_EXCEPTION {
     uuid tenant_id PK
     uuid break_id PK
     uuid trade_id FK
@@ -145,3 +145,4 @@ erDiagram
 - `TRADE` and `ALLOCATION` move here from `settlement.trade` and `trading.block_allocation` (DM-7) — **(ADR-0020)**. Fills link to trades through the allocation run; the exact fill-to-trade grouping is set in the Execution / FE-06 specification (EA-007 G10).
 - `order_id` columns are ID references to `trading."order"`; `document_id` to `documents.document`.
 - `BROKER_ORDER` uses the outbound-instruction pattern (DA-001 §3.5) with the unknown-outcome states of EA-007 §10.6.
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `execution.external_trade_evidence`, `execution.load_run`.

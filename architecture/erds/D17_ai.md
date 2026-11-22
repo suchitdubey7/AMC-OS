@@ -2,14 +2,14 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Assistants, sessions and governance
 
 ```mermaid
 erDiagram
-  AGENT_DEFINITION_VERSION ||--o{ AGENT : "enabled as"
-  PROMPT_VERSION ||--o{ AGENT_DEFINITION_VERSION : "used by"
+  ASSISTANT_VERSION ||--o{ AGENT : "enabled as"
+  PROMPT_VERSION ||--o{ ASSISTANT_VERSION : "used by"
   AGENT ||--o{ SESSION : "runs"
   SESSION ||--|{ MESSAGE : "contains"
   SESSION ||--o{ TOOL_CALL_LOG : "calls"
@@ -19,12 +19,13 @@ erDiagram
   AGENT ||--o{ PROPOSAL : "drafts"
   SESSION ||--o{ FEEDBACK : "rated"
   EVALUATION_SUITE ||--o{ EVALUATION_RESULT : "produces"
-  MODEL_REGISTRY ||--o{ AGENT_DEFINITION_VERSION : "model of"
+  MODEL_REGISTRY ||--o{ ASSISTANT_VERSION : "model of"
   AGENT ||--o{ USAGE_COUNTER : "counted"
-  AGENT_DEFINITION_VERSION {
+  ASSISTANT_VERSION {
     uuid tenant_id PK
-    text agent_code PK
+    text assistant_code PK
     int version_no PK
+    text state
     text model_ref
     text prompt_version
     text risk_tier
@@ -120,11 +121,18 @@ erDiagram
     text source
     text licence_tag
   }
-  KILL_SWITCH_EVENT {
+  KILL_SWITCH {
     uuid tenant_id PK
-    uuid event_id PK
+    uuid kill_switch_id PK
     text scope
     bool engaged
+  }
+  ANOMALY {
+    uuid tenant_id PK
+    uuid anomaly_id PK
+    text object_type
+    uuid object_id
+    text state
   }
   USAGE_COUNTER {
     uuid tenant_id PK
@@ -136,5 +144,6 @@ erDiagram
 
 ## Notes
 
-- Assistant definitions are released by the vendor and copied identically into each tenant (D-73, DM-15). `AGENT.service_user_id` is an ID reference to `identity.app_user` (DM-20). A proposal enters the normal approval of the owning module; it never approves itself (ADR-0008).
+- Assistant versions arrive with a release, are copied identically into each tenant and become usable after WF-043 approval (D-60, D-73, DM-15). `AGENT.service_user_id` is an ID reference to `identity.app_user` (DM-20). A proposal enters the normal approval of the owning module; it never approves itself (ADR-0008).
 - `TOOL_CALL_LOG` and `RETRIEVAL_LOG` are partitioned monthly, so `session_id` there is a plain ID column. Embeddings are in the separate pgvector cluster (ADR-0007), not in this schema.
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `ai.inventory_snapshot`.

@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Distributors and mappings
 
@@ -101,6 +101,8 @@ erDiagram
   COMMISSION_RUN ||--o{ STATEMENT : "reported in"
   DISTRIBUTOR_REF ||--o{ DISPUTE : "raises"
   COMMISSION_RUN ||--o{ PAYMENT_FILE : "paid by"
+  PAYMENT_FILE ||--|{ PAYMENT_FILE_ATTEMPT : "sent via"
+  DISTRIBUTOR_REF ||--o{ DISTRIBUTOR_FLOW : "sells"
   COMMISSION_RATE {
     uuid tenant_id PK
     text structure_code PK
@@ -171,6 +173,20 @@ erDiagram
     uuid run_id FK
     text delivery_state
   }
+  PAYMENT_FILE_ATTEMPT {
+    uuid tenant_id PK
+    uuid attempt_id PK
+    uuid payment_file_id FK
+    text action
+  }
+  DISTRIBUTOR_FLOW {
+    uuid tenant_id PK
+    date flow_date PK
+    uuid distributor_id PK
+    uuid plan_id PK
+    int version_no PK
+    numeric net_flow
+  }
   DISTRIBUTOR_REF {
     uuid tenant_id PK
     uuid distributor_id PK
@@ -181,3 +197,4 @@ erDiagram
 
 - `DISTRIBUTOR_REF` is the `DISTRIBUTOR` entity of the first diagram. Empanelment states follow FR-D14-017 (DM-14). `COMMISSION_LINE` has its own key, a line type and `adjusts_line_id`; `COMMISSION_RUN` has `supersedes_run_id` (DM-14).
 - Staff incentive schemes and results, sales forecasts and opportunities are in DA-001 §4.20 and left out of the diagram for size. `plan_id` goes to `product.plan` (reference schema).
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `distribution.certification`, `distribution.staff_incentive_scheme`, `distribution.staff_incentive_result`, `distribution.sales_forecast`, `distribution.opportunity`, `distribution.external_identifier`, `distribution.load_run`.

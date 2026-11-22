@@ -1,7 +1,7 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-22 05:20 IST
+**Updated:** 2026-11-22 08:55 IST
 **Chain tip:** `wp3-step14-integrations`
 
 ## Next action
@@ -210,3 +210,6 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 | Q78 | Should release 1 support SWIFT messages for custodians and banks (needs SWIFT membership or a service bureau), or only each provider's own file or API channel? | Step 14 (INT-008, INT-010) | Provider's own file or API channel only; SWIFT later |
 | Q79 | May documents that arrive by email (for example broker contract notes as PDF) be accepted in release 1, from an allow-list of senders and always checked by a person? | Step 14 (INT-001 IN7) | Yes, with a person's check every time |
 | Q80 | May AMC OS automatically download public files from AMFI, exchanges and SEBI websites (where their terms allow), or must a person download them? | Step 14 (INT-001 IN8) | Automatic where the site's terms allow, after Compliance checks the terms [VAL] |
+| Q81 | Orders (DA-001 DM-6, PRD-005 C4): from which states may an order be amended (a new version that is checked again), and after a broker rejects it, where does a re-routed version start again? | Step 15 | Amend only before approval (`PENDING_COMPLIANCE`, `COMPLIANCE_BLOCKED`, `PENDING_APPROVAL`); after approval cancel and raise a new order. Re-route goes back to `PENDING_COMPLIANCE` |
+| Q82 | Accounting (DA-001 DM-12, PRD-010 C4): may postings be made to a SOFT_CLOSED period, and which ones (for example only manual adjustments with approval)? | Step 15 | No — SOFT_CLOSED blocks postings like CLOSED |
+| Q83 | AI (DA-001 DM-15): are the D-60 approvals of a new assistant version given once by the vendor for all AMCs, or by each AMC before it can switch the version on? | Step 15 | By each AMC (the stricter reading) |

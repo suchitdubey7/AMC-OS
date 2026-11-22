@@ -2,7 +2,7 @@
 
 Annex of [DA-001](../../docs/05_data_architecture/DA-001_canonical_enterprise_data_model.md) (canonical enterprise data model), Step 15. Status: **Draft** — same status and approver as DA-001; these annexes carry no ID of their own. Only key columns and a few main columns are shown; the full column list of every table is the data dictionary DBE-001 (Step 17).
 
-**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
+**How to read:** every tenant table's key starts with `tenant_id` (shown first, `PK`). `||--o{` = one to zero-or-many, `||--|{` = one to one-or-many, `||--o|` = one to zero-or-one, `|o--o|` = optional link to a row of the same kind. A bi-temporal entity that other rows point at (for example a security or an investor) is drawn once, as its anchor; its `_version` table (DA-001 §3.1) is implied. Boxes named `MASTER_…`, `PRODUCT_…` stand for tables in the reference schemas `master` and `product` (foreign keys allowed, DA-001 M4); a link to any other schema is an ID reference and is not drawn as a line.
 
 ## Register, rules, checks and breaches
 
@@ -16,6 +16,7 @@ erDiagram
   RULE ||--o{ BACKTEST_RESULT : "back-tested"
   REGULATION ||--o{ IMPACT_ASSESSMENT : "assessed"
   RULE ||--o{ CHECK_RESULT : "produces"
+  CHECK_RUN ||--|{ CHECK_RESULT : "groups"
   CHECK_RESULT ||--o| PRETRADE_OVERRIDE : "overridden by"
   RULE ||--o{ EXEMPTION : "exempted"
   RULE ||--o{ BREACH : "breached"
@@ -77,10 +78,18 @@ erDiagram
     uuid regulation_id FK
     text state
   }
+  CHECK_RUN {
+    uuid tenant_id PK
+    uuid check_run_id PK
+    text check_kind
+    uuid order_id
+    uuid scheme_id FK
+  }
   CHECK_RESULT {
     uuid tenant_id PK
     date checked_on PK
     uuid result_id PK
+    uuid check_run_id FK
     uuid rule_id FK
     int version_no
     text check_kind
@@ -141,3 +150,4 @@ erDiagram
 
 - `rule_class` adds `HOUSE_LIMIT` (DM-11). `CHECK_RESULT` is partitioned yearly; `PRETRADE_OVERRIDE.check_result_id` is a plain ID column because the partitioned check-result key includes `checked_on`.
 - `order_id` is an ID reference to `trading."order"`; `scheme_id` goes to `product.scheme` (reference schema).
+- Not drawn here, to keep the diagram readable (listed in DA-001 §4): `compliance.breach_investigation`, `compliance.load_run`.
