@@ -21,7 +21,7 @@ GOV-002 §2 needs an ADR before tables move between schemas ("Domain boundaries"
 
 What DDL-000 v0.9 does today (checked in `database/ddl/DDL-000_core_schema_v0.9.sql`):
 
-- **One write role for everything.** `amc_app` gets `SELECT, INSERT, UPDATE` on every table in all 23 schemas (§17 grants loop), with a few revokes: `UPDATE` on seven insert-only tables, and `INSERT, UPDATE` on `platform.tenant`. The rule that a module writes only its own schema (AGENTS.md §2.3, ADR-0002, EA-003 B1) is therefore not enforced by the database. ADR-0002's own validation expects "DB grant tests show each module role cannot write other schemas", and DDL-000 cannot pass that test.
+- **One write role for everything.** `amc_app` gets `SELECT, INSERT, UPDATE` on every table in all 23 schemas (§17 grants loop), with a few revokes: `UPDATE` on seven tables, and `INSERT, UPDATE` on `platform.tenant`. The rule that a module writes only its own schema (AGENTS.md §2.3, ADR-0002, EA-003 B1) is therefore not enforced by the database. ADR-0002's own validation expects "DB grant tests show each module role cannot write other schemas", and DDL-000 cannot pass that test.
 - **A role that bypasses tenant isolation.** `amc_platform_admin` is created `BYPASSRLS`. DA-000 §6.4 uses it for break-glass support. One support session could then read every tenant in the cell, while the approval covers only one tenant (EA-005 §6).
 - **One shared outbox and one shared idempotency table.** These are `platform.outbox_event` and `platform.idempotency_key`, written by every module (EA-003 T15).
 - **One RLS policy for every role.** `platform.apply_tenant_rls()` creates `tenant_isolation` with no `TO` clause, so it applies to every role. It allows rows where `tenant_id = platform.current_tenant()`, which comes from a session setting that any session can set for itself.
@@ -97,7 +97,8 @@ STD-001 §4 stays the rule: tenant context comes from the authenticated principa
 4. **Removing a tenant** (option (a) of EA-005 §2.1, as chosen in DA-001 DM-17). A `NOLOGIN` role, `amc_tenant_removal`, owns one removal procedure. It removes **all** of one tenant's rows in every schema: ordinary rows and protected rows (posted journals, audit). It deletes in an order generated from the foreign keys in Step 16.
    - **Named exception to EA-003 B1.** This is the only role that deletes in schemas it doesn't own. Module roles don't get `DELETE` for this purpose.
    - The procedure takes the tenant ID and the authorisation ID as parameters. It first sets the tenant context to that tenant (for its own transaction only), and then checks the conditions. It runs only when an `APPROVED`, unexpired `platform.tenant_removal_authorisation` row exists for that tenant (two-sided: AMC and vendor), and the tenant's status is `OFFBOARDING` or `MIGRATED_OUT` (DM-16).
-   - **Every insert-only table, not only journals and audit.** The exception lives in the shared immutability trigger function `platform.tg_immutable()`, and in any table-specific delete guard added later. It therefore covers every table that refuses `DELETE`. In DDL-000 that is ten tables: `audit.audit_event`, `workflow.approval_decision`, `trading.order_event`, `execution.fill`, `compliance.check_result`, `valuation.price`, `accounting.journal_batch`, `accounting.journal_line`, `nav.nav_result` and `ai.tool_call_log`, plus those DA-001 adds in Step 16. The trigger allows `DELETE` only when `current_user` is `amc_tenant_removal` **and** the trigger itself finds that authorisation row for the row's tenant. The trigger doesn't rely on a session flag, because any session could set one. `UPDATE` stays refused for every role.
+   - **Every insert-only table, not only journals and audit.** The exception lives in the shared immutability trigger function `platform.tg_immutable()`, and in any table-specific delete guard added later. It therefore covers every table that refuses `DELETE`. In DDL-000, ten tables refuse `DELETE`: `audit.audit_event`, `workflow.approval_decision`, `trading.order_event`, `execution.fill`, `compliance.check_result`, `valuation.price`, `accounting.journal_batch`, `accounting.journal_line`, `nav.nav_result` and `ai.tool_call_log`, plus those DA-001 adds in Step 16. The trigger allows `DELETE` only when `current_user` is `amc_tenant_removal` **and** the trigger itself finds that authorisation row for the row's tenant. The trigger doesn't rely on a session flag, because any session could set one. This exception is for `DELETE` only. `UPDATE` behaviour doesn't change: it stays refused wherever DDL-000 refuses it today. Note that `valuation.price` refuses `DELETE` but not `UPDATE` in DDL-000. Whether prices become fully insert-only is left to DA-001 and DBE-001.
+   - **What is kept.** The procedure doesn't remove the tenant's `platform.tenant` row, which the Tenant module sets to `ARCHIVED` (DA-000 §6), or the `platform.tenant_removal_authorisation` row. Both stay as the record of the removal, together with the deletion certificate. The authorisation row is never deleted during the run, because the trigger needs it for every protected row.
    - The run is audited in the control plane (EA-006 CP-7) and ends with a deletion certificate.
    - Option (c), keeping the rows and crypto-shredding personal data, stays available where a contract or REG-001 needs the rows kept **[VAL]**.
 5. **Restore extract** runs only on a scratch cluster with that cluster's own migration-owner role. Nothing is written to the live cell.
@@ -126,9 +127,14 @@ Modules don't get `INSERT` on `audit.audit_event`. They get `EXECUTE` on an inse
 2. **Provisioning a login.** When a tenant approves a request (WF-022), the break-glass tool calls a provisioning function owned by a `NOLOGIN` role, `amc_breakglass_admin`. That role has `CREATEROLE` and `ADMIN OPTION` on `amc_breakglass` only, and no table rights.
    - The function creates a **per-grant login** (`VALID UNTIL` the grant expiry) and grants it `amc_breakglass` only.
    - The function returns the new login name. The Identity module then records it in the grant row under its own role (`amc_mod_identity`), so `amc_breakglass_admin` needs no table rights.
-   - The credential is a random secret generated by the break-glass tool, outside the database. The tool passes only a SCRAM-SHA-256 verifier to the provisioning function, never the secret itself. PostgreSQL stores a pre-computed verifier as given, so the plain secret never appears in SQL text, server logs or `pg_authid`. Only the verifier is stored. The secret reaches the approved support engineer through the secrets manager. The delivery method is set in SEC-001 (Step 25) **[VAL]**.
+   - The credential is a random secret generated by the break-glass tool, outside the database. The tool passes only a SCRAM-SHA-256 verifier to the provisioning function, never the secret itself. The function refuses any input that isn't a well-formed verifier. Without this check, PostgreSQL would treat a malformed verifier string as a plain password and hash it, with no error. PostgreSQL stores a well-formed, pre-computed verifier as given, so the plain secret never appears in SQL text, server logs or `pg_authid`. Only the verifier is stored. The secret reaches the approved support engineer through the secrets manager. The delivery method is set in SEC-001 (Step 25) **[VAL]**.
    - This was checked on PostgreSQL 16.15: such a role could create a login and grant it `amc_breakglass`, could drop it, and was **refused** when it tried to grant any other role.
-3. **Ending access.** At expiry, or when the grant is revoked, the provisioning function drops the login. A second definer function ends that login's open sessions. It is owned by a `NOLOGIN` role, `amc_breakglass_session_admin`, which holds `pg_signal_backend` and nothing else. The function ends only sessions whose user is a member of `amc_breakglass`, so no other session can be ended through it. Only `amc_login_breakglass_tool` may execute it (part 7.1), and the expiry job runs under that login. The grant lasts at most 4 hours (WF-022; PRD-001 FR-D01-023).
+3. **Ending access.** At expiry, or when the grant is revoked, these steps run in this order:
+   1. `ALTER ROLE … NOLOGIN` on the login.
+   2. End that login's open sessions.
+   3. `DROP ROLE`.
+
+   The order matters. Once a login is dropped, its open sessions no longer show its name in `pg_stat_activity`, so they can't be found and ended (observed on PostgreSQL 16.15). A second definer function ends the sessions (step 2). It is owned by a `NOLOGIN` role, `amc_breakglass_session_admin`, which holds `pg_signal_backend` and nothing else. The function ends only sessions whose user is a member of `amc_breakglass`, so no other session can be ended through it. Only `amc_login_breakglass_tool` may execute it (part 7.1), and the expiry job runs under that login. The grant lasts at most 4 hours (WF-022; PRD-001 FR-D01-023).
 4. **Policies.** These don't use `app.tenant_id`, because any session can set it:
    - On `identity.break_glass_grant`, a `SELECT` policy `TO amc_breakglass` that shows only the row whose login name is `current_user`, while it is approved and unexpired. Without this policy, the break-glass login couldn't see its own grant (the table has forced RLS), and the next policy would return nothing.
    - On every table in scope, a **permissive** `SELECT` policy `TO amc_breakglass` that allows a row only if its `tenant_id` matches that grant.
@@ -179,7 +185,8 @@ The cell shapes (DEDICATED_DB dropped, Q69), placement rules P1–P7 and the new
   - Audit chains survive a tenant move.
   - Other tenants' registration details are hidden in shared cells.
 - **Negative:**
-  - 22 module roles plus about ten system, tool and break-glass roles.
+  - 22 module roles plus 12 other named roles: `amc_tenant_scoped`, `amc_sys_signal_bridge`, `amc_sys_extract`, `amc_audit_writer`, `amc_audit_import`, `amc_tenant_removal`, `amc_breakglass`, `amc_breakglass_admin`, `amc_breakglass_session_admin`, `amc_login_platform_tools`, `amc_login_breakglass_tool` and `amc_migration_owner`.
+  - One pool login per module and process role (part 2.3), up to 44, plus the per-grant break-glass logins.
   - More connection pools.
   - Five extra tables per schema.
   - Grant and policy tests grow.
@@ -204,7 +211,7 @@ Moves to Validated when these DBT tests pass on PostgreSQL 16 in CI:
 1. Each module role can't `INSERT`, `UPDATE` or `DELETE` in any other module's schema. This is the ADR-0002 validation. `amc_sys_extract`, `amc_sys_signal_bridge` and the two tool logins can't write any table directly.
 2. No non-superuser role has `BYPASSRLS`.
 3. Every tenant table has `FORCE ROW LEVEL SECURITY` and a `tenant_isolation` policy `TO amc_tenant_scoped`. Every role in the part 3.2 list is a member of that group, and `amc_breakglass` is not.
-4. A break-glass login sees only its own grant row, and only its granted tenant and scope, even with `app.tenant_id` set to another tenant. After the grant expires it sees nothing. The provisioning role can't grant any role other than `amc_breakglass`.
+4. A break-glass login sees only its own grant row, and only its granted tenant and scope, even with `app.tenant_id` set to another tenant. After the grant expires it sees nothing, and no session of the dropped login remains. A malformed verifier is refused. The provisioning role can't grant any role other than `amc_breakglass`.
 5. The relay of module A can't read module B's outbox. Module roles can read only `tenant_id`, `tenant_code` and `status` of `platform.tenant`.
 6. An event handler's effect and its inbox row commit or roll back together. A repeated delivery has no second effect.
 7. Audit import:
@@ -213,7 +220,7 @@ Moves to Validated when these DBT tests pass on PostgreSQL 16 in CI:
    - refuses to run without an approved migration record, or when the tenant already has audit rows;
    - leaves normal inserts recomputing hashes;
    - advances the audit sequence past the import.
-8. Tenant removal deletes rows only for the authorised tenant, including rows in **each** insert-only table listed in part 6.4. It fails without an approved authorisation, for another tenant, or when called by any other role. `UPDATE` of an insert-only row is still refused for every role.
+8. Tenant removal deletes rows only for the authorised tenant, including rows in **each** insert-only table listed in part 6.4. It fails without an approved authorisation, for another tenant, or when called by any other role. `UPDATE` is refused exactly where DDL-000 refuses it today. The `platform.tenant` row and the authorisation row remain after the run.
 9. No definer function in part 7 can be run by `PUBLIC` or by a role not named there. A temporary table created by the caller with the same name as a table the function writes doesn't capture the write.
 10. The Workflow SoD trigger refuses a decision when the `actor_ref` row is missing, is a service identity or isn't `ACTIVE`. `is_service_identity` can't be changed.
 11. A tenant context set for a transaction doesn't survive into the next transaction on the same pooled connection, tested through PgBouncer in transaction mode.
@@ -250,4 +257,4 @@ Moves to Validated when these DBT tests pass on PostgreSQL 16 in CI:
 ## Change log
 | Date | Status | By | Note |
 | --- | --- | --- | --- |
-| 2026-11-22 | Draft | Claude, for the project owner | Drafted at the owner's request on branch `proposal/adr-0020-schema-moves-db-roles`; review round 1 findings 1–17 and round 2 findings 1–8 addressed |
+| 2026-11-22 | Draft | Claude, for the project owner | Drafted at the owner's request on branch `proposal/adr-0020-schema-moves-db-roles`; review round 1 findings 1–17, round 2 findings 1–8 and round 3 findings 1–5 addressed |
