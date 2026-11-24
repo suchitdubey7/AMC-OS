@@ -1,12 +1,14 @@
 # LOOP_STATE — build loop status (GOV-008)
 
 **Status:** RUNNING
-**Updated:** 2026-11-21 12:41 IST
-**Chain tip:** `wp3-step10-system-context`
+**Updated:** 2026-11-21 16:45 IST
+**Chain tip:** `wp3-step11-service-catalogue`
 
 ## Next action
 
-**Step 11** (Stage B) on a new branch `wp3-step11-service-catalogue` from the chain tip: EA-003 domain boundaries and service catalogue (responsibilities, APIs, events, dependencies per module, building on EA-002 §5.1); configuration-over-customisation design (master prompt §3.6). Also decide there whether a per-object system-of-record register is needed (EA-001 G4; proposal EA-101 as input only). Note: Step 10's branch adds ADRs (owner-only), so it waits for the owner; Step 11 stacks on it and cannot be auto-merged until the owner merges Step 10. Next free numbers: NFR-PERF-028, NFR-AUD-018, NFR-RET-008, NFR-SEC-006, NFR-SCAL-005, NFR-PRIV-005, NFR-AVAIL-003, NFR-OBS-003, WF-044, ADR-0020, owner question Q66 (NFR-PERF-009 is unused, never reused).
+**Step 12** (Stage B) on a new branch `wp3-step12-deployment-cells` from the chain tip: EA-004 deployment and cell architecture, EA-005 multi-tenant architecture, EA-006 control plane / data plane (master prompt §6: cell capacity, tenant placement, migration between cells, cell upgrades, cell DR, resource limits per tenant, release compatibility, control plane). Inputs: ADR-0003, ADR-0018, EA-001…EA-003, EA-008 §5 promotion (G5), EA-003 G7 extraction triggers; proposal EA-103 as input only. Steps 10 and 11 wait for the owner (Step 10 has owner-only ADRs; Step 11 stacks on it). Next free numbers: NFR-PERF-028, NFR-AUD-018, NFR-RET-008, NFR-SEC-006, NFR-SCAL-005, NFR-PRIV-005, NFR-AVAIL-003, NFR-OBS-003, WF-044, ADR-0021 (ADR-0020 is reserved for the schema-move and database-role ADR named in EA-003 §7), owner question Q69 (NFR-PERF-009 is unused, never reused).
+
+Done in the Step 11 run (21 Nov 2026, scheduled): EA-003 domain boundaries and service catalogue — 22 modules with responsibilities, indicative APIs, candidate events, calls and adapters; boundary rules B1–B11; acyclic call tiers 0–11; ownership decisions T1–T19 closing PRD-005 C6/C9, PRD-006 C3/C4/C7/C11/C15, PRD-007 C3/C9, PRD-008 C4, PRD-012 C2/C3, PRD-013 C8, PRD-014 C5, PRD-016 C2/C10 (placement), PRD-001 C6, BA-001 §5 C3, BA-004 §5.2 C2; system-of-record decision for EA-001 G4 (Q66). EA-008 configuration over customisation (settings catalogue, scopes, WF-021 lifecycle, domain rule sets, storage in `platform`). New owner questions Q66–Q68. ADR-0020 (owner-only) is needed before Steps 15–16 for the table moves and per-module database roles. Review: round 1 RECOMMEND CHANGES (3 Major — central outbox relay wrote other schemas, Reporting could not reach Workflow, no ADR recorded for schema moves — all fixed, with 10 Minor, 6 Nits); round 2 RECOMMEND MERGE AFTER FIXES (5 Minor, 3 Nits — all fixed except the trailer Nit).
 
 Done in the Step 10 run (21 Nov 2026, scheduled): EA-001 system context (people, 16 outside systems X01–X16, trust boundaries, systems of record); EA-002 seven-layer architecture with the 12 workspaces of D-74 (WS-01…WS-12), request path, identity design, tenant isolation per layer, smallest technology set for release 1; ADR-0016 sign-in (Keycloak broker per cell, D-8), ADR-0017 cache (Valkey, never a source of truth; financial idempotency keys in PostgreSQL), ADR-0018 cloud and regions (D-7), ADR-0019 gateway and policy-engine evaluation (D-71; OPA leading, gateway open until the Kubernetes decision, Kong not recommended). Review round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 12 Minor, 2 Nits) — all fixed except Nit 14 (trailer). Left open: SEBI cloud framework and CSCRF texts not opened (marked [VAL], for Step 25).
 
@@ -65,6 +67,7 @@ Findings left open from Step 1 (no fix needed unless the owner wants it): STEP-0
 | 15 | `wp2-step09c-prd-data-ai` | Step 9c: PRD-016 (D16, WF-041, WF-042), PRD-017 (D17, WF-043); PRD-000 re-keying note; owner questions Q53–Q60 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 2 Nits — all fixed except Nit 4 (trailer); round 1 had 1 Major, fixed) | pass | yes (21 Nov 2026, build loop, CR-0001 gate PASS) |
 | 16 | `wp2-step09d-owner-answers` | Step 9d: owner answers D-26…D-66 applied to PRD-001, PRD-003, PRD-006…PRD-017, BA-001, BA-004; PRD-000 note; owner questions Q61, Q62 | Round 3: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 2 Minor, 1 Nit — all fixed except Nit 3 (trailer); rounds 1–2 had 3 Major, all fixed) | pass | yes (21 Nov 2026, build loop, CR-0001 gate PASS) |
 | 17 | `wp3-step10-system-context` | Step 10: EA-001, EA-002 (12 workspaces); ADR-0016…ADR-0019; owner questions Q63–Q65 | Round 1: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 12 Minor, 2 Nits — all fixed except Nit 14 (trailer)) | pass | no — gate G2 failed: owner-only ADRs (see "Waiting for owner") |
+| 18 | `wp3-step11-service-catalogue` | Step 11: EA-003 service catalogue (22 modules, tiers, T1–T19), EA-008 configuration over customisation; owner questions Q66–Q68 | Round 2: RECOMMEND MERGE AFTER FIXES (0 Blocker, 0 Major, 5 Minor, 3 Nits — all fixed except Nit 8 (trailer); round 1 had 3 Major, all fixed) | pass | no — waits behind Step 10 (gate G1) |
 
 ## Owner decisions used by the loop
 
@@ -160,13 +163,15 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 - PRD-010 C3: reopening a closed month by CFO and Head of Fund Accounting (D-42); BA-005 §3 still gives the COO a reopen role.
 - PRD-011 §7, PRD-012 §7: Head of Fund Accounting accepts custodian NAV (D-44); break write-off above a tenant amount (D-50).
 - PRD-013 C3, PRD-016 §7: Grievance Officer and Data Protection Officer roles (D-54, Q61).
+- From Step 11 (EA-008 §6.2): the Head of Sales role (PRD-014 BRL-D14-005) and the right `operations.recon_definition.approve` (PRD-012 §7).
 - PRD-014: Finance approval of commission paid (D-56). PRD-016, PRD-017 C6: metric definition sign-offs (D-59); AI release approvals (D-60) and emergency switch-off (D-75).
 
 ## Waiting for owner (cannot be auto-merged)
 
 | Branch | Why |
 | --- | --- |
-| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST: **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). The branch also carries the wording fixes to ADR-0002 (one or more schemas), ADR-0006 (outbox first, Kafka later, D-70) and ADR-0007 (orchestrator choice in Step 19), made at the owner's request in chat on 21 Nov 2026; the loop is not permitted to merge owner-only files, so the owner merges this branch. If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
+| `wp3-step10-system-context` | Merge gate 21 Nov 12:47 IST and again 16:52 IST (Step 11 run): **FAIL on G2 only** (G1, G3–G6 pass; CI success). Adds ADR-0016…ADR-0019 in `architecture/adrs/` (owner-only in CODEOWNERS, gate G2). The branch also carries the wording fixes to ADR-0002 (one or more schemas), ADR-0006 (outbox first, Kafka later, D-70) and ADR-0007 (orchestrator choice in Step 19), made at the owner's request in chat on 21 Nov 2026; the loop is not permitted to merge owner-only files, so the owner merges this branch. If you merge the proposal branch later, mark its ADR-0015 Superseded by ADR-0019 |
+| `wp3-step11-service-catalogue` | Stacked on Step 10, so it cannot pass gate G1 until the owner merges Step 10. It has no owner-only files of its own (GOV-001 register rows, GOV-006 status cell, `reviews/`, LOOP_STATE only), so the loop can merge it after Step 10 is in `main` |
 | — | Note for the owner: `scripts/merge_gate.py` accepts table-row-only changes anywhere in GOV-001, which is looser than CR-0001 G2 (review STEP-05b round 2, finding 1); fixing the script is an owner-only change |
 
 ## Questions for owner (open)
@@ -178,3 +183,6 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 | Q63 | Should the workspace labels WS-01…WS-12 (EA-002 §3) become official IDs, with a row `WS-nn` in GOV-001 §4? | Step 10 | Working labels only, not official |
 | Q64 | Product and scheme management (D02) has no workspace in master prompt §5 L1. Keep scheme set-up inside the System administrators workspace (WS-12) with Product Managers seeing only that module, or add a 13th "Product" workspace? | Step 10 (EA-002 §3.2) | Inside WS-12 |
 | Q65 | ClickHouse is in ADR-0007. Should the pilot start with it from day one, or start with PostgreSQL only for analytics and add ClickHouse when volumes need it (like Kafka, D-70)? | Step 10 (EA-002 §8) | Open — no default; DA-001 (Step 15) will propose |
+| Q66 | System-of-record register (EA-003 §6): accept the smaller design — fixed record holders, plus per-scheme accounting mode and NAV mode and the per-tenant NAV submitter as named settings, with a generated read-only view — instead of the proposal's generic per-object register checked by the policy engine? | Step 11 (EA-001 G4) | Smaller design (EA-003 §6) |
+| Q67 | Emergency universe override (FR-D05-012): may a new security get a fast-track golden-record approval so the emergency order can go ahead, and if so who approves it? | Step 11 (EA-003 T10; PRD-016 C10) | No fast track — the order waits for WF-041 |
+| Q68 | May an AMC add its own tags or extra fields to records (for reporting only, never used by calculations or rules)? | Step 11 (EA-008 §10) | No tenant-defined fields |
