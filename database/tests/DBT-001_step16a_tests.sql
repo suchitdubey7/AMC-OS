@@ -61,7 +61,15 @@ BEGIN
                  'master.currency','identity.permission','trading.order_state_transition')
               OR k.relname LIKE '%\_transition');
   IF n <> 0 THEN RAISE EXCEPTION 'C2 FAIL: tables without tenant_id outside the M3 list: %', v; END IF;
-  PERFORM pg_temp.ok('C2 every tenant table has forced RLS; every other table is on the M3 product-level list');
+  -- M3: product-level lists are read-only for the application role.
+  SELECT count(*), string_agg(s.nspname || '.' || k.relname, ', ') INTO n, v
+    FROM pg_class k JOIN pg_namespace s ON s.oid = k.relnamespace
+   WHERE k.relkind IN ('r','p') AND s.nspname NOT IN ('pg_catalog','information_schema','pg_toast')
+     AND NOT EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = k.oid AND a.attname = 'tenant_id' AND NOT a.attisdropped)
+     AND (has_table_privilege('amc_app', k.oid, 'INSERT') OR has_table_privilege('amc_app', k.oid, 'UPDATE')
+          OR has_table_privilege('amc_app', k.oid, 'DELETE'));
+  IF n <> 0 THEN RAISE EXCEPTION 'C2 FAIL: product-level tables writable by amc_app: %', v; END IF;
+  PERFORM pg_temp.ok('C2 every tenant table has forced RLS; every other table is on the M3 list and read-only for the application');
 END $$;
 
 DO $$
@@ -158,17 +166,35 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   BEGIN
-    DELETE FROM master.security_version WHERE security_id = '40000000-0000-0000-0000-000000000002';
-    RAISE EXCEPTION 'T8b FAIL: version deleted';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
-  END;
-  BEGIN
     UPDATE master.security SET isin = 'INE000B01099' WHERE security_id = '40000000-0000-0000-0000-000000000002';
     RAISE EXCEPTION 'T8b FAIL: anchor changed';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T8b versions are insert-only: no edit, no supersede without a correction, no delete; anchors never change');
+  PERFORM pg_temp.ok('T8b versions are insert-only: no edit, no supersede without a correction; anchors never change');
 END $$;
+
+-- The same guards hold for a role that has every grant (the migration owner): the triggers, not
+-- missing grants, refuse the change.
+RESET ROLE;
+DO $$
+DECLARE e text;
+BEGIN
+  BEGIN
+    DELETE FROM master.security_version WHERE security_id = '40000000-0000-0000-0000-000000000002';
+    RAISE EXCEPTION 'T8b2 FAIL: version deleted';
+  EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T8b2 FAIL: wrong refusal: %', e; END IF;
+  END;
+  BEGIN
+    UPDATE master.security_version SET superseded_at = now()
+     WHERE security_id = '40000000-0000-0000-0000-000000000002' AND superseded_at IS NULL;
+    RAISE EXCEPTION 'T8b2 FAIL: superseded without a correction';
+  EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'SUPERSEDE_WITHOUT_CORRECTION%' THEN RAISE EXCEPTION 'T8b2 FAIL: wrong refusal: %', e; END IF;
+  END;
+  PERFORM pg_temp.ok('T8b2 the bi-temporal guard trigger itself refuses delete and supersede-without-correction');
+END $$;
+SET ROLE amc_app;
 
 -- A back-dated change for part of the period: the module inserts the full corrected set.
 DO $$
@@ -184,24 +210,87 @@ BEGIN
   SELECT count(*) INTO n FROM master.security_version
    WHERE security_id = '40000000-0000-0000-0000-000000000002' AND superseded_at IS NULL;
   IF n <> 2 THEN RAISE EXCEPTION 'T8c FAIL: % current versions', n; END IF;
-  PERFORM pg_temp.ok('T8c a split of the validity period leaves exactly the corrected set current');
+  SELECT count(*) INTO n FROM master.security_version
+   WHERE security_id = '40000000-0000-0000-0000-000000000002' AND superseded_at IS NULL
+     AND ((valid_period = '[2026-01-01,2026-07-01)' AND short_name = 'BETA CORPORATION')
+       OR (valid_period = '[2026-07-01,)' AND short_name = 'BETA CORPORATION LTD'));
+  IF n <> 2 THEN RAISE EXCEPTION 'T8c FAIL: current versions do not carry the corrected content'; END IF;
+  PERFORM pg_temp.ok('T8c a split of the validity period (two rows, one statement) leaves exactly the corrected set current');
 END $$;
 
--- Two current versions that overlap are refused (the exclusion constraint is checked at COMMIT).
+-- System time is the database's: a forged recorded_at is overwritten, a row cannot be born superseded.
 DO $$
+DECLARE n int; e text;
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO master.benchmark_version (tenant_id, benchmark_id, valid_period, recorded_at, name, provider, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','[2026-01-01,)','2099-01-01',
+          'Nifty 100 TRI','NSE Indices','f0000000-0000-0000-0000-000000000010');
+  SELECT count(*) INTO n FROM master.benchmark_version WHERE recorded_at > now() + interval '1 day';
+  IF n <> 0 THEN RAISE EXCEPTION 'T8d FAIL: a forged future recorded_at was kept'; END IF;
   BEGIN
-    -- Bypass the supersede trigger's effect by inserting an OLDER-recorded row is impossible,
-    -- so prove the constraint directly: two rows in one statement with the same recorded_at.
-    INSERT INTO platform.tenant_entitlement (tenant_id, module_code, valid_period, recorded_at, access_mode, desired_state_ref)
-    VALUES ('00000000-0000-0000-0000-00000000000a','NAV','[2026-01-01,)','2026-11-24 10:00+05:30','FULL','ds-1'),
-           ('00000000-0000-0000-0000-00000000000a','NAV','[2026-06-01,)','2026-11-24 10:00+05:30','READ_ONLY','ds-1');
-    SET CONSTRAINTS ALL IMMEDIATE;
-    RAISE EXCEPTION 'T8d FAIL: overlapping current versions accepted';
-  EXCEPTION WHEN exclusion_violation THEN
-    PERFORM pg_temp.ok('T8d two overlapping current versions of one key are refused');
+    INSERT INTO master.benchmark_version (tenant_id, benchmark_id, valid_period, recorded_at, superseded_at, name, provider, approval_request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','[2025-01-01,2026-01-01)','2026-02-01','2026-03-01',
+            'Forged','X','f0000000-0000-0000-0000-000000000010');
+    RAISE EXCEPTION 'T8d FAIL: a row was inserted already superseded';
+  EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T8d FAIL: wrong refusal: %', e; END IF;
   END;
+  SET CONSTRAINTS ALL IMMEDIATE;
+  SELECT count(*) INTO n FROM master.benchmark_version WHERE benchmark_id = '20000000-0000-0000-0000-000000000001' AND superseded_at IS NULL;
+  IF n <> 1 THEN RAISE EXCEPTION 'T8d FAIL: % current benchmark versions', n; END IF;
+  PERFORM pg_temp.ok('T8d recorded_at is always the database clock; a row cannot be born superseded; later corrections still work');
+END $$;
+
+-- A forward-dated change keeps the earlier dates current (no silent gap).
+DO $$
+DECLARE v text;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO master.benchmark_version (tenant_id, benchmark_id, valid_period, name, provider, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','[2027-01-01,)',
+          'Nifty 100 TRI (renamed)','NSE Indices','f0000000-0000-0000-0000-000000000011');
+  SET CONSTRAINTS ALL IMMEDIATE;
+  SELECT name INTO v FROM master.benchmark_version
+   WHERE benchmark_id = '20000000-0000-0000-0000-000000000001' AND superseded_at IS NULL AND valid_period @> date '2026-06-30';
+  IF v IS DISTINCT FROM 'Nifty 100 TRI' THEN RAISE EXCEPTION 'T8e FAIL: 2026 value is %', coalesce(v, 'missing'); END IF;
+  SELECT name INTO v FROM master.benchmark_version
+   WHERE benchmark_id = '20000000-0000-0000-0000-000000000001' AND superseded_at IS NULL AND valid_period @> date '2027-06-30';
+  IF v IS DISTINCT FROM 'Nifty 100 TRI (renamed)' THEN RAISE EXCEPTION 'T8e FAIL: 2027 value is %', coalesce(v, 'missing'); END IF;
+  PERFORM pg_temp.ok('T8e a forward-dated version leaves the earlier dates current with the old content');
+END $$;
+
+-- Date-keyed bi-temporal tables (calendar, debt schedule) accept corrections.
+DO $$
+DECLARE n int; v boolean;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO platform.business_calendar (tenant_id, calendar_code, cal_date, is_business_day, description)
+  VALUES ('00000000-0000-0000-0000-00000000000a','NSE_EQ','2026-12-25',true,'loaded');
+  INSERT INTO platform.business_calendar (tenant_id, calendar_code, cal_date, is_business_day, description, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','NSE_EQ','2026-12-25',false,'holiday (corrected)','f0000000-0000-0000-0000-000000000012');
+  SET CONSTRAINTS ALL IMMEDIATE;
+  SELECT count(*), bool_and(NOT is_business_day) INTO n, v FROM platform.business_calendar
+   WHERE calendar_code = 'NSE_EQ' AND cal_date = '2026-12-25' AND superseded_at IS NULL;
+  IF n <> 1 OR NOT v THEN RAISE EXCEPTION 'T8f FAIL: calendar correction (% current)', n; END IF;
+END $$;
+-- (A new block: the correction relies on the default deferred check, which SET CONSTRAINTS
+-- ALL IMMEDIATE above switched off for the rest of that transaction.)
+DO $$
+DECLARE n int;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO master.security (tenant_id, security_id, isin, instrument_type)
+  VALUES ('00000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000003','INE000C07011','NCD');
+  INSERT INTO master.security_schedule (tenant_id, security_id, schedule_type, event_date, coupon_rate, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000003','COUPON','2027-03-31',8.250000,'f0000000-0000-0000-0000-000000000012');
+  INSERT INTO master.security_schedule (tenant_id, security_id, schedule_type, event_date, coupon_rate, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000003','COUPON','2027-03-31',8.300000,'f0000000-0000-0000-0000-000000000013');
+  SET CONSTRAINTS ALL IMMEDIATE;
+  SELECT count(*) INTO n FROM master.security_schedule
+   WHERE security_id = '40000000-0000-0000-0000-000000000003' AND superseded_at IS NULL AND coupon_rate = 8.300000;
+  IF n <> 1 THEN RAISE EXCEPTION 'T8f FAIL: schedule correction'; END IF;
+  PERFORM pg_temp.ok('T8f date-keyed tables (calendar, debt schedule) take corrections; one current row per key');
 END $$;
 
 -- =====================================================================
@@ -232,14 +321,26 @@ END $$;
 DO $$
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  BEGIN
+    UPDATE master.load_run SET business_date = '2026-11-21' WHERE load_run_id = 'b1000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T9b FAIL: business date of a running load changed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   UPDATE master.load_run SET status = 'COMPLETED', finished_at = now(), rows_loaded = 1, rows_quarantined = 0
    WHERE load_run_id = 'b1000000-0000-0000-0000-000000000001';
   BEGIN
     UPDATE master.load_run SET rows_loaded = 99 WHERE load_run_id = 'b1000000-0000-0000-0000-000000000001';
     RAISE EXCEPTION 'T9b FAIL: finished load run edited';
-  EXCEPTION WHEN insufficient_privilege THEN
-    PERFORM pg_temp.ok('T9b a load run is frozen once it is no longer RUNNING');
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
+  BEGIN
+    INSERT INTO master.benchmark_level (tenant_id, benchmark_id, level_date, level_type, level_value, load_run_id, source_system, source_record_ref)
+    VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','2026-11-20','TOTAL_RETURN',34567.12345678,
+            'b1000000-0000-0000-0000-000000000001','NSE_INDICES','lvl-1');
+    RAISE EXCEPTION 'T9b FAIL: row added to a completed load run';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  PERFORM pg_temp.ok('T9b a load run''s identity and business date never change; it is frozen when finished and takes no more rows');
 END $$;
 
 -- =====================================================================
@@ -337,6 +438,50 @@ BEGIN
   END;
 END $$;
 
+DO $$
+DECLARE e text;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  BEGIN
+    INSERT INTO identity.role_grant_request_history (tenant_id, request_id, from_state, to_state, cause, changed_by)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-000000000001','APPROVED','APPLIED','FORGED',
+            '10000000-0000-0000-0000-000000000003');
+    RAISE EXCEPTION 'T11d FAIL: forged history row accepted';
+  EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T11d FAIL: wrong refusal: %', e; END IF;
+  END;
+  PERFORM pg_temp.ok('T11d history rows are written only by the state-machine trigger');
+END $$;
+
+-- Approved versions (M11) with their lifecycle (source precedence rules).
+DO $$
+DECLARE e text;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO master.source_precedence_rule (tenant_id, entity_type, field_name, version_no, provider_order, valid_period, maker_user_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','SECURITY','short_name',1,ARRAY['NSE','BSE'],'[2026-12-01,)','10000000-0000-0000-0000-000000000001');
+  UPDATE master.source_precedence_rule SET status = 'PENDING_APPROVAL' WHERE field_name = 'short_name';
+  UPDATE master.source_precedence_rule SET status = 'REJECTED' WHERE field_name = 'short_name';
+  BEGIN
+    UPDATE master.source_precedence_rule SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000014'
+     WHERE field_name = 'short_name';
+    RAISE EXCEPTION 'T11e FAIL: REJECTED -> APPROVED accepted';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  INSERT INTO master.source_precedence_rule (tenant_id, entity_type, field_name, version_no, provider_order, valid_period, maker_user_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','SECURITY','short_name',2,ARRAY['NSE','BSE'],'[2026-12-01,)','10000000-0000-0000-0000-000000000001');
+  UPDATE master.source_precedence_rule SET status = 'PENDING_APPROVAL' WHERE field_name = 'short_name' AND version_no = 2;
+  UPDATE master.source_precedence_rule SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000014'
+   WHERE field_name = 'short_name' AND version_no = 2;
+  BEGIN
+    UPDATE master.source_precedence_rule SET provider_order = ARRAY['BSE'] WHERE field_name = 'short_name' AND version_no = 2;
+    RAISE EXCEPTION 'T11e FAIL: approved version edited';
+  EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T11e FAIL: wrong refusal: %', e; END IF;
+  END;
+  PERFORM pg_temp.ok('T11e approved versions follow DRAFT -> PENDING_APPROVAL -> APPROVED -> SUPERSEDED and are frozen once approved');
+END $$;
+
 -- =====================================================================
 -- T12  Role grants (SOD-05, no self-grant, no self-certification)
 -- =====================================================================
@@ -371,7 +516,52 @@ BEGIN
     RAISE EXCEPTION 'T12a FAIL: user certifies own access';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T12a two different people grant a role, neither the receiver; nobody certifies their own access');
+  BEGIN
+    INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-000000000001','[2027-01-01,)',
+            '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000009');
+    RAISE EXCEPTION 'T12a FAIL: an AI service identity approved a role grant';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  PERFORM pg_temp.ok('T12a two active humans grant a role, neither the receiver nor a service identity; nobody certifies their own access');
+END $$;
+
+DO $$
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO identity.session (tenant_id, session_id, user_id, idp_session_ref)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c5000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','idp-s-1');
+  UPDATE identity.session SET ended_at = now(), end_reason = 'SIGN_OUT' WHERE session_id = 'c5000000-0000-0000-0000-000000000001';
+  BEGIN
+    UPDATE identity.session SET end_reason = 'TIMEOUT' WHERE session_id = 'c5000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T12b FAIL: ended session changed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    UPDATE identity.session SET user_id = '10000000-0000-0000-0000-000000000002' WHERE session_id = 'c5000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T12b FAIL: session owner changed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  PERFORM pg_temp.ok('T12b a session may only be ended, once');
+END $$;
+
+DO $$
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO platform.organisation_unit (tenant_id, org_unit_id) VALUES
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000001'),
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000002');
+  INSERT INTO platform.organisation_unit_version (tenant_id, org_unit_id, valid_period, unit_code, unit_name, unit_type, parent_org_unit_id, approval_request_id) VALUES
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000001','[2026-01-01,)','U1','Unit 1','DEPARTMENT','c6000000-0000-0000-0000-000000000002','f0000000-0000-0000-0000-000000000015'),
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000002','[2026-01-01,)','U2','Unit 2','DEPARTMENT','c6000000-0000-0000-0000-000000000001','f0000000-0000-0000-0000-000000000015');
+  BEGIN
+    SET CONSTRAINTS ALL IMMEDIATE;
+    RAISE EXCEPTION 'T12c FAIL: a cycle in the unit tree was accepted';
+  EXCEPTION WHEN check_violation THEN
+    PERFORM pg_temp.ok('T12c the organisation-unit tree cannot contain a cycle');
+  END;
+  RAISE EXCEPTION 'rollback this block' USING ERRCODE = 'P0099';
+EXCEPTION WHEN SQLSTATE 'P0099' THEN NULL;
 END $$;
 
 -- =====================================================================
@@ -389,6 +579,11 @@ BEGIN
   UPDATE platform.config_version SET status = 'VALIDATED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
   UPDATE platform.config_version SET status = 'TESTED'    WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
   UPDATE platform.config_version SET status = 'SUBMITTED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+  BEGIN
+    UPDATE platform.config_version SET release = 'REL-OTHER' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T13a FAIL: submitted version edited';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   BEGIN
     UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000007',
            approved_on = '2026-12-15'
@@ -409,7 +604,27 @@ BEGIN
     RAISE EXCEPTION 'T13a FAIL: approved version edited';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T13a configuration follows DRAFT -> ... -> APPROVED, never applies before approval, and is frozen once approved');
+  PERFORM pg_temp.ok('T13a configuration follows DRAFT -> ... -> APPROVED, never applies before approval, and is frozen from SUBMITTED on');
+END $$;
+
+DO $$
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO platform.config_version (tenant_id, config_version_id, release, valid_period, maker_user_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000002','REL-TEST','[2026-12-01,)',
+          '10000000-0000-0000-0000-000000000001');
+  UPDATE platform.config_version SET status = 'VALIDATED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
+  UPDATE platform.config_version SET status = 'TESTED'    WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
+  UPDATE platform.config_version SET status = 'SUBMITTED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
+  BEGIN
+    UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000008',
+           approved_on = '2026-11-24'
+     WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
+    SET CONSTRAINTS ALL IMMEDIATE;
+    RAISE EXCEPTION 'T13b FAIL: two approved configuration versions start on the same date';
+  EXCEPTION WHEN exclusion_violation THEN
+    PERFORM pg_temp.ok('T13b two approved configuration versions cannot start on the same date');
+  END;
 END $$;
 
 -- =====================================================================
@@ -462,6 +677,29 @@ BEGIN
   SELECT count(*) INTO n FROM audit.access_log_2026_11;
   IF n <> 0 THEN RAISE EXCEPTION 'T14b FAIL: tenant B reads tenant A access log through the partition'; END IF;
   PERFORM pg_temp.ok('T14b new tables and partitions are tenant-isolated (reads, writes, cross-tenant foreign keys)');
+END $$;
+
+DO $$
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  BEGIN
+    INSERT INTO platform.tenant_entitlement (tenant_id, module_code, valid_period, access_mode, max_users, desired_state_ref)
+    VALUES ('00000000-0000-0000-0000-00000000000a','RISK','[2026-01-01,)','FULL',100000,'self');
+    RAISE EXCEPTION 'T15 FAIL: the application gave itself an entitlement';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    INSERT INTO platform.usage_meter (tenant_id, meter_code, usage_date, quantity)
+    VALUES ('00000000-0000-0000-0000-00000000000a','USERS','2026-11-24',1);
+    RAISE EXCEPTION 'T15 FAIL: the application wrote its own usage count';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    UPDATE identity.permission SET ai_forbidden = false;
+    RAISE EXCEPTION 'T15 FAIL: the application changed the permission list';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  PERFORM pg_temp.ok('T15 subscriptions, entitlements, usage counts and product-level lists are not writable by the application');
 END $$;
 
 RESET ROLE;

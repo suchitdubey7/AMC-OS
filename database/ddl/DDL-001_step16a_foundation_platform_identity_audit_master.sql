@@ -3,7 +3,7 @@
 -- Target: PostgreSQL 16+.  Applied after DDL-000 v0.9.  Tested on PostgreSQL 16.15.
 -- Run as a superuser / migration owner:  psql -v ON_ERROR_STOP=1 -f <this file>
 --
--- What this file builds (DA-001 v0.1, Draft):
+-- What this file builds (DA-001 v0.2, Draft):
 --   00  shared building blocks (M6, M7, M9, M14 trigger functions; provenance helper)
 --   01  numeric widening of DDL-000 amount columns (DA-001 §3.7, DM-22)
 --   02  platform  (DA-001 §4.1)  - cell, tenant changes (DM-16), configuration (DM-21) ...
@@ -21,11 +21,32 @@
 --     ADR-0020 is merged as Draft and not yet accepted by the owner.
 --   * The other 18 schemas: Steps 16b-16e (see LOOP_STATE.md).
 --
+-- Data: this file reshapes DDL-000 tables (drops columns that move to version tables) without
+-- copying rows.  It is for the empty reference database; it refuses to run if those tables hold
+-- rows.  The data move for a real database is the Alembic migration of Step 18.
+-- The whole file runs in one transaction: it applies completely or not at all.
+--
 -- Every decision here is [DES] unless labelled. No business rule, rate, threshold or cut-off is
 -- set: where a value is a business rule it is data (a row), not code. State lists that no source
 -- document fixes are marked [ASSUMPTION] and live in transition tables, so the owner can change
 -- them by migration without touching code.
 -- =====================================================================
+
+BEGIN;
+
+-- Refuse to run against tables that hold rows (finding: columns are dropped, not copied).
+DO $$
+DECLARE t text; n bigint;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['identity.user_role','identity.role_permission','platform.business_calendar',
+                           'master.issuer_group','master.issuer','master.security','master.credit_rating','master.benchmark']
+  LOOP
+    EXECUTE format('SELECT count(*) FROM %s', t) INTO n;
+    IF n > 0 THEN
+      RAISE EXCEPTION 'DDL-001 reshapes % but it holds % rows; use the Step 18 migration that moves the data', t, n;
+    END IF;
+  END LOOP;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- 00  Shared building blocks
@@ -39,25 +60,81 @@ RETURNS text LANGUAGE sql IMMUTABLE AS $$
     FROM unnest(p_keys) AS k
 $$;
 
+-- M7 system time.  BEFORE INSERT on a version table: recorded_at is always the database clock
+-- (M8 "set by the database"), and a row is never born superseded.
+CREATE OR REPLACE FUNCTION platform.tg_bt_stamp() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.superseded_at IS NOT NULL THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: a version cannot be inserted already superseded (%.%)',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
+  END IF;
+  NEW.recorded_at := clock_timestamp();
+  RETURN NEW;
+END $$;
+
+-- r minus s for date ranges: zero, one or two pieces.
+CREATE OR REPLACE FUNCTION platform.range_minus(r daterange, s daterange) RETURNS daterange[]
+LANGUAGE sql IMMUTABLE AS $$
+  SELECT CASE
+    WHEN isempty(r) THEN ARRAY[]::daterange[]
+    WHEN NOT (r && s) THEN ARRAY[r]
+    ELSE array_remove(ARRAY[
+           CASE WHEN lower_inf(s) OR (NOT lower_inf(r) AND lower(r) >= lower(s)) THEN NULL
+                ELSE daterange(lower(r), lower(s), '[)') END,
+           CASE WHEN upper_inf(s) OR (NOT upper_inf(r) AND upper(r) <= upper(s)) THEN NULL
+                ELSE daterange(upper(s), upper(r), '[)') END], NULL)
+  END
+$$;
+
 -- M7 bi-temporal versions.  AFTER INSERT on a version table: every current version of the same
--- key whose validity overlaps the new row is closed (superseded_at set).  Tables without a
--- valid_period column (keyed by a date, e.g. a calendar day) supersede the current row of the
--- same key.  Trigger arguments: the key columns WITHOUT valid_period / recorded_at.
--- The module inserts the full corrected set for the affected period in one transaction; the
--- exclusion constraint on current rows is DEFERRABLE INITIALLY DEFERRED and checked at COMMIT.
+-- key whose validity overlaps the new row, and that was recorded before it, is closed
+-- (superseded_at set).  The parts of a closed row's period that no newer current version covers
+-- are inserted again as current versions with the same content, so a forward-dated or partial
+-- change never leaves dates without a current version (DA-001 §11).  Tables without a
+-- valid_period column (keyed by a date, e.g. a calendar day) simply supersede the current row of
+-- the same key.  Trigger arguments: the key columns WITHOUT valid_period / recorded_at.  The "no
+-- overlap among current rows" exclusion constraint is DEFERRABLE INITIALLY DEFERRED (COMMIT).
 CREATE OR REPLACE FUNCTION platform.tg_bt_supersede() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE
-  v_has_period boolean := to_jsonb(NEW) ? 'valid_period';
-  v_sql text;
+  v_match  text := platform.key_match_sql(TG_ARGV);
+  v_sql    text;
+  v_old    jsonb;
+  v_pieces daterange[];
+  v_next   daterange[];
+  v_piece  daterange;
+  v_cover  daterange;
 BEGIN
   v_sql := format('UPDATE %I.%I t SET superseded_at = clock_timestamp() WHERE %s
                      AND t.superseded_at IS NULL AND t.recorded_at < ($1).recorded_at',
-                  TG_TABLE_SCHEMA, TG_TABLE_NAME, platform.key_match_sql(TG_ARGV));
-  IF v_has_period THEN
-    v_sql := v_sql || ' AND t.valid_period && ($1).valid_period';
+                  TG_TABLE_SCHEMA, TG_TABLE_NAME, v_match);
+  IF NOT (to_jsonb(NEW) ? 'valid_period') THEN
+    EXECUTE v_sql USING NEW;
+    RETURN NULL;
   END IF;
-  EXECUTE v_sql USING NEW;
+  FOR v_old IN EXECUTE v_sql || ' AND t.valid_period && ($1).valid_period RETURNING to_jsonb(t.*)' USING NEW
+  LOOP
+    -- What of the old period is not covered by any newer current version (the new row included)?
+    v_pieces := ARRAY[(v_old ->> 'valid_period')::daterange];
+    FOR v_cover IN EXECUTE format(
+        'SELECT t.valid_period FROM %I.%I t WHERE %s AND t.superseded_at IS NULL
+            AND t.recorded_at > ($2 ->> ''recorded_at'')::timestamptz AND t.valid_period && ($2 ->> ''valid_period'')::daterange',
+        TG_TABLE_SCHEMA, TG_TABLE_NAME, v_match) USING NEW, v_old
+    LOOP
+      v_next := ARRAY[]::daterange[];
+      FOREACH v_piece IN ARRAY v_pieces LOOP
+        v_next := v_next || platform.range_minus(v_piece, v_cover);
+      END LOOP;
+      v_pieces := v_next;
+    END LOOP;
+    -- Re-insert the uncovered parts with the old content.
+    FOREACH v_piece IN ARRAY v_pieces LOOP
+      EXECUTE format('INSERT INTO %I.%I SELECT * FROM jsonb_populate_record(NULL::%I.%I, $1)',
+                     TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_TABLE_SCHEMA, TG_TABLE_NAME)
+        USING v_old || jsonb_build_object('valid_period', v_piece::text, 'superseded_at', NULL, 'recorded_at', NULL);
+    END LOOP;
+  END LOOP;
   RETURN NULL;
 END $$;
 
@@ -164,9 +241,42 @@ BEGIN
   END IF;
   IF NEW.load_run_id <> OLD.load_run_id OR NEW.started_at <> OLD.started_at
      OR NEW.adapter_name <> OLD.adapter_name OR NEW.adapter_version <> OLD.adapter_version
-     OR NEW.canonical_family <> OLD.canonical_family THEN
+     OR NEW.canonical_family <> OLD.canonical_family
+     OR NEW.business_date IS DISTINCT FROM OLD.business_date
+     OR NEW.inbound_file_id IS DISTINCT FROM OLD.inbound_file_id
+     OR NEW.message_session_ref IS DISTINCT FROM OLD.message_session_ref THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: identity columns of load run % cannot change', OLD.load_run_id
       USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
+
+-- Loaded rows (§3.3): a new row may cite only a load run that is still RUNNING (rows are loaded
+-- during the run; a FAILED or COMPLETED run takes no more rows).  Rows re-inserted by the
+-- bi-temporal trigger (pg_trigger_depth() > 1) keep the load run of the row they continue.
+-- Argument: the owning schema's load_run table.
+CREATE OR REPLACE FUNCTION platform.tg_load_run_open() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE v_status text;
+BEGIN
+  IF NEW.load_run_id IS NULL OR pg_trigger_depth() > 1 THEN RETURN NEW; END IF;
+  EXECUTE format('SELECT status FROM %s WHERE tenant_id = $1 AND load_run_id = $2', TG_ARGV[0])
+    INTO v_status USING NEW.tenant_id, NEW.load_run_id;
+  IF v_status IS DISTINCT FROM 'RUNNING' THEN
+    RAISE EXCEPTION 'LOAD_RUN_CLOSED: load run % is %, rows can be added only while it is RUNNING',
+      NEW.load_run_id, coalesce(v_status, 'unknown') USING ERRCODE = '23514';
+  END IF;
+  RETURN NEW;
+END $$;
+
+-- History rows of state machines are written only by platform.tg_state_history (which runs as a
+-- trigger, so its insert is at trigger depth 2); a direct insert by any role is refused.
+CREATE OR REPLACE FUNCTION platform.tg_history_via_trigger_only() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF pg_trigger_depth() < 2 THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: %.% is written only by the state-machine trigger',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
 END $$;
@@ -178,6 +288,7 @@ LANGUAGE plpgsql AS $$
 DECLARE v_args text;
 BEGIN
   SELECT string_agg(quote_literal(k), ', ') INTO v_args FROM unnest(p_keys) AS k;
+  EXECUTE format('CREATE TRIGGER bt_stamp BEFORE INSERT ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_stamp()', p_table);
   EXECUTE format('CREATE TRIGGER bt_supersede AFTER INSERT ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_supersede(%s)', p_table, v_args);
   EXECUTE format('CREATE TRIGGER bt_guard BEFORE UPDATE OR DELETE ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_guard(%s)', p_table, v_args);
 END $$;
@@ -220,6 +331,8 @@ BEGIN
     )', p_schema, p_table || '_history', v_cols, v_keylist, v_keylist, p_schema, p_table, v_keylist);
   EXECUTE format('CREATE TRIGGER history_immutable BEFORE UPDATE OR DELETE ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_immutable()',
                  p_schema, p_table || '_history');
+  EXECUTE format('CREATE TRIGGER history_via_trigger_only BEFORE INSERT ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_history_via_trigger_only()',
+                 p_schema, p_table || '_history');
   EXECUTE format('CREATE TRIGGER state_machine BEFORE INSERT OR UPDATE ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_state_machine(%L, %L)',
                  p_schema, p_table, p_schema || '.' || p_table || '_transition', p_state_col);
   SELECT string_agg(quote_literal(k), ', ') INTO v_args FROM unnest(p_keys) AS k;
@@ -248,6 +361,8 @@ BEGIN
          OR (source_system <> ''AMC_OS_MANUAL'' AND load_run_id IS NOT NULL AND source_record_ref IS NOT NULL)),
       ADD CONSTRAINT provenance_load_run_fk FOREIGN KEY (tenant_id, load_run_id) REFERENCES %s (tenant_id, load_run_id)',
     p_table, p_load_run);
+  EXECUTE format('CREATE TRIGGER load_run_open BEFORE INSERT ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_load_run_open(%L)',
+    p_table, p_load_run::text);
 END $$;
 
 -- ---------------------------------------------------------------------
@@ -419,6 +534,29 @@ CREATE TABLE platform.organisation_unit_version (
 );
 SELECT pg_temp.make_bitemporal('platform.organisation_unit_version', ARRAY['tenant_id','org_unit_id']);
 
+-- The unit tree has no cycles (checked at commit over the current versions).
+CREATE OR REPLACE FUNCTION platform.tg_org_unit_no_cycle() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE v_cycle boolean;
+BEGIN
+  WITH RECURSIVE up(org_unit_id, depth) AS (
+      SELECT v.parent_org_unit_id, 1 FROM platform.organisation_unit_version v
+       WHERE v.tenant_id = NEW.tenant_id AND v.org_unit_id = NEW.org_unit_id AND v.superseded_at IS NULL
+         AND v.parent_org_unit_id IS NOT NULL
+    UNION
+      SELECT v.parent_org_unit_id, up.depth + 1 FROM up
+        JOIN platform.organisation_unit_version v
+          ON v.tenant_id = NEW.tenant_id AND v.org_unit_id = up.org_unit_id AND v.superseded_at IS NULL
+       WHERE v.parent_org_unit_id IS NOT NULL AND up.depth < 1000)
+  SELECT EXISTS (SELECT 1 FROM up WHERE org_unit_id = NEW.org_unit_id) INTO v_cycle;
+  IF v_cycle THEN
+    RAISE EXCEPTION 'ORG_UNIT_CYCLE: unit % would be its own ancestor', NEW.org_unit_id USING ERRCODE = '23514';
+  END IF;
+  RETURN NULL;
+END $$;
+CREATE CONSTRAINT TRIGGER organisation_unit_no_cycle AFTER INSERT ON platform.organisation_unit_version
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION platform.tg_org_unit_no_cycle();
+
 -- Who reports to whom (FR-D01-032).  Subjects and managers are users (identity) or units;
 -- both are ID references (M4), checked by the Tenant module.
 CREATE TABLE platform.reporting_line (
@@ -456,8 +594,9 @@ ALTER TABLE platform.business_calendar
   ADD COLUMN approval_request_id uuid;
 ALTER TABLE platform.business_calendar DROP CONSTRAINT business_calendar_pkey;
 ALTER TABLE platform.business_calendar ADD PRIMARY KEY (tenant_id, calendar_code, cal_date, recorded_at);
-CREATE UNIQUE INDEX business_calendar_current_ux ON platform.business_calendar (tenant_id, calendar_code, cal_date)
-  WHERE superseded_at IS NULL;
+ALTER TABLE platform.business_calendar ADD CONSTRAINT business_calendar_one_current
+  EXCLUDE USING gist (tenant_id WITH =, calendar_code WITH =, cal_date WITH =)
+  WHERE (superseded_at IS NULL) DEFERRABLE INITIALLY DEFERRED;
 SELECT pg_temp.make_bitemporal('platform.business_calendar', ARRAY['tenant_id','calendar_code','cal_date']);
 
 -- Configuration (EA-008 §3, §5, §8; DM-21).
@@ -498,7 +637,13 @@ CREATE TABLE platform.config_version (
   PRIMARY KEY (tenant_id, config_version_id),
   FOREIGN KEY (tenant_id, supersedes_version_id) REFERENCES platform.config_version (tenant_id, config_version_id),
   CHECK (status NOT IN ('APPROVED','EFFECTIVE','SUPERSEDED') OR (approval_request_id IS NOT NULL AND approved_on IS NOT NULL)),
-  CHECK (approved_on IS NULL OR lower(valid_period) >= approved_on)   -- EA-008 §5: never applies to the past
+  CHECK (approved_on IS NULL OR lower(valid_period) >= approved_on),  -- EA-008 §5: never applies to the past
+  -- A version applies from its start date until a later version replaces it, key by key; the
+  -- value for a key on date D comes from the approved version with the latest start on or before
+  -- D that holds the key (DA-001 §11).  Two approved versions with the same start date would make
+  -- that ambiguous, so they are refused.
+  EXCLUDE USING gist (tenant_id WITH =, (lower(valid_period)) WITH =)
+    WHERE (status IN ('APPROVED','EFFECTIVE')) DEFERRABLE INITIALLY DEFERRED
 );
 CREATE TRIGGER config_version_version BEFORE UPDATE ON platform.config_version
   FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
@@ -515,22 +660,27 @@ INSERT INTO platform.config_version_transition (from_state, to_state, cause) VAL
   ('APPROVED','EFFECTIVE','STATE_CHANGE'),
   ('EFFECTIVE','SUPERSEDED','STATE_CHANGE');
 
--- Content of an approved version may not change; only status (and its approval fields) move.
+-- Content is frozen from SUBMITTED on (the checker approves exactly what was submitted); from
+-- APPROVED on the approval fields are frozen too.  Only status (and its bookkeeping) moves.
 CREATE OR REPLACE FUNCTION platform.tg_config_version_frozen() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: configuration versions are never deleted (FR-D01-034)' USING ERRCODE = '42501';
   END IF;
-  IF OLD.status IN ('APPROVED','EFFECTIVE','SUPERSEDED')
-     AND (NEW.valid_period IS DISTINCT FROM OLD.valid_period OR NEW.release IS DISTINCT FROM OLD.release
-          OR NEW.maker_user_id IS DISTINCT FROM OLD.maker_user_id
-          OR NEW.approval_request_id IS DISTINCT FROM OLD.approval_request_id
-          OR NEW.approved_on IS DISTINCT FROM OLD.approved_on) THEN
-    RAISE EXCEPTION 'IMMUTABLE_RECORD: approved configuration version % cannot be edited; create a new version',
-      OLD.config_version_id USING ERRCODE = '42501';
+  IF OLD.status IN ('SUBMITTED','APPROVED','EFFECTIVE','SUPERSEDED')
+     AND (to_jsonb(NEW) - 'status' - 'approval_request_id' - 'approved_on' - 'updated_at' - 'row_version')
+         IS DISTINCT FROM
+         (to_jsonb(OLD) - 'status' - 'approval_request_id' - 'approved_on' - 'updated_at' - 'row_version') THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: configuration version % is % and cannot be edited; create a new version',
+      OLD.config_version_id, OLD.status USING ERRCODE = '42501';
   END IF;
-  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  IF OLD.status IN ('APPROVED','EFFECTIVE','SUPERSEDED')
+     AND (NEW.approval_request_id IS DISTINCT FROM OLD.approval_request_id OR NEW.approved_on IS DISTINCT FROM OLD.approved_on) THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: approval of configuration version % cannot change', OLD.config_version_id
+      USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
 END $$;
 CREATE TRIGGER config_version_frozen BEFORE UPDATE OR DELETE ON platform.config_version
   FOR EACH ROW EXECUTE FUNCTION platform.tg_config_version_frozen();
@@ -552,8 +702,10 @@ LANGUAGE plpgsql AS $$
 DECLARE v_status text; v_row platform.config_value;
 BEGIN
   v_row := CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  -- FOR SHARE: a concurrent status change waits until this value is committed or rolled back.
   SELECT status INTO v_status FROM platform.config_version
-   WHERE tenant_id = v_row.tenant_id AND config_version_id = v_row.config_version_id;
+   WHERE tenant_id = v_row.tenant_id AND config_version_id = v_row.config_version_id
+     FOR SHARE;
   IF v_status IS DISTINCT FROM 'DRAFT'
      OR (TG_OP = 'UPDATE' AND (OLD.tenant_id, OLD.config_version_id) IS DISTINCT FROM (NEW.tenant_id, NEW.config_version_id)) THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: values of configuration version % can change only while it is DRAFT',
@@ -726,14 +878,29 @@ CREATE TABLE identity.user_role_version (
 );
 SELECT pg_temp.make_bitemporal('identity.user_role_version', ARRAY['tenant_id','grant_id']);
 
--- No self-grant: neither person on a version may be the user who receives the role.
+-- No self-grant, and both people must be active humans: neither the granter nor the approver may
+-- be the user who receives the role, a service identity (AI never approves) or an inactive user.
+-- A linked request must be approved.
 CREATE OR REPLACE FUNCTION identity.tg_user_role_no_self_grant() RETURNS trigger
 LANGUAGE plpgsql AS $$
-DECLARE v_user uuid;
+DECLARE v_user uuid; v_ok boolean; v_req text;
 BEGIN
   SELECT user_id INTO v_user FROM identity.user_role WHERE tenant_id = NEW.tenant_id AND grant_id = NEW.grant_id;
   IF v_user IN (NEW.granted_by, NEW.approved_by) THEN
     RAISE EXCEPTION 'SOD_VIOLATION: a user cannot grant or approve their own role' USING ERRCODE = '42501';
+  END IF;
+  SELECT count(*) = CASE WHEN NEW.granted_by = NEW.approved_by THEN 1 ELSE 2 END INTO v_ok FROM identity.app_user
+   WHERE tenant_id = NEW.tenant_id AND user_id IN (NEW.granted_by, NEW.approved_by)
+     AND status = 'ACTIVE' AND NOT is_service_identity;
+  IF NOT v_ok THEN
+    RAISE EXCEPTION 'SOD_VIOLATION: granter and approver must be two active human users' USING ERRCODE = '42501';
+  END IF;
+  IF NEW.request_id IS NOT NULL THEN
+    SELECT status INTO v_req FROM identity.role_grant_request WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id;
+    IF v_req IS DISTINCT FROM 'APPROVED' AND v_req IS DISTINCT FROM 'APPLIED' THEN
+      RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % is %', NEW.request_id, coalesce(v_req, 'unknown')
+        USING ERRCODE = '23514';
+    END IF;
   END IF;
   RETURN NEW;
 END $$;
@@ -1110,7 +1277,7 @@ CREATE TRIGGER security_version_check BEFORE INSERT ON master.security_version
 
 -- Credit ratings -> anchor (who rates what, on which scale) + versions (the rating over time).
 ALTER TABLE master.credit_rating
-  DROP CONSTRAINT credit_rating_check,               -- valid_to >= valid_from: replaced by valid_period
+  DROP CONSTRAINT credit_rating_check,               -- subject check (security or issuer); re-added below by name
   DROP COLUMN rating, DROP COLUMN outlook, DROP COLUMN valid_from, DROP COLUMN valid_to, DROP COLUMN recorded_at,
   ADD COLUMN created_at timestamptz NOT NULL DEFAULT now(),
   ADD CONSTRAINT credit_rating_subject_ck CHECK (security_id IS NOT NULL OR issuer_id IS NOT NULL);
@@ -1168,8 +1335,9 @@ CREATE TABLE master.security_schedule (
   PRIMARY KEY (tenant_id, security_id, schedule_type, event_date, recorded_at),
   FOREIGN KEY (tenant_id, security_id) REFERENCES master.security (tenant_id, security_id)
 );
-CREATE UNIQUE INDEX security_schedule_current_ux ON master.security_schedule (tenant_id, security_id, schedule_type, event_date)
-  WHERE superseded_at IS NULL;
+ALTER TABLE master.security_schedule ADD CONSTRAINT security_schedule_one_current
+  EXCLUDE USING gist (tenant_id WITH =, security_id WITH =, schedule_type WITH =, event_date WITH =)
+  WHERE (superseded_at IS NULL) DEFERRABLE INITIALLY DEFERRED;
 
 -- Daily index levels and constituents.  Insert-only; a vendor correction is a new version_no
 -- (M12 correction path; DA-001's key plus version_no).
@@ -1359,6 +1527,16 @@ BEGIN
 END $$;
 CREATE TRIGGER source_precedence_rule_frozen BEFORE UPDATE OR DELETE ON master.source_precedence_rule
   FOR EACH ROW EXECUTE FUNCTION platform.tg_vr_frozen();
+SELECT pg_temp.make_state_machine('master', 'source_precedence_rule', 'status',
+  ARRAY['entity_type','field_name','version_no'], ARRAY['text','text','integer']);
+-- The approved-version lifecycle of DA-001 §3.1 (code VR).
+INSERT INTO master.source_precedence_rule_transition (from_state, to_state, cause) VALUES
+  ('(NEW)','DRAFT','CREATE'),
+  ('DRAFT','PENDING_APPROVAL','STATE_CHANGE'),
+  ('PENDING_APPROVAL','APPROVED','STATE_CHANGE'),
+  ('PENDING_APPROVAL','REJECTED','STATE_CHANGE'),
+  ('PENDING_APPROVAL','DRAFT','REJECT'),
+  ('APPROVED','SUPERSEDED','STATE_CHANGE');
 
 -- Request to create or change a golden record (WF-041), with evidence.
 CREATE TABLE master.steward_request (
@@ -1432,6 +1610,19 @@ INSERT INTO master.match_candidate_transition (from_state, to_state, cause) VALU
   ('ROUTED_TO_OWNER','CONFIRMED_DUPLICATE','STATE_CHANGE'),
   ('ROUTED_TO_OWNER','NOT_DUPLICATE','STATE_CHANGE');
 
+-- Standard columns on mutable rows (M21) where the table definitions above lack them.
+DO $$
+DECLARE t text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['identity.api_client','platform.feature_flag','platform.notification_channel',
+                           'master.identifier_scheme','master.match_candidate','identity.role_grant_request',
+                           'platform.schedule_entry','master.steward_request','identity.recertification_item']
+  LOOP
+    EXECUTE format('ALTER TABLE %s ADD COLUMN IF NOT EXISTS created_at timestamptz NOT NULL DEFAULT now()', t);
+    EXECUTE format('ALTER TABLE %s ADD COLUMN IF NOT EXISTS created_by uuid DEFAULT platform.current_user_id()', t);
+  END LOOP;
+END $$;
+
 -- ---------------------------------------------------------------------
 -- 06  Row-level security and grants for every new table
 -- ---------------------------------------------------------------------
@@ -1461,7 +1652,15 @@ REVOKE INSERT, UPDATE ON platform.cell, platform.config_item, platform.code_list
                          platform.environment_release,
                          platform.config_version_transition, identity.role_grant_request_transition,
                          identity.recertification_campaign_transition, identity.recertification_item_transition,
-                         master.steward_request_transition, master.match_candidate_transition
+                         master.steward_request_transition, master.match_candidate_transition,
+                         master.source_precedence_rule_transition,
+                         identity.permission, master.currency,         -- DDL-000 product-level lists (M3)
+                         trading.order_state_transition
+  FROM amc_app;
+-- Written only by the cell agent applying a signed desired-state step (DM-16), or by the
+-- migration owner until the ADR-0020 roles exist: never by the application.
+REVOKE INSERT, UPDATE ON platform.subscription, platform.subscription_version,
+                         platform.tenant_entitlement, platform.usage_meter
   FROM amc_app;
 -- Insert-only tables: no UPDATE for the application (the triggers refuse it as well).
 REVOKE UPDATE ON platform.tenant_status_history, platform.usage_meter, platform.config_promotion,
@@ -1469,9 +1668,13 @@ REVOKE UPDATE ON platform.tenant_status_history, platform.usage_meter, platform.
                  identity.recertification_campaign_history, identity.recertification_item_history,
                  audit.chain_anchor, audit.access_log,
                  master.benchmark_level, master.benchmark_constituent,
-                 master.steward_request_history, master.match_candidate_history
+                 master.steward_request_history, master.match_candidate_history,
+                 master.source_precedence_rule_history,
+                 audit.access_log_2026_11, audit.access_log_2026_12, audit.access_log_default
   FROM amc_app;
 -- The tenant status history is written by the trigger on platform.tenant, never by the app.
 REVOKE INSERT ON platform.tenant_status_history FROM amc_app;
+
+COMMIT;
 
 -- End of DDL-001.
