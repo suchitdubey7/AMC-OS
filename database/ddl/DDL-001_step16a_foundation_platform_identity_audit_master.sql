@@ -3,8 +3,8 @@
 -- Target: PostgreSQL 16+.  Applied after DDL-000 v0.9.  Tested on PostgreSQL 16.15.
 -- Run as a superuser / migration owner:  psql -v ON_ERROR_STOP=1 -f <this file>
 --
--- What this file builds (DA-001 v0.2, Draft):
---   00  shared building blocks (M6, M7, M9, M14 trigger functions; provenance helper)
+-- What this file builds (DA-001 v0.3, Draft):
+--   00  shared building blocks (M6, M7, M9, M14 trigger functions; closure tables for BT-3/BT-4; provenance helper)
 --   01  numeric widening of DDL-000 amount columns (DA-001 §3.7, DM-22)
 --   02  platform  (DA-001 §4.1)  - cell, tenant changes (DM-16), configuration (DM-21) ...
 --   03  identity  (DA-001 §4.2)  - grant anchors, scope attributes, requests, sessions ...
@@ -60,31 +60,63 @@ RETURNS text LANGUAGE sql IMMUTABLE AS $$
     FROM unnest(p_keys) AS k
 $$;
 
--- How bi-temporal versions change (M7; DA-001 §11, rule BT-1..BT-5):
+-- How bi-temporal versions change (M7; DA-001 §11, rules BT-1..BT-5; owner decision D-76):
 --   BT-1  A version states the truth for its own validity period.  Inserting it closes (supersedes)
 --         every older current version of the same key whose period overlaps it.
---   BT-2  What an older version said BEFORE the new version's start is kept: that part is
---         re-inserted as a current version with the old content (a "continuation").
---   BT-3  What an older version said AFTER the new version's end is dropped unless the module
---         restates it.  So a version with an end date ends the key from that date (revocation,
---         removal of a right, retirement of a code).
---   BT-4  A current version can be retracted (no version at all) by setting superseded_at;
---         the database stamps the time.  Rows are never edited otherwise and never deleted.
---   BT-5  recorded_at and superseded_at are the database clock.  One correction uses one instant:
---         the closed rows' superseded_at and the continuations' recorded_at equal the new row's
---         recorded_at.  Continuations are written by the trigger (trigger depth > 1; the
---         application role has no TEMPORARY privilege, so it cannot run its own triggers) and are
---         not re-checked against today's signing or format rules.
+--   BT-2  What an older version said OUTSIDE the new version's period (before its start and after
+--         its end) is kept: each part is re-inserted as a current version with the old content
+--         (a "continuation").  A version with an end date therefore does NOT end the key.
+--   BT-3  Ending a key from a date (revoking a grant, removing a right, retiring a code) is a
+--         separate END row in the table's closure table <table>_closure (D-76, option B).  It
+--         records who ended the key (closed_by, from the identity context), from which date
+--         (end_date), under which request (request_id) and why (reason).  It never restates or
+--         re-signs the old content.  It closes every current version of the key whose period
+--         reaches end_date or later - including versions that start later - and keeps only the
+--         part before end_date as a continuation.
+--   BT-4  Retracting one current version (no version at all for its period) is a RETRACT row in
+--         the same closure table, with the same who / request / why.  The application can never
+--         set superseded_at itself.  Rows are never edited otherwise and never deleted.
+--   BT-5  recorded_at and superseded_at are the database clock.  One inserted version or one
+--         closure row uses one instant: the rows it closes get superseded_at, and its
+--         continuations get recorded_at, equal to its own recorded_at.  Several versions written
+--         in one transaction each get their own (increasing) instant, so an "as known at T"
+--         query for a T inside that transaction's few microseconds can see part of the change;
+--         as-known-at queries use instants taken from committed data (DA-001 §11).
+--   Continuations are recognised from data, not only from trigger depth: the row must be written
+--   inside a trigger AND a row of the same table closed at exactly its recorded_at must have the
+--   same content over a period that contains it (platform.bt_is_continuation).  Only continuations
+--   skip today's signing and format checks.  No other trigger may insert into a version table or
+--   set superseded_at (DA-001 §11).
 --   The "no overlap among current versions" exclusion constraints are DEFERRABLE INITIALLY
 --   DEFERRED and checked at COMMIT; a module must not SET CONSTRAINTS ... IMMEDIATE before it
 --   inserts a version (the check would run before the old row is closed).
+
+-- Is this row a continuation written by tg_bt_supersede / tg_bt_close?  (BT-5: from data.)
+CREATE OR REPLACE FUNCTION platform.bt_is_continuation(p_table regclass, p_row jsonb) RETURNS boolean
+LANGUAGE plpgsql STABLE AS $$
+DECLARE v_ok boolean;
+BEGIN
+  IF pg_trigger_depth() < 2 OR p_row ->> 'recorded_at' IS NULL OR NOT (p_row ? 'superseded_at') THEN
+    RETURN false;
+  END IF;
+  EXECUTE format('SELECT EXISTS (SELECT 1 FROM %s t
+                   WHERE t.tenant_id = ($1 ->> ''tenant_id'')::uuid
+                     AND t.superseded_at = ($1 ->> ''recorded_at'')::timestamptz %s
+                     AND (to_jsonb(t) - ''valid_period'' - ''recorded_at'' - ''superseded_at'')
+                       = ($1 - ''valid_period'' - ''recorded_at'' - ''superseded_at''))',
+                 p_table,
+                 CASE WHEN p_row ? 'valid_period'
+                      THEN 'AND t.valid_period @> ($1 ->> ''valid_period'')::daterange' ELSE '' END)
+    INTO v_ok USING p_row;
+  RETURN v_ok;
+END $$;
 
 -- BT-5 system time.  BEFORE INSERT on a version table.
 CREATE OR REPLACE FUNCTION platform.tg_bt_stamp() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
-  IF pg_trigger_depth() > 1 AND NEW.recorded_at IS NOT NULL THEN
-    RETURN NEW;                                   -- continuation written by tg_bt_supersede
+  IF platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN
+    RETURN NEW;                                   -- continuation written by tg_bt_supersede / tg_bt_close
   END IF;
   IF NEW.superseded_at IS NOT NULL THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: a version cannot be inserted already superseded (%.%)',
@@ -104,6 +136,7 @@ DECLARE
   v_old  jsonb;
   v_left daterange;
   v_new  daterange;
+  v_part daterange;
 BEGIN
   v_sql := format('UPDATE %I.%I t SET superseded_at = ($1).recorded_at WHERE %s
                      AND t.superseded_at IS NULL AND t.recorded_at < ($1).recorded_at',
@@ -115,28 +148,91 @@ BEGIN
   v_new := (to_jsonb(NEW) ->> 'valid_period')::daterange;
   FOR v_old IN EXECUTE v_sql || ' AND t.valid_period && ($1).valid_period RETURNING to_jsonb(t.*)' USING NEW
   LOOP
-    -- BT-2: keep the part of the old period before the new version starts.
-    IF NOT lower_inf(v_new) THEN
-      v_left := (v_old ->> 'valid_period')::daterange * daterange(NULL, lower(v_new), '[)');
-      IF NOT isempty(v_left) THEN
+    -- BT-2: keep the parts of the old period before the new version starts and after it ends.
+    FOREACH v_part IN ARRAY ARRAY[
+        CASE WHEN lower_inf(v_new) THEN 'empty'::daterange
+             ELSE (v_old ->> 'valid_period')::daterange * daterange(NULL, lower(v_new), '[)') END,
+        CASE WHEN upper_inf(v_new) THEN 'empty'::daterange
+             ELSE (v_old ->> 'valid_period')::daterange * daterange(upper(v_new), NULL, '[)') END]
+    LOOP
+      IF NOT isempty(v_part) THEN
         EXECUTE format('INSERT INTO %I.%I SELECT * FROM jsonb_populate_record(NULL::%I.%I, $1)',
                        TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_TABLE_SCHEMA, TG_TABLE_NAME)
-          USING v_old || jsonb_build_object('valid_period', v_left::text, 'superseded_at', NULL,
+          USING v_old || jsonb_build_object('valid_period', v_part::text, 'superseded_at', NULL,
                                             'recorded_at', to_jsonb(NEW) -> 'recorded_at');
       END IF;
-    END IF;
+    END LOOP;
   END LOOP;
   RETURN NULL;
 END $$;
 
+-- BT-3, BT-4.  BEFORE INSERT on a closure table: the database sets the time and the actor.
+CREATE OR REPLACE FUNCTION platform.tg_bt_closure_stamp() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.recorded_at := clock_timestamp();
+  NEW.closed_by   := platform.current_user_id();
+  IF NEW.closed_by IS NULL THEN
+    RAISE EXCEPTION 'NO_ACTOR: ending or retracting a version on %.% needs the acting user (app.user_id)',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
+  END IF;
+  RETURN NEW;
+END $$;
+
+-- BT-3, BT-4.  AFTER INSERT on a closure table.  Arguments: [0] the version table, [1..] its key
+-- columns (the closure table has the same key columns).
+CREATE OR REPLACE FUNCTION platform.tg_bt_close() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE
+  v_table text := TG_ARGV[0];
+  v_keys  text[] := TG_ARGV[1:TG_NARGS - 1];
+  v_old   jsonb;
+  v_left  daterange;
+  n       int := 0;
+BEGIN
+  IF NEW.closure_kind = 'RETRACT' THEN
+    EXECUTE format('UPDATE %s t SET superseded_at = ($1).recorded_at WHERE %s AND t.superseded_at IS NULL
+                      AND t.recorded_at = ($1).target_recorded_at %s',
+                   v_table, platform.key_match_sql(v_keys),
+                   CASE WHEN NEW.target_valid_period IS NOT NULL
+                        THEN 'AND t.valid_period = ($1).target_valid_period' ELSE '' END)
+      USING NEW;
+    GET DIAGNOSTICS n = ROW_COUNT;
+    IF n <> 1 THEN
+      RAISE EXCEPTION 'NOTHING_TO_RETRACT: no single current version of % matches the retraction (% found)', v_table, n
+        USING ERRCODE = '23514';
+    END IF;
+    RETURN NULL;
+  END IF;
+  -- END: close every current version that reaches the end date or later; keep the part before it.
+  FOR v_old IN EXECUTE format('UPDATE %s t SET superseded_at = ($1).recorded_at WHERE %s AND t.superseded_at IS NULL
+                                 AND (upper_inf(t.valid_period) OR upper(t.valid_period) > ($1).end_date)
+                               RETURNING to_jsonb(t.*)', v_table, platform.key_match_sql(v_keys)) USING NEW
+  LOOP
+    n := n + 1;
+    v_left := (v_old ->> 'valid_period')::daterange * daterange(NULL, NEW.end_date, '[)');
+    IF NOT isempty(v_left) THEN
+      EXECUTE format('INSERT INTO %s SELECT * FROM jsonb_populate_record(NULL::%s, $1)', v_table, v_table)
+        USING v_old || jsonb_build_object('valid_period', v_left::text, 'superseded_at', NULL,
+                                          'recorded_at', to_jsonb(NEW.recorded_at));
+    END IF;
+  END LOOP;
+  IF n = 0 THEN
+    RAISE EXCEPTION 'NOTHING_TO_END: % has no current version on or after %', v_table, NEW.end_date
+      USING ERRCODE = '23514';
+  END IF;
+  RETURN NULL;
+END $$;
+
 -- BT-4, BT-5 guard.  BEFORE UPDATE OR DELETE on a version table: only superseded_at may be set,
--- once.  Set by the application (a retraction) it is stamped with the database clock; set by
--- tg_bt_supersede it keeps the correcting row's recorded_at.
+-- once, and only by tg_bt_supersede or tg_bt_close (trigger depth > 1), which set it to the
+-- correcting row's or closure row's recorded_at.  A direct UPDATE is refused: a retraction is a
+-- RETRACT row in the closure table, which records who, why and under which request (BT-4).
 CREATE OR REPLACE FUNCTION platform.tg_bt_guard() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
-    RAISE EXCEPTION 'IMMUTABLE_RECORD: DELETE on %.% is not allowed; insert a correcting version or retract',
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: DELETE on %.% is not allowed; insert a correcting version or a closure row',
       TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
   END IF;
   IF OLD.superseded_at IS NOT NULL OR NEW.superseded_at IS NULL
@@ -144,8 +240,9 @@ BEGIN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: only superseded_at may be set, once, on %.%',
       TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
   END IF;
-  IF pg_trigger_depth() = 1 THEN
-    NEW.superseded_at := clock_timestamp();
+  IF pg_trigger_depth() < 2 THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: %.% versions are closed only by a new version or a row in %_closure (BT-3, BT-4)',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME, TG_TABLE_NAME USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
 END $$;
@@ -194,6 +291,7 @@ DECLARE
   v_keys  text[] := TG_ARGV[2:TG_NARGS - 1];
   v_cols  text;
   v_vals  text;
+  v_ok    boolean;
 BEGIN
   IF TG_OP = 'INSERT' THEN
     v_from := '(NEW)'; v_cause := 'CREATE';
@@ -201,6 +299,14 @@ BEGIN
     v_from := to_jsonb(OLD) ->> TG_ARGV[1];
     IF v_from IS NOT DISTINCT FROM v_to THEN RETURN NULL; END IF;
     v_cause := coalesce(NULLIF(current_setting('app.transition_cause', true), ''), 'STATE_CHANGE');
+    -- The cause is read again here; check it again, so a cause changed after the BEFORE trigger
+    -- ran (same statement) cannot be written to the history.
+    EXECUTE format('SELECT EXISTS (SELECT 1 FROM %s WHERE from_state = $1 AND to_state = $2 AND cause = $3)',
+                   regexp_replace(TG_ARGV[0], '_history$', '_transition')) INTO v_ok USING v_from, v_to, v_cause;
+    IF NOT v_ok THEN
+      RAISE EXCEPTION 'ILLEGAL_TRANSITION: history for %.% % -> % (cause %) does not match a transition',
+        TG_TABLE_SCHEMA, TG_TABLE_NAME, v_from, coalesce(v_to, 'NULL'), v_cause USING ERRCODE = '23514';
+    END IF;
   END IF;
   SELECT string_agg(format('%I', k), ', '), string_agg(format('($1).%I', k), ', ')
     INTO v_cols, v_vals FROM unnest(v_keys) AS k;
@@ -232,14 +338,14 @@ BEGIN
 END $$;
 
 -- Loaded rows (§3.3): a new row may cite only a load run that is still RUNNING (rows are loaded
--- during the run; a FAILED or COMPLETED run takes no more rows).  Rows re-inserted by the
--- bi-temporal trigger (pg_trigger_depth() > 1) keep the load run of the row they continue.
+-- during the run; a FAILED or COMPLETED run takes no more rows).  Continuations written by the
+-- bi-temporal triggers (BT-5, recognised from data) keep the load run of the row they continue.
 -- Argument: the owning schema's load_run table.
 CREATE OR REPLACE FUNCTION platform.tg_load_run_open() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE v_status text;
 BEGIN
-  IF NEW.load_run_id IS NULL OR pg_trigger_depth() > 1 THEN RETURN NEW; END IF;
+  IF NEW.load_run_id IS NULL OR platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NEW; END IF;
   -- FOR SHARE: the run cannot be completed while this row is uncommitted.  The completion step
   -- locks the run (SELECT ... FOR UPDATE) before it counts rows, so it waits for this row.
   EXECUTE format('SELECT status FROM %s WHERE tenant_id = $1 AND load_run_id = $2 FOR SHARE', TG_ARGV[0])
@@ -264,15 +370,56 @@ BEGIN
 END $$;
 
 -- Migration helpers (session-local; they disappear when this script ends).
--- Adds the standard bi-temporal triggers to a version table.
+-- Adds the standard bi-temporal triggers to a version table, and its closure table
+-- <table>_closure (BT-3 END rows, BT-4 RETRACT rows) with the same key columns.
 CREATE FUNCTION pg_temp.make_bitemporal(p_table regclass, p_keys text[]) RETURNS void
 LANGUAGE plpgsql AS $$
-DECLARE v_args text;
+DECLARE
+  v_args   text;
+  v_cols   text;
+  v_schema text;
+  v_name   text;
+  v_period boolean;
 BEGIN
   SELECT string_agg(quote_literal(k), ', ') INTO v_args FROM unnest(p_keys) AS k;
   EXECUTE format('CREATE TRIGGER bt_stamp BEFORE INSERT ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_stamp()', p_table);
   EXECUTE format('CREATE TRIGGER bt_supersede AFTER INSERT ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_supersede(%s)', p_table, v_args);
   EXECUTE format('CREATE TRIGGER bt_guard BEFORE UPDATE OR DELETE ON %s FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_guard(%s)', p_table, v_args);
+
+  SELECT n.nspname, c.relname INTO v_schema, v_name
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.oid = p_table;
+  SELECT string_agg(format('%I %s NOT NULL', a.attname, format_type(a.atttypid, a.atttypmod)), ', ' ORDER BY k.ord)
+    INTO v_cols
+    FROM unnest(p_keys) WITH ORDINALITY AS k(name, ord)
+    JOIN pg_attribute a ON a.attrelid = p_table AND a.attname = k.name AND NOT a.attisdropped;
+  v_period := EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = p_table AND attname = 'valid_period' AND NOT attisdropped);
+  EXECUTE format('CREATE TABLE %I.%I (
+      %s,
+      closure_id          uuid NOT NULL DEFAULT gen_random_uuid(),
+      closure_kind        text NOT NULL CHECK (closure_kind IN (''END'',''RETRACT'')),
+      end_date            date,           -- END: the key has no version from this date on
+      target_valid_period daterange,      -- RETRACT: the current version to retract
+      target_recorded_at  timestamptz,
+      recorded_at         timestamptz NOT NULL DEFAULT clock_timestamp(),  -- set by the database
+      closed_by           uuid NOT NULL,                                    -- set by the database (app.user_id)
+      request_id          uuid NOT NULL,  -- the approved request this follows (ID reference, M4, unless a table adds a FK)
+      reason              text NOT NULL CHECK (length(btrim(reason)) > 0),
+      PRIMARY KEY (tenant_id, closure_id),
+      CHECK ((closure_kind = ''END'') = (end_date IS NOT NULL)),
+      CHECK ((closure_kind = ''RETRACT'') = (target_recorded_at IS NOT NULL)),
+      CHECK (%s)
+    )', v_schema, v_name || '_closure', v_cols,
+    CASE WHEN v_period
+         THEN '(closure_kind = ''RETRACT'') = (target_valid_period IS NOT NULL)'
+         ELSE 'closure_kind = ''RETRACT'' AND target_valid_period IS NULL' END);
+  EXECUTE format('COMMENT ON TABLE %I.%I IS %L', v_schema, v_name || '_closure',
+    format('Ends (END) or retracts (RETRACT) versions of %s.%s, with who, when, why and under which request (DA-001 §11, BT-3, BT-4, D-76). Insert-only.', v_schema, v_name));
+  EXECUTE format('CREATE TRIGGER bt_closure_stamp BEFORE INSERT ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_closure_stamp()',
+                 v_schema, v_name || '_closure');
+  EXECUTE format('CREATE TRIGGER bt_close AFTER INSERT ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_close(%L, %s)',
+                 v_schema, v_name || '_closure', format('%I.%I', v_schema, v_name), v_args);
+  EXECUTE format('CREATE TRIGGER bt_closure_immutable BEFORE UPDATE OR DELETE ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_immutable()',
+                 v_schema, v_name || '_closure');
 END $$;
 
 -- Adds a product-level transition table, a tenant history table and both state triggers to a
@@ -616,22 +763,27 @@ CREATE TABLE platform.config_version (
   approved_on        date,                       -- set by the database when the version is approved
   values_hash        text,                       -- hash of the values the validator checked
   supersedes_version_id uuid,
+  withdrawal_request_id uuid,                    -- approved request to withdraw it (D-77), ID reference (M4)
   created_at         timestamptz NOT NULL DEFAULT now(),
   updated_at         timestamptz NOT NULL DEFAULT now(),
   row_version        integer NOT NULL DEFAULT 1,
   PRIMARY KEY (tenant_id, config_version_id),
   FOREIGN KEY (tenant_id, supersedes_version_id) REFERENCES platform.config_version (tenant_id, config_version_id),
-  CHECK (status NOT IN ('APPROVED','EFFECTIVE','SUPERSEDED') OR (approval_request_id IS NOT NULL AND approved_on IS NOT NULL)),
+  CHECK (status NOT IN ('APPROVED','EFFECTIVE','SUPERSEDED','WITHDRAWN') OR (approval_request_id IS NOT NULL AND approved_on IS NOT NULL)),
   CHECK (approved_on IS NULL OR lower(valid_period) >= approved_on),  -- EA-008 §5: never applies to the past
   CHECK (status IN ('DRAFT') OR values_hash IS NOT NULL),
   CHECK (status <> 'DRAFT' OR (approved_on IS NULL AND approval_request_id IS NULL)),
-  -- [ASSUMPTION - owner Q85] Interim lookup rule: a version holds the tenant's complete
-  -- configuration and applies from its start date until a later approved version starts, so its
-  -- period is open-ended; the version in force on date D is the approved one with the latest start
-  -- on or before D.  Two approved versions with the same start date would make that ambiguous.
+  CHECK ((status = 'WITHDRAWN') = (withdrawal_request_id IS NOT NULL)),
+  -- Owner decision D-77 (24 Nov 2026): a version holds the tenant's complete configuration and
+  -- applies from its start date until a later approved version starts, so its period is
+  -- open-ended (no end dates).  The version in force on date D is the latest version in
+  -- APPROVED, EFFECTIVE or SUPERSEDED whose start is on or before D (platform.config_version_in_force):
+  -- SUPERSEDED means "no longer the newest" (EA-008 §4 rule 2) and still counts for past dates.
+  -- WITHDRAWN (found wrong before its start date) never counts.  So no two versions in those three
+  -- statuses may start on the same date.
   CHECK (upper_inf(valid_period)),
   EXCLUDE USING gist (tenant_id WITH =, (lower(valid_period)) WITH =)
-    WHERE (status IN ('APPROVED','EFFECTIVE')) DEFERRABLE INITIALLY DEFERRED
+    WHERE (status IN ('APPROVED','EFFECTIVE','SUPERSEDED')) DEFERRABLE INITIALLY DEFERRED
 );
 CREATE TRIGGER config_version_version BEFORE UPDATE ON platform.config_version
   FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
@@ -646,8 +798,29 @@ BEGIN
             FROM platform.config_value WHERE tenant_id = p_tenant AND config_version_id = p_version);
 END $$;
 
+-- Today's business date.  Fixed to India time (Asia/Kolkata), whatever the session TimeZone or the
+-- server clock zone, so no session can move "today" back by setting a far-west TimeZone.
+-- [DES] One zone for every tenant: AMC OS serves Indian AMCs; a per-tenant zone held in data can
+-- replace it if that ever changes.
+CREATE OR REPLACE FUNCTION platform.today_ist() RETURNS date
+LANGUAGE sql STABLE PARALLEL SAFE AS $$
+  SELECT (now() AT TIME ZONE 'Asia/Kolkata')::date
+$$;
+
+-- The configuration version in force for a tenant on a business date (D-77).
+CREATE OR REPLACE FUNCTION platform.config_version_in_force(p_tenant uuid, p_date date) RETURNS uuid
+LANGUAGE sql STABLE AS $$
+  SELECT config_version_id FROM platform.config_version
+   WHERE tenant_id = p_tenant AND status IN ('APPROVED','EFFECTIVE','SUPERSEDED')
+     AND lower(valid_period) <= p_date
+   ORDER BY lower(valid_period) DESC
+   LIMIT 1
+$$;
+
 -- Moves that need database facts: DRAFT -> VALIDATED checks the values hash; -> APPROVED stamps
--- approved_on with the database date (EA-008 §5: a version never applies to the past).
+-- approved_on with today's business date (EA-008 §5: a version never applies to the past);
+-- APPROVED -> WITHDRAWN only before the start date; EFFECTIVE -> SUPERSEDED only when a later
+-- approved version exists (D-77).
 CREATE OR REPLACE FUNCTION platform.tg_config_version_moves() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
@@ -660,9 +833,22 @@ BEGIN
     NEW.values_hash := NULL;                       -- rejected: validate again
   END IF;
   IF NEW.status = 'APPROVED' AND OLD.status <> 'APPROVED' THEN
-    NEW.approved_on := current_date;
-  ELSIF NEW.approved_on IS DISTINCT FROM OLD.approved_on AND OLD.status NOT IN ('APPROVED','EFFECTIVE','SUPERSEDED') THEN
+    NEW.approved_on := platform.today_ist();
+  ELSIF NEW.approved_on IS DISTINCT FROM OLD.approved_on AND OLD.status NOT IN ('APPROVED','EFFECTIVE','SUPERSEDED','WITHDRAWN') THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: approved_on is set by the database at approval' USING ERRCODE = '42501';
+  END IF;
+  IF NEW.status = 'WITHDRAWN' AND OLD.status <> 'WITHDRAWN' AND lower(OLD.valid_period) <= platform.today_ist() THEN
+    RAISE EXCEPTION 'VERSION_IN_FORCE: configuration version % has applied since %; correct it with a new version (EA-008 §5)',
+      OLD.config_version_id, lower(OLD.valid_period) USING ERRCODE = '23514';
+  END IF;
+  IF NEW.status = 'SUPERSEDED' AND OLD.status <> 'SUPERSEDED'
+     AND NOT EXISTS (SELECT 1 FROM platform.config_version v
+                      WHERE v.tenant_id = OLD.tenant_id AND v.config_version_id <> OLD.config_version_id
+                        AND v.status IN ('APPROVED','EFFECTIVE','SUPERSEDED')
+                        AND lower(v.valid_period) > lower(OLD.valid_period)
+                        FOR SHARE) THEN
+    RAISE EXCEPTION 'NO_LATER_VERSION: configuration version % can be superseded only by a later approved version',
+      OLD.config_version_id USING ERRCODE = '23514';
   END IF;
   RETURN NEW;
 END $$;
@@ -679,20 +865,22 @@ INSERT INTO platform.config_version_transition (from_state, to_state, cause) VAL
   ('SUBMITTED','APPROVED','STATE_CHANGE'),
   ('SUBMITTED','DRAFT','REJECT'),
   ('APPROVED','EFFECTIVE','STATE_CHANGE'),
-  ('EFFECTIVE','SUPERSEDED','STATE_CHANGE');
+  ('EFFECTIVE','SUPERSEDED','STATE_CHANGE'),     -- only when a later approved version exists (D-77)
+  ('APPROVED','WITHDRAWN','STATE_CHANGE');       -- D-77: found wrong before its start date; never counts
 
 -- Content is frozen from SUBMITTED on (the checker approves exactly what was submitted); from
--- APPROVED on the approval fields are frozen too.  Only status (and its bookkeeping) moves.
+-- APPROVED on the approval fields are frozen too.  Only status (and its bookkeeping) moves;
+-- WITHDRAWN is final.
 CREATE OR REPLACE FUNCTION platform.tg_config_version_frozen() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_OP = 'DELETE' THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: configuration versions are never deleted (FR-D01-034)' USING ERRCODE = '42501';
   END IF;
-  IF OLD.status IN ('SUBMITTED','APPROVED','EFFECTIVE','SUPERSEDED')
-     AND (to_jsonb(NEW) - 'status' - 'approval_request_id' - 'approved_on' - 'updated_at' - 'row_version')
+  IF OLD.status IN ('SUBMITTED','APPROVED','EFFECTIVE','SUPERSEDED','WITHDRAWN')
+     AND (to_jsonb(NEW) - 'status' - 'approval_request_id' - 'approved_on' - 'withdrawal_request_id' - 'updated_at' - 'row_version')
          IS DISTINCT FROM
-         (to_jsonb(OLD) - 'status' - 'approval_request_id' - 'approved_on' - 'updated_at' - 'row_version') THEN
+         (to_jsonb(OLD) - 'status' - 'approval_request_id' - 'approved_on' - 'withdrawal_request_id' - 'updated_at' - 'row_version') THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: configuration version % is % and cannot be edited; create a new version',
       OLD.config_version_id, OLD.status USING ERRCODE = '42501';
   END IF;
@@ -700,6 +888,12 @@ BEGIN
      AND (NEW.approval_request_id IS DISTINCT FROM OLD.approval_request_id OR NEW.approved_on IS DISTINCT FROM OLD.approved_on) THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: approval of configuration version % cannot change', OLD.config_version_id
       USING ERRCODE = '42501';
+  END IF;
+  -- The withdrawal reference is written only with the move APPROVED -> WITHDRAWN (D-77).
+  IF NEW.withdrawal_request_id IS DISTINCT FROM OLD.withdrawal_request_id
+     AND NOT (OLD.status = 'APPROVED' AND NEW.status = 'WITHDRAWN') THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: withdrawal of configuration version % is recorded only when it is withdrawn',
+      OLD.config_version_id USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
 END $$;
@@ -906,7 +1100,7 @@ CREATE OR REPLACE FUNCTION identity.tg_user_role_no_self_grant() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE v_user uuid; v_ok boolean; v_req text;
 BEGIN
-  IF pg_trigger_depth() > 1 THEN RETURN NEW; END IF;   -- continuation of a row already checked (BT-5)
+  IF platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NEW; END IF;  -- already checked (BT-5)
   SELECT user_id INTO v_user FROM identity.user_role WHERE tenant_id = NEW.tenant_id AND grant_id = NEW.grant_id;
   IF v_user IN (NEW.granted_by, NEW.approved_by) THEN
     RAISE EXCEPTION 'SOD_VIOLATION: a user cannot grant or approve their own role' USING ERRCODE = '42501';
@@ -930,6 +1124,11 @@ CREATE TRIGGER user_role_version_no_self_grant BEFORE INSERT ON identity.user_ro
   FOR EACH ROW EXECUTE FUNCTION identity.tg_user_role_no_self_grant();
 
 -- Named scope values a grant carries, replacing DDL-000's free JSON scope (PRD-001 §10).
+-- Meaning (DA-001 §11, [ASSUMPTION - owner Q87]): the current rows of one attribute list the
+-- values the grant is limited to on a date; an attribute with no current row does not limit the
+-- grant (as DDL-000's empty scope '{}').  So adding a row narrows access and ending the last row
+-- of an attribute widens it: both follow an approved request (FR-D01-017: scope is part of the
+-- grant that is approved).
 CREATE TABLE identity.scope_attribute (
   tenant_id     uuid NOT NULL,
   grant_id      uuid NOT NULL,
@@ -938,6 +1137,7 @@ CREATE TABLE identity.scope_attribute (
   valid_period  daterange NOT NULL CHECK (NOT isempty(valid_period) AND lower(valid_period) IS NOT NULL),
   recorded_at   timestamptz NOT NULL DEFAULT clock_timestamp(),
   superseded_at timestamptz,
+  request_id    uuid NOT NULL,              -- approved GRANT or CHANGE_SCOPE request for this grant
   PRIMARY KEY (tenant_id, grant_id, attribute, value, valid_period, recorded_at),
   FOREIGN KEY (tenant_id, grant_id) REFERENCES identity.user_role (tenant_id, grant_id),
   EXCLUDE USING gist (tenant_id WITH =, grant_id WITH =, attribute WITH =, value WITH =, valid_period WITH &&)
@@ -973,6 +1173,63 @@ CREATE TABLE identity.role_grant_request (
 );
 ALTER TABLE identity.user_role_version
   ADD FOREIGN KEY (tenant_id, request_id) REFERENCES identity.role_grant_request (tenant_id, request_id);
+ALTER TABLE identity.scope_attribute
+  ADD FOREIGN KEY (tenant_id, request_id) REFERENCES identity.role_grant_request (tenant_id, request_id);
+ALTER TABLE identity.user_role_version_closure
+  ADD FOREIGN KEY (tenant_id, request_id) REFERENCES identity.role_grant_request (tenant_id, request_id),
+  ADD FOREIGN KEY (tenant_id, grant_id)   REFERENCES identity.user_role (tenant_id, grant_id);
+ALTER TABLE identity.scope_attribute_closure
+  ADD FOREIGN KEY (tenant_id, request_id) REFERENCES identity.role_grant_request (tenant_id, request_id),
+  ADD FOREIGN KEY (tenant_id, grant_id)   REFERENCES identity.user_role (tenant_id, grant_id);
+
+-- A grant's scope, and the end or retraction of a grant or a scope row, follow an approved request
+-- for that grant (D-76; FR-D01-017).  Allowed request types:
+--   scope row added       GRANT or CHANGE_SCOPE
+--   scope row ended       CHANGE_SCOPE or REVOKE
+--   grant ended/retracted REVOKE or CHANGE_SCOPE
+-- A GRANT request made before the grant existed (grant_id empty) matches by user and role.
+CREATE OR REPLACE FUNCTION identity.check_grant_request(p_tenant uuid, p_grant uuid, p_request uuid, p_types text[])
+RETURNS void LANGUAGE plpgsql STABLE AS $$
+DECLARE r identity.role_grant_request; g identity.user_role;
+BEGIN
+  SELECT * INTO r FROM identity.role_grant_request WHERE tenant_id = p_tenant AND request_id = p_request;
+  SELECT * INTO g FROM identity.user_role WHERE tenant_id = p_tenant AND grant_id = p_grant;
+  IF r.status IS DISTINCT FROM 'APPROVED' AND r.status IS DISTINCT FROM 'APPLIED' THEN
+    RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % is %', p_request, coalesce(r.status, 'unknown')
+      USING ERRCODE = '23514';
+  END IF;
+  IF NOT (r.request_type = ANY (p_types)) THEN
+    RAISE EXCEPTION 'WRONG_REQUEST_TYPE: a % request cannot do this (allowed: %)', r.request_type, p_types
+      USING ERRCODE = '23514';
+  END IF;
+  IF NOT (r.grant_id = p_grant
+          OR (r.request_type = 'GRANT' AND r.grant_id IS NULL AND r.user_id = g.user_id AND r.role_code = g.role_code)) THEN
+    RAISE EXCEPTION 'WRONG_GRANT: request % is not for grant %', p_request, p_grant USING ERRCODE = '23514';
+  END IF;
+END $$;
+
+CREATE OR REPLACE FUNCTION identity.tg_scope_attribute_request() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NEW; END IF;  -- already checked (BT-5)
+  PERFORM identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['GRANT','CHANGE_SCOPE']);
+  RETURN NEW;
+END $$;
+CREATE TRIGGER scope_attribute_request BEFORE INSERT ON identity.scope_attribute
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_scope_attribute_request();
+
+CREATE OR REPLACE FUNCTION identity.tg_grant_closure_request() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  PERFORM identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id,
+    CASE WHEN TG_TABLE_NAME = 'scope_attribute_closure' THEN ARRAY['CHANGE_SCOPE','REVOKE']
+         ELSE ARRAY['REVOKE','CHANGE_SCOPE'] END);
+  RETURN NEW;
+END $$;
+CREATE TRIGGER user_role_version_closure_request BEFORE INSERT ON identity.user_role_version_closure
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_grant_closure_request();
+CREATE TRIGGER scope_attribute_closure_request BEFORE INSERT ON identity.scope_attribute_closure
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_grant_closure_request();
 CREATE TRIGGER role_grant_request_version BEFORE UPDATE ON identity.role_grant_request
   FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
 SELECT pg_temp.make_state_machine('identity', 'role_grant_request', 'status', ARRAY['request_id'], ARRAY['uuid']);
@@ -1487,7 +1744,7 @@ CREATE OR REPLACE FUNCTION master.tg_external_identifier_check() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE v_ok boolean; v_types text[]; v_regex text;
 BEGIN
-  IF pg_trigger_depth() > 1 THEN RETURN NEW; END IF;   -- continuation of a row already checked (BT-5)
+  IF platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NEW; END IF;  -- already checked (BT-5)
   v_ok := CASE NEW.entity_type
     WHEN 'SECURITY'     THEN EXISTS (SELECT 1 FROM master.security     WHERE tenant_id = NEW.tenant_id AND security_id     = NEW.entity_id)
     WHEN 'ISSUER'       THEN EXISTS (SELECT 1 FROM master.issuer       WHERE tenant_id = NEW.tenant_id AND issuer_id       = NEW.entity_id)
@@ -1702,6 +1959,19 @@ REVOKE UPDATE ON platform.tenant_status_history, platform.usage_meter, platform.
   FROM amc_app;
 -- The tenant status history is written by the trigger on platform.tenant, never by the app.
 REVOKE INSERT ON platform.tenant_status_history FROM amc_app;
+-- Closure tables (BT-3, BT-4) are insert-only; those of tables the application may not write are
+-- not writable by it either.
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT n.nspname AS s, c.relname AS t FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+            WHERE c.relkind = 'r' AND c.relname LIKE '%\_closure'
+              AND n.nspname IN ('platform','identity','audit','master')
+  LOOP
+    EXECUTE format('REVOKE UPDATE ON %I.%I FROM amc_app', r.s, r.t);
+  END LOOP;
+END $$;
+REVOKE INSERT ON platform.subscription_version_closure, platform.tenant_entitlement_closure FROM amc_app;
 
 COMMIT;
 
