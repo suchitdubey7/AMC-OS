@@ -154,6 +154,86 @@ def test_latest_round_is_used(repo: Path) -> None:
     assert gate(repo).returncode == 0
 
 
+STATUS_TABLE = """### Round 1 findings: status
+| R1 # | Severity | Status |
+| --- | --- | --- |
+| 1 | Major | Fixed. |
+
+"""
+
+
+def test_fixed_major_in_status_table_passes(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW.replace("### Findings", STATUS_TABLE + "### Findings"))
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 0, r.stdout
+
+
+def test_new_major_after_status_table_fails(repo: Path) -> None:
+    add_doc(repo)
+    text = GOOD_REVIEW.replace("### Findings", STATUS_TABLE + "### Findings")
+    add_review(repo, text.replace("| 1 | Minor |", "| 1 | Major |"))
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 1 and "1 Blocker/Major" in r.stdout
+
+
+def test_no_findings_heading_scans_whole_file(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW.replace("### Findings\n", "").replace("| 1 | Minor |", "| 1 | Blocker |"))
+    commit(repo)
+    assert gate(repo).returncode == 1
+
+
+@pytest.mark.parametrize("layout", [
+    "### Findings\nNone new.\n\n### Findings (continued)\n| # | Severity |\n| --- | --- |\n| 2 | Major | x | y | z |\n",
+    "### Findings\nSee below.\n\n### Majors\n| 2 | Major | x | y | z |\n",
+    "```\n### Findings\n```\n\n### Findings\n| 2 | Major | x | y | z |\n",
+    "### Findings (round 2)\n| 2 | Major | x | y | z |",
+    "### Findings\n#### Carried over\n| 2 | Major | x | y | z |\n",
+    "### Findings\n| 2 | **Major** | x | y | z |\n",
+    "### Findings\n  | 2 | Blocker | x | y | z |\n",
+])
+def test_findings_layouts_fail_closed(repo: Path, layout: str) -> None:
+    add_doc(repo)
+    head = GOOD_REVIEW.split("### Findings")[0]
+    add_review(repo, head + STATUS_TABLE + layout + "\n### Checks run\n| Check | Result |\n")
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 1 and "Blocker/Major" in r.stdout, r.stdout
+
+
+def test_checks_run_rows_do_not_count(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW + "\n### Checks run\n| Check | Result |\n")
+    commit(repo)
+    assert gate(repo).returncode == 0
+
+
+def test_open_major_in_status_table_fails(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW.replace("### Findings", STATUS_TABLE.replace("Fixed.", "Not fixed.") + "### Findings"))
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 1 and "Blocker/Major" in r.stdout
+
+
+def test_level2_findings_before_level3_fails(repo: Path) -> None:
+    add_doc(repo)
+    text = GOOD_REVIEW.replace("### Findings", "## Findings\n| 1 | Major | a | b | fix it |\n\n### Findings")
+    add_review(repo, text)
+    commit(repo)
+    assert gate(repo).returncode == 1
+
+
+def test_major_as_last_bytes_of_file_fails(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW.rstrip("\n").replace("| 1 | Minor |", "| 1 | Major |"))
+    commit(repo)
+    assert gate(repo).returncode == 1
+
+
 def test_missing_review_fails(repo: Path) -> None:
     add_doc(repo); commit(repo)
     r = gate(repo)
