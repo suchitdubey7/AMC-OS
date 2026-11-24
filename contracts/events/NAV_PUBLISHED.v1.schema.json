@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:NAV_PUBLISHED.v1.schema.json",
+  "title": "NAV_PUBLISHED.v1",
+  "description": "Payload of event NAV_PUBLISHED.v1. Producer: NAV module. An approved NAV is delivered to its channels (RTA, AMFI, website, exchanges). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "NAV_PUBLISHED",
+    "event_version": 1,
+    "producer": "NAV",
+    "aggregate_type": "nav.nav_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE_RUN_REF"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nav_run_id",
+    "scheme_id",
+    "nav_date",
+    "plans",
+    "channels"
+  ],
+  "properties": {
+    "nav_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "nav_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "plan_id",
+          "nav_per_unit"
+        ],
+        "properties": {
+          "plan_id": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+          },
+          "nav_per_unit": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "channels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "channel_code",
+          "status"
+        ],
+        "properties": {
+          "channel_code": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SENT",
+              "ACKNOWLEDGED",
+              "FAILED",
+              "UNKNOWN_OUTCOME"
+            ]
+          },
+          "acknowledged_at": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+          }
+        }
+      },
+      "minItems": 1
+    }
+  }
+}

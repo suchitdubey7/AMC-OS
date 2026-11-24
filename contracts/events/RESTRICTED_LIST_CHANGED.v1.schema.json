@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RESTRICTED_LIST_CHANGED.v1.schema.json",
+  "title": "RESTRICTED_LIST_CHANGED.v1",
+  "description": "Payload of event RESTRICTED_LIST_CHANGED.v1. Producer: INVESTMENT module. A restricted-list entry is added or removed; takes effect at once (US-D03-002). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RESTRICTED_LIST_CHANGED",
+    "event_version": 1,
+    "producer": "INVESTMENT",
+    "aggregate_type": "investment.restricted_list_entry",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "restriction_id",
+    "change_type",
+    "effective_at",
+    "applies_to_all_schemes"
+  ],
+  "properties": {
+    "restriction_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "change_type": {
+      "type": "string",
+      "enum": [
+        "ADDED",
+        "REMOVED"
+      ]
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "applies_to_all_schemes": {
+      "type": "boolean"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "issuer_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 0
+    }
+  }
+}

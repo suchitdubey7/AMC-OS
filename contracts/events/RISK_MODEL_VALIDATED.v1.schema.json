@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RISK_MODEL_VALIDATED.v1.schema.json",
+  "title": "RISK_MODEL_VALIDATED.v1",
+  "description": "Payload of event RISK_MODEL_VALIDATED.v1. Producer: RISK module. A risk model version is validated by someone who did not build it (D-36). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RISK_MODEL_VALIDATED",
+    "event_version": 1,
+    "producer": "RISK",
+    "aggregate_type": "risk.risk_model",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "model_id",
+    "model_version",
+    "validation_id",
+    "outcome"
+  ],
+  "properties": {
+    "model_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "model_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "validation_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "outcome": {
+      "type": "string",
+      "enum": [
+        "ACCEPTED",
+        "REJECTED"
+      ]
+    }
+  }
+}

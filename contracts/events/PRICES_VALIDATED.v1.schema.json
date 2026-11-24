@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:PRICES_VALIDATED.v1.schema.json",
+  "title": "PRICES_VALIDATED.v1",
+  "description": "Payload of event PRICES_VALIDATED.v1. Producer: VALUATION module. Prices for a date pass validation (stale, tolerance, missing) with overrides recorded. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "PRICES_VALIDATED",
+    "event_version": 1,
+    "producer": "VALUATION",
+    "aggregate_type": "valuation.price_set",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "price_set_id",
+    "price_date",
+    "prices_count",
+    "exceptions_count",
+    "overrides_count"
+  ],
+  "properties": {
+    "price_set_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "price_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "prices_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "exceptions_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "overrides_count": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

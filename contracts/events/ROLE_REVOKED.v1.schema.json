@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ROLE_REVOKED.v1.schema.json",
+  "title": "ROLE_REVOKED.v1",
+  "description": "Payload of event ROLE_REVOKED.v1. Producer: IDENTITY module. A role grant ends (mover, leaver, recertification, expiry). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ROLE_REVOKED",
+    "event_version": 1,
+    "producer": "IDENTITY",
+    "aggregate_type": "identity.role_grant",
+    "event_class": "ACCESS",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant_id",
+    "user_id",
+    "role_code",
+    "reason_code",
+    "effective_at"
+  ],
+  "properties": {
+    "grant_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "user_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "role_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

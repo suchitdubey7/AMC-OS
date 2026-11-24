@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:PERIOD_CLOSED.v1.schema.json",
+  "title": "PERIOD_CLOSED.v1",
+  "description": "Payload of event PERIOD_CLOSED.v1. Producer: ACCOUNTING module. An accounting period (month) is closed (WF-008). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "PERIOD_CLOSED",
+    "event_version": 1,
+    "producer": "ACCOUNTING",
+    "aggregate_type": "accounting.period",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "period_id",
+    "period_start",
+    "period_end"
+  ],
+  "properties": {
+    "period_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "period_start": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "period_end": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

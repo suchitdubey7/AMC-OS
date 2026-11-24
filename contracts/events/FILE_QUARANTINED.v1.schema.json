@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:FILE_QUARANTINED.v1.schema.json",
+  "title": "FILE_QUARANTINED.v1",
+  "description": "Payload of event FILE_QUARANTINED.v1. Producer: OPERATIONS module. An inbound file fails checks and is quarantined. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "FILE_QUARANTINED",
+    "event_version": 1,
+    "producer": "OPERATIONS",
+    "aggregate_type": "operations.inbound_file",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "file_id",
+    "connection_id",
+    "reason_code",
+    "quarantined_at"
+  ],
+  "properties": {
+    "file_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "connection_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "quarantined_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

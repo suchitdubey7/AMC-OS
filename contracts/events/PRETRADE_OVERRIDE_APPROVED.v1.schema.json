@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:PRETRADE_OVERRIDE_APPROVED.v1.schema.json",
+  "title": "PRETRADE_OVERRIDE_APPROVED.v1",
+  "description": "Payload of event PRETRADE_OVERRIDE_APPROVED.v1. Producer: COMPLIANCE module. A pre-trade override is approved (EA-003 T7). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "PRETRADE_OVERRIDE_APPROVED",
+    "event_version": 1,
+    "producer": "COMPLIANCE",
+    "aggregate_type": "compliance.pretrade_override",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "override_id",
+    "order_id",
+    "check_id",
+    "rule_versions",
+    "approval_request_id"
+  ],
+  "properties": {
+    "override_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "check_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "rule_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/rule_version_ref"
+      },
+      "minItems": 1
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

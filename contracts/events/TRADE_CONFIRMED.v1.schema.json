@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TRADE_CONFIRMED.v1.schema.json",
+  "title": "TRADE_CONFIRMED.v1",
+  "description": "Payload of event TRADE_CONFIRMED.v1. Producer: EXECUTION module. A trade is confirmed against the contract note (WF-025, EA-003 T1, T2). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TRADE_CONFIRMED",
+    "event_version": 1,
+    "producer": "EXECUTION",
+    "aggregate_type": "execution.trade",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "EXTERNAL_SOURCE"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trade_id",
+    "trade_version",
+    "scheme_id",
+    "security_id",
+    "broker_id",
+    "side",
+    "quantity",
+    "price",
+    "gross_amount",
+    "charges",
+    "net_amount",
+    "trade_date",
+    "settlement_date"
+  ],
+  "properties": {
+    "trade_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "trade_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "broker_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "price": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "gross_amount": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "charges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "charge_code",
+          "amount"
+        ],
+        "properties": {
+          "charge_code": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+          },
+          "amount": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+          }
+        }
+      },
+      "minItems": 0
+    },
+    "net_amount": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "trade_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "settlement_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "contract_note_ref": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

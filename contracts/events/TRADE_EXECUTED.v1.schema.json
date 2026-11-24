@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TRADE_EXECUTED.v1.schema.json",
+  "title": "TRADE_EXECUTED.v1",
+  "description": "Payload of event TRADE_EXECUTED.v1. Producer: EXECUTION module. A fill (execution report) is received from a broker. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TRADE_EXECUTED",
+    "event_version": 1,
+    "producer": "EXECUTION",
+    "aggregate_type": "execution.execution",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "EXTERNAL_SOURCE"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "execution_id",
+    "order_id",
+    "broker_id",
+    "security_id",
+    "side",
+    "executed_quantity",
+    "executed_price",
+    "cumulative_quantity",
+    "currency",
+    "executed_at"
+  ],
+  "properties": {
+    "execution_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "order_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "broker_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "side": {
+      "type": "string",
+      "enum": [
+        "BUY",
+        "SELL"
+      ]
+    },
+    "executed_quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "executed_price": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "cumulative_quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "currency": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/currency"
+    },
+    "executed_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "block_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

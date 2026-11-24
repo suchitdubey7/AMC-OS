@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COMMISSION_RUN_CALCULATED.v1.schema.json",
+  "title": "COMMISSION_RUN_CALCULATED.v1",
+  "description": "Payload of event COMMISSION_RUN_CALCULATED.v1. Producer: DISTRIBUTION module. A commission run is calculated (FE-09, WF-013). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COMMISSION_RUN_CALCULATED",
+    "event_version": 1,
+    "producer": "DISTRIBUTION",
+    "aggregate_type": "distribution.commission_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "commission_run_id",
+    "period_start",
+    "period_end",
+    "structure_versions",
+    "total_commission",
+    "break_count",
+    "engine_version"
+  ],
+  "properties": {
+    "commission_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "period_start": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "period_end": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "structure_versions": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+      },
+      "minItems": 1
+    },
+    "total_commission": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "break_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "engine_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/engine_version"
+    },
+    "variance_vs_rta": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    }
+  }
+}

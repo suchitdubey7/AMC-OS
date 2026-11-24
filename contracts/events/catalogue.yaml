@@ -1,0 +1,831 @@
+# Event catalogue v1 — generated with EA-007 (Step 13). Status: Draft. Machine-readable twin of EA-007 §8.
+# Every event also goes to the Reporting module (analytical store); it is not repeated under consumers.
+envelope: envelope.v1.schema.json
+common: common.v1.schema.json
+events:
+  - name: TENANT_ACTIVATED
+    version: 1
+    producer: TENANT
+    aggregate_type: platform.tenant
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: TENANT_ACTIVATED.v1.schema.json
+    consumers: []
+  - name: TENANT_SUSPENDED
+    version: 1
+    producer: TENANT
+    aggregate_type: platform.tenant
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: TENANT_SUSPENDED.v1.schema.json
+    consumers: []
+  - name: TENANT_ENTITLEMENT_CHANGED
+    version: 1
+    producer: TENANT
+    aggregate_type: platform.tenant_entitlement
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: TENANT_ENTITLEMENT_CHANGED.v1.schema.json
+    consumers: [AI]
+  - name: CONFIG_VERSION_APPROVED
+    version: 1
+    producer: TENANT
+    aggregate_type: platform.config_version
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: CONFIG_VERSION_APPROVED.v1.schema.json
+    consumers: []
+  - name: CONFIG_VERSION_EFFECTIVE
+    version: 1
+    producer: TENANT
+    aggregate_type: platform.config_version
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: CONFIG_VERSION_EFFECTIVE.v1.schema.json
+    consumers: []
+  - name: CALENDAR_CHANGED
+    version: 1
+    producer: TENANT
+    aggregate_type: platform.business_calendar
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: CALENDAR_CHANGED.v1.schema.json
+    consumers: [SETTLEMENT, OPERATIONS]
+  - name: USER_PROVISIONED
+    version: 1
+    producer: IDENTITY
+    aggregate_type: identity.app_user
+    event_class: ACCESS
+    data_classification: CONFIDENTIAL
+    schema: USER_PROVISIONED.v1.schema.json
+    consumers: []
+  - name: USER_DEPROVISIONED
+    version: 1
+    producer: IDENTITY
+    aggregate_type: identity.app_user
+    event_class: ACCESS
+    data_classification: CONFIDENTIAL
+    schema: USER_DEPROVISIONED.v1.schema.json
+    consumers: []
+  - name: ROLE_GRANTED
+    version: 1
+    producer: IDENTITY
+    aggregate_type: identity.role_grant
+    event_class: ACCESS
+    data_classification: CONFIDENTIAL
+    schema: ROLE_GRANTED.v1.schema.json
+    consumers: []
+  - name: ROLE_REVOKED
+    version: 1
+    producer: IDENTITY
+    aggregate_type: identity.role_grant
+    event_class: ACCESS
+    data_classification: CONFIDENTIAL
+    schema: ROLE_REVOKED.v1.schema.json
+    consumers: [WORKFLOW, AI]
+  - name: BREAK_GLASS_GRANTED
+    version: 1
+    producer: IDENTITY
+    aggregate_type: identity.break_glass_grant
+    event_class: ACCESS
+    data_classification: CONFIDENTIAL
+    schema: BREAK_GLASS_GRANTED.v1.schema.json
+    consumers: []
+  - name: APPROVAL_REQUESTED
+    version: 1
+    producer: WORKFLOW
+    aggregate_type: workflow.approval_request
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: APPROVAL_REQUESTED.v1.schema.json
+    consumers: []
+  - name: APPROVAL_DECIDED
+    version: 1
+    producer: WORKFLOW
+    aggregate_type: workflow.approval_request
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: APPROVAL_DECIDED.v1.schema.json
+    consumers: [TENANT, IDENTITY, L4_SIGNAL_BRIDGE]
+  - name: TASK_ASSIGNED
+    version: 1
+    producer: WORKFLOW
+    aggregate_type: workflow.task
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: TASK_ASSIGNED.v1.schema.json
+    consumers: []
+  - name: TASK_OVERDUE
+    version: 1
+    producer: WORKFLOW
+    aggregate_type: workflow.task
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: TASK_OVERDUE.v1.schema.json
+    consumers: []
+  - name: DOCUMENT_STORED
+    version: 1
+    producer: DOCUMENTS
+    aggregate_type: documents.document_version
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: DOCUMENT_STORED.v1.schema.json
+    consumers: []
+  - name: DOCUMENT_VERSION_APPROVED
+    version: 1
+    producer: DOCUMENTS
+    aggregate_type: documents.document_version
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: DOCUMENT_VERSION_APPROVED.v1.schema.json
+    consumers: []
+  - name: SECURITY_APPROVED
+    version: 1
+    producer: SECURITY_MASTER
+    aggregate_type: master.security
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: SECURITY_APPROVED.v1.schema.json
+    consumers: [VALUATION]
+  - name: SECURITY_CHANGED
+    version: 1
+    producer: SECURITY_MASTER
+    aggregate_type: master.security
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: SECURITY_CHANGED.v1.schema.json
+    consumers: [INVESTMENT, VALUATION]
+  - name: ISSUER_CHANGED
+    version: 1
+    producer: SECURITY_MASTER
+    aggregate_type: master.issuer
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: ISSUER_CHANGED.v1.schema.json
+    consumers: []
+  - name: RATING_CHANGED
+    version: 1
+    producer: SECURITY_MASTER
+    aggregate_type: master.credit_rating
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: RATING_CHANGED.v1.schema.json
+    consumers: [INVESTMENT, RISK]
+  - name: COUNTERPARTY_CHANGED
+    version: 1
+    producer: SECURITY_MASTER
+    aggregate_type: master.counterparty
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: COUNTERPARTY_CHANGED.v1.schema.json
+    consumers: [EXECUTION]
+  - name: BENCHMARK_LEVELS_LOADED
+    version: 1
+    producer: SECURITY_MASTER
+    aggregate_type: master.benchmark
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: BENCHMARK_LEVELS_LOADED.v1.schema.json
+    consumers: [PRODUCT]
+  - name: SCHEME_ACTIVATED
+    version: 1
+    producer: PRODUCT
+    aggregate_type: product.scheme
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: SCHEME_ACTIVATED.v1.schema.json
+    consumers: []
+  - name: SCHEME_AMENDED
+    version: 1
+    producer: PRODUCT
+    aggregate_type: product.scheme
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: SCHEME_AMENDED.v1.schema.json
+    consumers: [ACCOUNTING, INVESTOR, DISTRIBUTION]
+  - name: SCHEME_MANDATE_CHANGED
+    version: 1
+    producer: PRODUCT
+    aggregate_type: product.scheme_mandate
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: SCHEME_MANDATE_CHANGED.v1.schema.json
+    consumers: [COMPLIANCE]
+  - name: NFO_CLOSED
+    version: 1
+    producer: PRODUCT
+    aggregate_type: product.nfo
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: NFO_CLOSED.v1.schema.json
+    consumers: []
+  - name: SCHEME_WOUND_UP
+    version: 1
+    producer: PRODUCT
+    aggregate_type: product.scheme
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: SCHEME_WOUND_UP.v1.schema.json
+    consumers: []
+  - name: RESEARCH_APPROVED
+    version: 1
+    producer: INVESTMENT
+    aggregate_type: investment.research_note
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: RESEARCH_APPROVED.v1.schema.json
+    consumers: []
+  - name: INVESTMENT_DECISION_RECORDED
+    version: 1
+    producer: INVESTMENT
+    aggregate_type: investment.decision_record
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: INVESTMENT_DECISION_RECORDED.v1.schema.json
+    consumers: []
+  - name: UNIVERSE_CHANGED
+    version: 1
+    producer: INVESTMENT
+    aggregate_type: investment.universe_member
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: UNIVERSE_CHANGED.v1.schema.json
+    consumers: []
+  - name: RESTRICTED_LIST_CHANGED
+    version: 1
+    producer: INVESTMENT
+    aggregate_type: investment.restricted_list_entry
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: RESTRICTED_LIST_CHANGED.v1.schema.json
+    consumers: [OMS, COMPLIANCE]
+  - name: INVESTMENT_POLICY_APPROVED
+    version: 1
+    producer: INVESTMENT
+    aggregate_type: investment.investment_policy
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: INVESTMENT_POLICY_APPROVED.v1.schema.json
+    consumers: []
+  - name: HOLDINGS_UPDATED
+    version: 1
+    producer: PORTFOLIO
+    aggregate_type: portfolio.position
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: HOLDINGS_UPDATED.v1.schema.json
+    consumers: [COMPLIANCE]
+  - name: POSITIONS_SNAPSHOT_TAKEN
+    version: 1
+    producer: PORTFOLIO
+    aggregate_type: portfolio.position_snapshot
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: POSITIONS_SNAPSHOT_TAKEN.v1.schema.json
+    consumers: [RISK]
+  - name: REBALANCE_PROPOSED
+    version: 1
+    producer: PORTFOLIO
+    aggregate_type: portfolio.rebalance_proposal
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: REBALANCE_PROPOSED.v1.schema.json
+    consumers: []
+  - name: PERFORMANCE_CALCULATED
+    version: 1
+    producer: PORTFOLIO
+    aggregate_type: portfolio.performance_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: PERFORMANCE_CALCULATED.v1.schema.json
+    consumers: []
+  - name: ORDER_CREATED
+    version: 1
+    producer: OMS
+    aggregate_type: trading.order
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ORDER_CREATED.v1.schema.json
+    consumers: []
+  - name: ORDER_VALIDATED
+    version: 1
+    producer: OMS
+    aggregate_type: trading.order
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ORDER_VALIDATED.v1.schema.json
+    consumers: []
+  - name: ORDER_APPROVED
+    version: 1
+    producer: OMS
+    aggregate_type: trading.order
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ORDER_APPROVED.v1.schema.json
+    consumers: []
+  - name: ORDER_RELEASED
+    version: 1
+    producer: OMS
+    aggregate_type: trading.order
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ORDER_RELEASED.v1.schema.json
+    consumers: [EXECUTION]
+  - name: ORDER_CANCELLED
+    version: 1
+    producer: OMS
+    aggregate_type: trading.order
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ORDER_CANCELLED.v1.schema.json
+    consumers: [EXECUTION]
+  - name: TRADE_EXECUTED
+    version: 1
+    producer: EXECUTION
+    aggregate_type: execution.execution
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: TRADE_EXECUTED.v1.schema.json
+    consumers: [OMS]
+  - name: ALLOCATION_COMPLETED
+    version: 1
+    producer: EXECUTION
+    aggregate_type: execution.allocation
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ALLOCATION_COMPLETED.v1.schema.json
+    consumers: [OMS, PORTFOLIO, COMPLIANCE]
+  - name: TRADE_CONFIRMED
+    version: 1
+    producer: EXECUTION
+    aggregate_type: execution.trade
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: TRADE_CONFIRMED.v1.schema.json
+    consumers: [SETTLEMENT, PORTFOLIO, ACCOUNTING]
+  - name: TRADE_CORRECTED
+    version: 1
+    producer: EXECUTION
+    aggregate_type: execution.trade
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: TRADE_CORRECTED.v1.schema.json
+    consumers: [SETTLEMENT]
+  - name: TRADE_EXCEPTION_RAISED
+    version: 1
+    producer: EXECUTION
+    aggregate_type: execution.trade_exception
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: TRADE_EXCEPTION_RAISED.v1.schema.json
+    consumers: []
+  - name: BROKER_STATUS_CHANGED
+    version: 1
+    producer: EXECUTION
+    aggregate_type: execution.broker
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: BROKER_STATUS_CHANGED.v1.schema.json
+    consumers: []
+  - name: SETTLEMENT_INSTRUCTED
+    version: 1
+    producer: SETTLEMENT
+    aggregate_type: settlement.settlement
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: SETTLEMENT_INSTRUCTED.v1.schema.json
+    consumers: []
+  - name: SETTLEMENT_STATUS_CHANGED
+    version: 1
+    producer: SETTLEMENT
+    aggregate_type: settlement.settlement
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: SETTLEMENT_STATUS_CHANGED.v1.schema.json
+    consumers: [PORTFOLIO, ACCOUNTING, OPERATIONS]
+  - name: TRADE_SETTLED
+    version: 1
+    producer: SETTLEMENT
+    aggregate_type: settlement.settlement
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: TRADE_SETTLED.v1.schema.json
+    consumers: [ACCOUNTING]
+  - name: SETTLEMENT_FAILED
+    version: 1
+    producer: SETTLEMENT
+    aggregate_type: settlement.settlement
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: SETTLEMENT_FAILED.v1.schema.json
+    consumers: [L4_SIGNAL_BRIDGE]
+  - name: COMPLIANCE_CHECK_COMPLETED
+    version: 1
+    producer: COMPLIANCE
+    aggregate_type: compliance.check_run
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: COMPLIANCE_CHECK_COMPLETED.v1.schema.json
+    consumers: [OMS]
+  - name: COMPLIANCE_BREACH_DETECTED
+    version: 1
+    producer: COMPLIANCE
+    aggregate_type: compliance.breach
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: COMPLIANCE_BREACH_DETECTED.v1.schema.json
+    consumers: [RISK, L4_SIGNAL_BRIDGE]
+  - name: COMPLIANCE_BREACH_CLOSED
+    version: 1
+    producer: COMPLIANCE
+    aggregate_type: compliance.breach
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: COMPLIANCE_BREACH_CLOSED.v1.schema.json
+    consumers: []
+  - name: RULE_VERSION_APPROVED
+    version: 1
+    producer: COMPLIANCE
+    aggregate_type: compliance.rule_version
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: RULE_VERSION_APPROVED.v1.schema.json
+    consumers: []
+  - name: PRETRADE_OVERRIDE_APPROVED
+    version: 1
+    producer: COMPLIANCE
+    aggregate_type: compliance.pretrade_override
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: PRETRADE_OVERRIDE_APPROVED.v1.schema.json
+    consumers: []
+  - name: RISK_RUN_COMPLETED
+    version: 1
+    producer: RISK
+    aggregate_type: risk.risk_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: RISK_RUN_COMPLETED.v1.schema.json
+    consumers: [COMPLIANCE]
+  - name: RISK_ALERT_RAISED
+    version: 1
+    producer: RISK
+    aggregate_type: risk.risk_alert
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: RISK_ALERT_RAISED.v1.schema.json
+    consumers: []
+  - name: RISK_ALERT_ESCALATED
+    version: 1
+    producer: RISK
+    aggregate_type: risk.risk_alert
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: RISK_ALERT_ESCALATED.v1.schema.json
+    consumers: []
+  - name: RISK_MODEL_VALIDATED
+    version: 1
+    producer: RISK
+    aggregate_type: risk.risk_model
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: RISK_MODEL_VALIDATED.v1.schema.json
+    consumers: []
+  - name: JOURNAL_POSTED
+    version: 1
+    producer: ACCOUNTING
+    aggregate_type: accounting.journal
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: JOURNAL_POSTED.v1.schema.json
+    consumers: []
+  - name: ACCRUALS_POSTED
+    version: 1
+    producer: ACCOUNTING
+    aggregate_type: accounting.accrual_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ACCRUALS_POSTED.v1.schema.json
+    consumers: []
+  - name: ACCOUNTING_DAY_CLOSED
+    version: 1
+    producer: ACCOUNTING
+    aggregate_type: accounting.accounting_day
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: ACCOUNTING_DAY_CLOSED.v1.schema.json
+    consumers: [NAV, OPERATIONS, L4_SIGNAL_BRIDGE]
+  - name: PERIOD_CLOSED
+    version: 1
+    producer: ACCOUNTING
+    aggregate_type: accounting.period
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: PERIOD_CLOSED.v1.schema.json
+    consumers: [FINANCE]
+  - name: PERIOD_REOPENED
+    version: 1
+    producer: ACCOUNTING
+    aggregate_type: accounting.period
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: PERIOD_REOPENED.v1.schema.json
+    consumers: []
+  - name: PRICES_LOADED
+    version: 1
+    producer: VALUATION
+    aggregate_type: valuation.price_load
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: PRICES_LOADED.v1.schema.json
+    consumers: []
+  - name: PRICES_VALIDATED
+    version: 1
+    producer: VALUATION
+    aggregate_type: valuation.price_set
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: PRICES_VALIDATED.v1.schema.json
+    consumers: [PORTFOLIO, RISK, L4_SIGNAL_BRIDGE]
+  - name: FAIR_VALUE_DECIDED
+    version: 1
+    producer: VALUATION
+    aggregate_type: valuation.fair_value_case
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: FAIR_VALUE_DECIDED.v1.schema.json
+    consumers: [NAV]
+  - name: VALUATION_APPROVED
+    version: 1
+    producer: VALUATION
+    aggregate_type: valuation.valuation
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: VALUATION_APPROVED.v1.schema.json
+    consumers: [ACCOUNTING]
+  - name: NAV_CALCULATED
+    version: 1
+    producer: NAV
+    aggregate_type: nav.nav_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: NAV_CALCULATED.v1.schema.json
+    consumers: []
+  - name: NAV_APPROVED
+    version: 1
+    producer: NAV
+    aggregate_type: nav.nav_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: NAV_APPROVED.v1.schema.json
+    consumers: [COMPLIANCE, OPERATIONS]
+  - name: NAV_PUBLISHED
+    version: 1
+    producer: NAV
+    aggregate_type: nav.nav_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: NAV_PUBLISHED.v1.schema.json
+    consumers: [INVESTOR, DISTRIBUTION, FINANCE]
+  - name: NAV_CORRECTION_APPROVED
+    version: 1
+    producer: NAV
+    aggregate_type: nav.nav_correction
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: NAV_CORRECTION_APPROVED.v1.schema.json
+    consumers: []
+  - name: FILE_RECEIVED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.inbound_file
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: FILE_RECEIVED.v1.schema.json
+    consumers: []
+  - name: FILE_QUARANTINED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.inbound_file
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: FILE_QUARANTINED.v1.schema.json
+    consumers: []
+  - name: RECONCILIATION_COMPLETED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.recon_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: RECONCILIATION_COMPLETED.v1.schema.json
+    consumers: [NAV, INVESTOR, L4_SIGNAL_BRIDGE]
+  - name: RECONCILIATION_EXCEPTION_CREATED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.recon_break
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: RECONCILIATION_EXCEPTION_CREATED.v1.schema.json
+    consumers: []
+  - name: CORPORATE_ACTION_ANNOUNCED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.corporate_action
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: CORPORATE_ACTION_ANNOUNCED.v1.schema.json
+    consumers: []
+  - name: CORPORATE_ACTION_CONFIRMED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.corporate_action
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: CORPORATE_ACTION_CONFIRMED.v1.schema.json
+    consumers: []
+  - name: CORPORATE_ACTION_EFFECTIVE
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.corporate_action
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: CORPORATE_ACTION_EFFECTIVE.v1.schema.json
+    consumers: [PORTFOLIO, RISK, ACCOUNTING, VALUATION]
+  - name: CORPORATE_ACTION_ENTITLEMENT_RECEIVED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.ca_entitlement
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: CORPORATE_ACTION_ENTITLEMENT_RECEIVED.v1.schema.json
+    consumers: [ACCOUNTING]
+  - name: OPERATIONS_DAY_CLOSED
+    version: 1
+    producer: OPERATIONS
+    aggregate_type: operations.day_plan
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: OPERATIONS_DAY_CLOSED.v1.schema.json
+    consumers: []
+  - name: INVESTOR_TRANSACTION_RECEIVED
+    version: 1
+    producer: INVESTOR
+    aggregate_type: investor.investor_transaction
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: INVESTOR_TRANSACTION_RECEIVED.v1.schema.json
+    consumers: [DISTRIBUTION]
+  - name: INVESTOR_FLOWS_PROVISIONAL
+    version: 1
+    producer: INVESTOR
+    aggregate_type: investor.flow_batch
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: INVESTOR_FLOWS_PROVISIONAL.v1.schema.json
+    consumers: [PORTFOLIO]
+  - name: INVESTOR_FLOWS_FINAL
+    version: 1
+    producer: INVESTOR
+    aggregate_type: investor.flow_batch
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: INVESTOR_FLOWS_FINAL.v1.schema.json
+    consumers: [ACCOUNTING, PORTFOLIO, DISTRIBUTION]
+  - name: SERVICE_REQUEST_CLOSED
+    version: 1
+    producer: INVESTOR
+    aggregate_type: investor.service_request
+    event_class: OPERATIONAL
+    data_classification: INTERNAL
+    schema: SERVICE_REQUEST_CLOSED.v1.schema.json
+    consumers: []
+  - name: COMPLAINT_RECEIVED
+    version: 1
+    producer: INVESTOR
+    aggregate_type: investor.complaint
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: COMPLAINT_RECEIVED.v1.schema.json
+    consumers: []
+  - name: INVESTOR_DATA_FLAGGED
+    version: 1
+    producer: INVESTOR
+    aggregate_type: investor.data_flag
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: INVESTOR_DATA_FLAGGED.v1.schema.json
+    consumers: []
+  - name: DISTRIBUTOR_STATUS_CHANGED
+    version: 1
+    producer: DISTRIBUTION
+    aggregate_type: distribution.distributor
+    event_class: REFERENCE
+    data_classification: INTERNAL
+    schema: DISTRIBUTOR_STATUS_CHANGED.v1.schema.json
+    consumers: []
+  - name: DISTRIBUTOR_FLOW_UPDATED
+    version: 1
+    producer: DISTRIBUTION
+    aggregate_type: distribution.distributor_flow
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: DISTRIBUTOR_FLOW_UPDATED.v1.schema.json
+    consumers: []
+  - name: COMMISSION_RUN_CALCULATED
+    version: 1
+    producer: DISTRIBUTION
+    aggregate_type: distribution.commission_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: COMMISSION_RUN_CALCULATED.v1.schema.json
+    consumers: []
+  - name: COMMISSION_RUN_APPROVED
+    version: 1
+    producer: DISTRIBUTION
+    aggregate_type: distribution.commission_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: COMMISSION_RUN_APPROVED.v1.schema.json
+    consumers: [FINANCE]
+  - name: MANAGEMENT_PERIOD_CLOSED
+    version: 1
+    producer: FINANCE
+    aggregate_type: finance.management_period
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: MANAGEMENT_PERIOD_CLOSED.v1.schema.json
+    consumers: []
+  - name: BUDGET_APPROVED
+    version: 1
+    producer: FINANCE
+    aggregate_type: finance.budget
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: BUDGET_APPROVED.v1.schema.json
+    consumers: []
+  - name: COST_ALLOCATION_RUN_APPROVED
+    version: 1
+    producer: FINANCE
+    aggregate_type: finance.allocation_run
+    event_class: FINANCIAL
+    data_classification: CONFIDENTIAL
+    schema: COST_ALLOCATION_RUN_APPROVED.v1.schema.json
+    consumers: []
+  - name: DATASET_CERTIFIED
+    version: 1
+    producer: REPORTING
+    aggregate_type: analytics.dataset_certification
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: DATASET_CERTIFIED.v1.schema.json
+    consumers: []
+  - name: DQ_EXCEPTION_RAISED
+    version: 1
+    producer: REPORTING
+    aggregate_type: analytics.dq_exception
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: DQ_EXCEPTION_RAISED.v1.schema.json
+    consumers: []
+  - name: METRIC_DEFINITION_CERTIFIED
+    version: 1
+    producer: REPORTING
+    aggregate_type: analytics.metric_definition
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: METRIC_DEFINITION_CERTIFIED.v1.schema.json
+    consumers: [FINANCE]
+  - name: AI_PROPOSAL_CREATED
+    version: 1
+    producer: AI
+    aggregate_type: ai.proposal
+    event_class: AI
+    data_classification: CONFIDENTIAL
+    schema: AI_PROPOSAL_CREATED.v1.schema.json
+    consumers: []
+  - name: AI_ANOMALY_FLAGGED
+    version: 1
+    producer: AI
+    aggregate_type: ai.anomaly
+    event_class: AI
+    data_classification: CONFIDENTIAL
+    schema: AI_ANOMALY_FLAGGED.v1.schema.json
+    consumers: []
+  - name: AI_KILL_SWITCH_CHANGED
+    version: 1
+    producer: AI
+    aggregate_type: ai.kill_switch
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: AI_KILL_SWITCH_CHANGED.v1.schema.json
+    consumers: []
+  - name: ASSISTANT_VERSION_RELEASED
+    version: 1
+    producer: AI
+    aggregate_type: ai.assistant_version
+    event_class: CONTROL
+    data_classification: CONFIDENTIAL
+    schema: ASSISTANT_VERSION_RELEASED.v1.schema.json
+    consumers: []
+# Changes inside a version (EA-007 rule V1: optional fields added in place) are listed here.
+changes: []

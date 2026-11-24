@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TRADE_SETTLED.v1.schema.json",
+  "title": "TRADE_SETTLED.v1",
+  "description": "Payload of event TRADE_SETTLED.v1. Producer: SETTLEMENT module. A trade is fully settled (master prompt \u00a75 L4 example). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TRADE_SETTLED",
+    "event_version": 1,
+    "producer": "SETTLEMENT",
+    "aggregate_type": "settlement.settlement",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "EXTERNAL_SOURCE"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settlement_id",
+    "trade_id",
+    "scheme_id",
+    "security_id",
+    "settled_quantity",
+    "settled_amount",
+    "settlement_date"
+  ],
+  "properties": {
+    "settlement_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "trade_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "settled_quantity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+    },
+    "settled_amount": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "settlement_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    }
+  }
+}

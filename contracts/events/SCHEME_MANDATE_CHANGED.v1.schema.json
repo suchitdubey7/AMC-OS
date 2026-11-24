@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:SCHEME_MANDATE_CHANGED.v1.schema.json",
+  "title": "SCHEME_MANDATE_CHANGED.v1",
+  "description": "Payload of event SCHEME_MANDATE_CHANGED.v1. Producer: PRODUCT module. A scheme's investment mandate version changes. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "SCHEME_MANDATE_CHANGED",
+    "event_version": 1,
+    "producer": "PRODUCT",
+    "aggregate_type": "product.scheme_mandate",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scheme_id",
+    "scheme_version_id",
+    "mandate_version_id",
+    "effective_from"
+  ],
+  "properties": {
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_version_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "mandate_version_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:BROKER_STATUS_CHANGED.v1.schema.json",
+  "title": "BROKER_STATUS_CHANGED.v1",
+  "description": "Payload of event BROKER_STATUS_CHANGED.v1. Producer: EXECUTION module. A broker's empanelment status changes (WF-023). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "BROKER_STATUS_CHANGED",
+    "event_version": 1,
+    "producer": "EXECUTION",
+    "aggregate_type": "execution.broker",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "broker_id",
+    "counterparty_id",
+    "new_status",
+    "effective_at"
+  ],
+  "properties": {
+    "broker_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "counterparty_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "new_status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "previous_status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    }
+  }
+}

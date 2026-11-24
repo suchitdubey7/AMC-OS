@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:SETTLEMENT_FAILED.v1.schema.json",
+  "title": "SETTLEMENT_FAILED.v1",
+  "description": "Payload of event SETTLEMENT_FAILED.v1. Producer: SETTLEMENT module. A settlement fails or partly settles, or confirmation is overdue (starts WF-027). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "SETTLEMENT_FAILED",
+    "event_version": 1,
+    "producer": "SETTLEMENT",
+    "aggregate_type": "settlement.settlement",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "settlement_id",
+    "trade_id",
+    "scheme_id",
+    "fail_reason_code",
+    "partially_settled",
+    "reported_at"
+  ],
+  "properties": {
+    "settlement_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "trade_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "fail_reason_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "partially_settled": {
+      "type": "boolean"
+    },
+    "reported_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

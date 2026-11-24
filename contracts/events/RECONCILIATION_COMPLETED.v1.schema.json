@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RECONCILIATION_COMPLETED.v1.schema.json",
+  "title": "RECONCILIATION_COMPLETED.v1",
+  "description": "Payload of event RECONCILIATION_COMPLETED.v1. Producer: OPERATIONS module. A reconciliation run finishes (FE-07, WF-015). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RECONCILIATION_COMPLETED",
+    "event_version": 1,
+    "producer": "OPERATIONS",
+    "aggregate_type": "operations.recon_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recon_run_id",
+    "recon_definition_id",
+    "recon_definition_version",
+    "business_date",
+    "scheme_ids",
+    "matched_count",
+    "break_count",
+    "open_critical_break_count",
+    "engine_version"
+  ],
+  "properties": {
+    "recon_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "recon_definition_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "recon_definition_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "business_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 0
+    },
+    "matched_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "break_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "open_critical_break_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "engine_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/engine_version"
+    }
+  }
+}

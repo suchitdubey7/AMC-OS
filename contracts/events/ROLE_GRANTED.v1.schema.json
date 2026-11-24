@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ROLE_GRANTED.v1.schema.json",
+  "title": "ROLE_GRANTED.v1",
+  "description": "Payload of event ROLE_GRANTED.v1. Producer: IDENTITY module. A role grant takes effect after approval (WF-020). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ROLE_GRANTED",
+    "event_version": 1,
+    "producer": "IDENTITY",
+    "aggregate_type": "identity.role_grant",
+    "event_class": "ACCESS",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "grant_id",
+    "user_id",
+    "role_code",
+    "effective_from",
+    "approval_request_id"
+  ],
+  "properties": {
+    "grant_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "user_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "role_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "org_unit_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "effective_to": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

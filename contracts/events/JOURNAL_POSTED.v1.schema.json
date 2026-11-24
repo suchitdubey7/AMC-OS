@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:JOURNAL_POSTED.v1.schema.json",
+  "title": "JOURNAL_POSTED.v1",
+  "description": "Payload of event JOURNAL_POSTED.v1. Producer: ACCOUNTING module. A balanced journal is posted (FE-02). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "JOURNAL_POSTED",
+    "event_version": 1,
+    "producer": "ACCOUNTING",
+    "aggregate_type": "accounting.journal",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "journal_id",
+    "scheme_id",
+    "journal_type",
+    "accounting_date",
+    "total_debit",
+    "total_credit",
+    "engine_version"
+  ],
+  "properties": {
+    "journal_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "journal_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "accounting_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "total_debit": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "total_credit": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "engine_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/engine_version"
+    },
+    "batch_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "source_event_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

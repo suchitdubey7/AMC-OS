@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COMPLIANCE_BREACH_DETECTED.v1.schema.json",
+  "title": "COMPLIANCE_BREACH_DETECTED.v1",
+  "description": "Payload of event COMPLIANCE_BREACH_DETECTED.v1. Producer: COMPLIANCE module. A breach is opened (WF-006; starts WF-014). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COMPLIANCE_BREACH_DETECTED",
+    "event_version": 1,
+    "producer": "COMPLIANCE",
+    "aggregate_type": "compliance.breach",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "breach_id",
+    "scheme_id",
+    "rule_version",
+    "severity",
+    "check_id",
+    "detected_at"
+  ],
+  "properties": {
+    "breach_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "rule_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/rule_version_ref"
+    },
+    "severity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "check_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "detected_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

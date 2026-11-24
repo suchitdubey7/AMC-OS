@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:APPROVAL_DECIDED.v1.schema.json",
+  "title": "APPROVAL_DECIDED.v1",
+  "description": "Payload of event APPROVAL_DECIDED.v1. Producer: WORKFLOW module. An approval request reaches its final decision; maker-checker already enforced. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "APPROVAL_DECIDED",
+    "event_version": 1,
+    "producer": "WORKFLOW",
+    "aggregate_type": "workflow.approval_request",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "approval_request_id",
+    "subject_module",
+    "subject_type",
+    "subject_id",
+    "decision",
+    "decided_at"
+  ],
+  "properties": {
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "subject_module": {
+      "type": "string",
+      "enum": [
+        "TENANT",
+        "IDENTITY",
+        "WORKFLOW",
+        "DOCUMENTS",
+        "SECURITY_MASTER",
+        "PRODUCT",
+        "INVESTMENT",
+        "PORTFOLIO",
+        "OMS",
+        "EXECUTION",
+        "SETTLEMENT",
+        "COMPLIANCE",
+        "RISK",
+        "ACCOUNTING",
+        "VALUATION",
+        "NAV",
+        "OPERATIONS",
+        "INVESTOR",
+        "DISTRIBUTION",
+        "FINANCE",
+        "REPORTING",
+        "AI"
+      ]
+    },
+    "subject_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "subject_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "decision": {
+      "type": "string",
+      "enum": [
+        "APPROVED",
+        "REJECTED",
+        "WITHDRAWN"
+      ]
+    },
+    "decided_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "subject_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "decided_by_user_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "process_workflow_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/workflow_id"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "APPROVED",
+              "REJECTED"
+            ]
+          }
+        },
+        "required": [
+          "decision"
+        ]
+      },
+      "then": {
+        "required": [
+          "decided_by_user_id"
+        ]
+      }
+    }
+  ]
+}

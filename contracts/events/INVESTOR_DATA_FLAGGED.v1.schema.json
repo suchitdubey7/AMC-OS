@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:INVESTOR_DATA_FLAGGED.v1.schema.json",
+  "title": "INVESTOR_DATA_FLAGGED.v1",
+  "description": "Payload of event INVESTOR_DATA_FLAGGED.v1. Producer: INVESTOR module. A check flags investor data for correction through the RTA (D-53). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "INVESTOR_DATA_FLAGGED",
+    "event_version": 1,
+    "producer": "INVESTOR",
+    "aggregate_type": "investor.data_flag",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "flag_id",
+    "folio_ref_id",
+    "flag_type"
+  ],
+  "properties": {
+    "flag_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "folio_ref_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "flag_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "recon_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

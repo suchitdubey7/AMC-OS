@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:AI_KILL_SWITCH_CHANGED.v1.schema.json",
+  "title": "AI_KILL_SWITCH_CHANGED.v1",
+  "description": "Payload of event AI_KILL_SWITCH_CHANGED.v1. Producer: AI module. AI is switched off (one person) or back on (two people) for an assistant, a tool or all AI (D-75). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "AI_KILL_SWITCH_CHANGED",
+    "event_version": 1,
+    "producer": "AI",
+    "aggregate_type": "ai.kill_switch",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "switch_scope",
+    "new_state",
+    "changed_by_user_ids"
+  ],
+  "properties": {
+    "switch_scope": {
+      "type": "string",
+      "enum": [
+        "ASSISTANT",
+        "TOOL",
+        "ALL_AI"
+      ]
+    },
+    "new_state": {
+      "type": "string",
+      "enum": [
+        "OFF",
+        "ON"
+      ]
+    },
+    "changed_by_user_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "scope_ref_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "new_state": {
+            "const": "ON"
+          }
+        },
+        "required": [
+          "new_state"
+        ]
+      },
+      "then": {
+        "properties": {
+          "changed_by_user_ids": {
+            "minItems": 2
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "switch_scope": {
+            "enum": [
+              "ASSISTANT",
+              "TOOL"
+            ]
+          }
+        },
+        "required": [
+          "switch_scope"
+        ]
+      },
+      "then": {
+        "required": [
+          "scope_ref_id"
+        ]
+      }
+    }
+  ]
+}

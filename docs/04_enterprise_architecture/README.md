@@ -10,6 +10,7 @@ System context, layered architecture, service catalogue, deployment and cells, m
 | [EA-004](EA-004_deployment_and_cell_architecture.md) | Deployment and cell architecture | Draft |
 | [EA-005](EA-005_multi_tenant_architecture.md) | Multi-tenant architecture | Draft |
 | [EA-006](EA-006_control_plane_and_data_plane.md) | Control plane and data plane | Draft |
+| [EA-007](EA-007_event_architecture_and_process_workflows.md) | Event architecture and process workflows (event catalogue in `contracts/events/`) | Draft |
 | [EA-008](EA-008_configuration_over_customisation.md) | Configuration over customisation | Draft |
 
-Next: EA-007 events (Step 13). See [GOV-006](/docs/00_governance/GOV-006_gap_analysis_and_delivery_plan.md).
+Next: integration architecture INT-001 (Step 14). See [GOV-006](/docs/00_governance/GOV-006_gap_analysis_and_delivery_plan.md).

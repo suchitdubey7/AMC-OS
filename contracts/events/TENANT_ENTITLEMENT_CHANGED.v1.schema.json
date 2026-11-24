@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TENANT_ENTITLEMENT_CHANGED.v1.schema.json",
+  "title": "TENANT_ENTITLEMENT_CHANGED.v1",
+  "description": "Payload of event TENANT_ENTITLEMENT_CHANGED.v1. Producer: TENANT module. A module subscription is switched on, made read-only or ended (D-14, D-26). Renamed from candidate ENTITLEMENT_CHANGED. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TENANT_ENTITLEMENT_CHANGED",
+    "event_version": 1,
+    "producer": "TENANT",
+    "aggregate_type": "platform.tenant_entitlement",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "module_code",
+    "previous_state",
+    "new_state",
+    "effective_at"
+  ],
+  "properties": {
+    "module_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "previous_state": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "new_state": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "effective_at": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    }
+  }
+}

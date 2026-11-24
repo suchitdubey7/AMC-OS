@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:DQ_EXCEPTION_RAISED.v1.schema.json",
+  "title": "DQ_EXCEPTION_RAISED.v1",
+  "description": "Payload of event DQ_EXCEPTION_RAISED.v1. Producer: REPORTING module. A data-quality rule fails. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "DQ_EXCEPTION_RAISED",
+    "event_version": 1,
+    "producer": "REPORTING",
+    "aggregate_type": "analytics.dq_exception",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dq_exception_id",
+    "dataset_id",
+    "dq_rule_id",
+    "severity",
+    "source_module"
+  ],
+  "properties": {
+    "dq_exception_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "dataset_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "dq_rule_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "severity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "source_module": {
+      "type": "string",
+      "enum": [
+        "TENANT",
+        "IDENTITY",
+        "WORKFLOW",
+        "DOCUMENTS",
+        "SECURITY_MASTER",
+        "PRODUCT",
+        "INVESTMENT",
+        "PORTFOLIO",
+        "OMS",
+        "EXECUTION",
+        "SETTLEMENT",
+        "COMPLIANCE",
+        "RISK",
+        "ACCOUNTING",
+        "VALUATION",
+        "NAV",
+        "OPERATIONS",
+        "INVESTOR",
+        "DISTRIBUTION",
+        "FINANCE",
+        "REPORTING",
+        "AI"
+      ]
+    }
+  }
+}

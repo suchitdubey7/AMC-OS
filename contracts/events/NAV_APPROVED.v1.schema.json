@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:NAV_APPROVED.v1.schema.json",
+  "title": "NAV_APPROVED.v1",
+  "description": "Payload of event NAV_APPROVED.v1. Producer: NAV module. A NAV run is approved by a person other than the preparer (SOD-02). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "NAV_APPROVED",
+    "event_version": 1,
+    "producer": "NAV",
+    "aggregate_type": "nav.nav_run",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE_RUN_REF"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "nav_run_id",
+    "scheme_id",
+    "nav_date",
+    "nav_mode",
+    "plans",
+    "approval_request_id"
+  ],
+  "properties": {
+    "nav_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "nav_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "nav_mode": {
+      "type": "string",
+      "enum": [
+        "CALCULATED",
+        "CUSTODIAN_LOADED"
+      ]
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "plan_id",
+          "nav_per_unit",
+          "units_outstanding",
+          "net_assets"
+        ],
+        "properties": {
+          "plan_id": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+          },
+          "nav_per_unit": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+          },
+          "units_outstanding": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/decimal_string"
+          },
+          "net_assets": {
+            "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+          }
+        }
+      },
+      "minItems": 1
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

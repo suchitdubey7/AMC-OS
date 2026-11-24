@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ACCOUNTING_DAY_CLOSED.v1.schema.json",
+  "title": "ACCOUNTING_DAY_CLOSED.v1",
+  "description": "Payload of event ACCOUNTING_DAY_CLOSED.v1. Producer: ACCOUNTING module. The accounting day of a scheme is closed; trial balance frozen (WF-008). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ACCOUNTING_DAY_CLOSED",
+    "event_version": 1,
+    "producer": "ACCOUNTING",
+    "aggregate_type": "accounting.accounting_day",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scheme_id",
+    "accounting_date",
+    "trial_balance_id",
+    "accounting_mode"
+  ],
+  "properties": {
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "accounting_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "trial_balance_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "accounting_mode": {
+      "type": "string",
+      "enum": [
+        "BOOK_OF_RECORD",
+        "CUSTODIAN_MIRROR"
+      ]
+    }
+  }
+}

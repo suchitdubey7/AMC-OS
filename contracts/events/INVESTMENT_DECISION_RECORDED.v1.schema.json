@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:INVESTMENT_DECISION_RECORDED.v1.schema.json",
+  "title": "INVESTMENT_DECISION_RECORDED.v1",
+  "description": "Payload of event INVESTMENT_DECISION_RECORDED.v1. Producer: INVESTMENT module. An investment decision is recorded (WF-002). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "INVESTMENT_DECISION_RECORDED",
+    "event_version": 1,
+    "producer": "INVESTMENT",
+    "aggregate_type": "investment.decision_record",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision_id",
+    "decision_type",
+    "scheme_ids"
+  ],
+  "properties": {
+    "decision_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "decision_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "scheme_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1
+    },
+    "ic_meeting_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

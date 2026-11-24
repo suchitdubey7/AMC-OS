@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:ASSISTANT_VERSION_RELEASED.v1.schema.json",
+  "title": "ASSISTANT_VERSION_RELEASED.v1",
+  "description": "Payload of event ASSISTANT_VERSION_RELEASED.v1. Producer: AI module. An assistant version is released after approval (WF-043, D-60). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "ASSISTANT_VERSION_RELEASED",
+    "event_version": 1,
+    "producer": "AI",
+    "aggregate_type": "ai.assistant_version",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "assistant_id",
+    "assistant_version",
+    "model_version",
+    "prompt_version",
+    "approval_request_id"
+  ],
+  "properties": {
+    "assistant_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "assistant_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "model_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "prompt_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

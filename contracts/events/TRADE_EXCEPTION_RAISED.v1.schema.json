@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:TRADE_EXCEPTION_RAISED.v1.schema.json",
+  "title": "TRADE_EXCEPTION_RAISED.v1",
+  "description": "Payload of event TRADE_EXCEPTION_RAISED.v1. Producer: EXECUTION module. A trade break or exception is raised (WF-025). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "TRADE_EXCEPTION_RAISED",
+    "event_version": 1,
+    "producer": "EXECUTION",
+    "aggregate_type": "execution.trade_exception",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "exception_id",
+    "exception_type"
+  ],
+  "properties": {
+    "exception_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "exception_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "trade_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "execution_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

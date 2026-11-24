@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:COUNTERPARTY_CHANGED.v1.schema.json",
+  "title": "COUNTERPARTY_CHANGED.v1",
+  "description": "Payload of event COUNTERPARTY_CHANGED.v1. Producer: SECURITY_MASTER module. A counterparty golden record or its empanelment status changes (EA-003 T5). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "COUNTERPARTY_CHANGED",
+    "event_version": 1,
+    "producer": "SECURITY_MASTER",
+    "aggregate_type": "master.counterparty",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "counterparty_id",
+    "record_version",
+    "counterparty_type",
+    "status",
+    "changed_attributes"
+  ],
+  "properties": {
+    "counterparty_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "record_version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "counterparty_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "status": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "changed_attributes": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+      },
+      "minItems": 1
+    }
+  }
+}

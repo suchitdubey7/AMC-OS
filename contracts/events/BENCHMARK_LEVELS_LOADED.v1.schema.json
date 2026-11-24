@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:BENCHMARK_LEVELS_LOADED.v1.schema.json",
+  "title": "BENCHMARK_LEVELS_LOADED.v1",
+  "description": "Payload of event BENCHMARK_LEVELS_LOADED.v1. Producer: SECURITY_MASTER module. Benchmark or index levels for a date are loaded and checked. Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "BENCHMARK_LEVELS_LOADED",
+    "event_version": 1,
+    "producer": "SECURITY_MASTER",
+    "aggregate_type": "master.benchmark",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "benchmark_id",
+    "level_date",
+    "levels_count",
+    "load_run_id"
+  ],
+  "properties": {
+    "benchmark_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "level_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "levels_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "load_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

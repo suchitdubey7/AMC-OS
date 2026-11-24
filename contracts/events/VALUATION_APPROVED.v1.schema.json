@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:VALUATION_APPROVED.v1.schema.json",
+  "title": "VALUATION_APPROVED.v1",
+  "description": "Payload of event VALUATION_APPROVED.v1. Producer: VALUATION module. A scheme valuation for a date is approved (FE-03). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "VALUATION_APPROVED",
+    "event_version": 1,
+    "producer": "VALUATION",
+    "aggregate_type": "valuation.valuation",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "ENGINE"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "valuation_id",
+    "scheme_id",
+    "valuation_date",
+    "price_set_id",
+    "total_market_value",
+    "engine_version"
+  ],
+  "properties": {
+    "valuation_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "valuation_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "price_set_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "total_market_value": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "engine_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/engine_version"
+    }
+  }
+}

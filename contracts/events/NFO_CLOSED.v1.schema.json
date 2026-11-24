@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:NFO_CLOSED.v1.schema.json",
+  "title": "NFO_CLOSED.v1",
+  "description": "Payload of event NFO_CLOSED.v1. Producer: PRODUCT module. The NFO subscription window closes (WF-001). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "NFO_CLOSED",
+    "event_version": 1,
+    "producer": "PRODUCT",
+    "aggregate_type": "product.nfo",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scheme_id",
+    "nfo_id",
+    "close_date"
+  ],
+  "properties": {
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "nfo_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "close_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    }
+  }
+}

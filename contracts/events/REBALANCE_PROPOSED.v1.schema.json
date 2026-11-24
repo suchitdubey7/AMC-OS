@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:REBALANCE_PROPOSED.v1.schema.json",
+  "title": "REBALANCE_PROPOSED.v1",
+  "description": "Payload of event REBALANCE_PROPOSED.v1. Producer: PORTFOLIO module. A rebalance proposal is ready for the fund manager (WF-003). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "REBALANCE_PROPOSED",
+    "event_version": 1,
+    "producer": "PORTFOLIO",
+    "aggregate_type": "portfolio.rebalance_proposal",
+    "event_class": "OPERATIONAL",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id",
+    "scheme_id"
+  ],
+  "properties": {
+    "proposal_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "model_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

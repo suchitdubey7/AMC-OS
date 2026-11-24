@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RISK_ALERT_RAISED.v1.schema.json",
+  "title": "RISK_ALERT_RAISED.v1",
+  "description": "Payload of event RISK_ALERT_RAISED.v1. Producer: RISK module. A risk limit or threshold alert is raised (WF-033). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RISK_ALERT_RAISED",
+    "event_version": 1,
+    "producer": "RISK",
+    "aggregate_type": "risk.risk_alert",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "alert_id",
+    "metric_code",
+    "severity",
+    "risk_run_id"
+  ],
+  "properties": {
+    "alert_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "metric_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "severity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "risk_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "limit_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

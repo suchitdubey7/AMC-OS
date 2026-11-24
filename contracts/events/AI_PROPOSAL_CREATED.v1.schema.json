@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:AI_PROPOSAL_CREATED.v1.schema.json",
+  "title": "AI_PROPOSAL_CREATED.v1",
+  "description": "Payload of event AI_PROPOSAL_CREATED.v1. Producer: AI module. An assistant drafts a proposal that enters the owning module's normal approval (ADR-0008 \u00a73). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "AI_PROPOSAL_CREATED",
+    "event_version": 1,
+    "producer": "AI",
+    "aggregate_type": "ai.proposal",
+    "event_class": "AI",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "proposal_id",
+    "assistant_id",
+    "assistant_version",
+    "target_module",
+    "target_type",
+    "draft_ref_id",
+    "session_id"
+  ],
+  "properties": {
+    "proposal_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "assistant_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "assistant_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "target_module": {
+      "type": "string",
+      "enum": [
+        "TENANT",
+        "IDENTITY",
+        "WORKFLOW",
+        "DOCUMENTS",
+        "SECURITY_MASTER",
+        "PRODUCT",
+        "INVESTMENT",
+        "PORTFOLIO",
+        "OMS",
+        "EXECUTION",
+        "SETTLEMENT",
+        "COMPLIANCE",
+        "RISK",
+        "ACCOUNTING",
+        "VALUATION",
+        "NAV",
+        "OPERATIONS",
+        "INVESTOR",
+        "DISTRIBUTION",
+        "FINANCE",
+        "REPORTING",
+        "AI"
+      ]
+    },
+    "target_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "draft_ref_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "session_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

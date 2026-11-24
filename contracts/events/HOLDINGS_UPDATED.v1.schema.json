@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:HOLDINGS_UPDATED.v1.schema.json",
+  "title": "HOLDINGS_UPDATED.v1",
+  "description": "Payload of event HOLDINGS_UPDATED.v1. Producer: PORTFOLIO module. Positions of a scheme change (trade, settlement, corporate action, adjustment). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "HOLDINGS_UPDATED",
+    "event_version": 1,
+    "producer": "PORTFOLIO",
+    "aggregate_type": "portfolio.position",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scheme_id",
+    "as_of",
+    "security_ids",
+    "cause_event_id",
+    "cause_event_type"
+  ],
+  "properties": {
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "as_of": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "security_ids": {
+      "type": "array",
+      "items": {
+        "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+      },
+      "minItems": 1
+    },
+    "cause_event_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "cause_event_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/event_type"
+    }
+  }
+}

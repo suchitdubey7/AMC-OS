@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:CORPORATE_ACTION_ANNOUNCED.v1.schema.json",
+  "title": "CORPORATE_ACTION_ANNOUNCED.v1",
+  "description": "Payload of event CORPORATE_ACTION_ANNOUNCED.v1. Producer: OPERATIONS module. A corporate action announcement is captured (WF-009). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "CORPORATE_ACTION_ANNOUNCED",
+    "event_version": 1,
+    "producer": "OPERATIONS",
+    "aggregate_type": "operations.corporate_action",
+    "event_class": "REFERENCE",
+    "data_classification": "INTERNAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "corporate_action_id",
+    "security_id",
+    "ca_type",
+    "source_code"
+  ],
+  "properties": {
+    "corporate_action_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "security_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "ca_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "source_code": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "record_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "ex_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    }
+  }
+}

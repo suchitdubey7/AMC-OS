@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RECONCILIATION_EXCEPTION_CREATED.v1.schema.json",
+  "title": "RECONCILIATION_EXCEPTION_CREATED.v1",
+  "description": "Payload of event RECONCILIATION_EXCEPTION_CREATED.v1. Producer: OPERATIONS module. A reconciliation break is created (master prompt \u00a75 L4 example). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RECONCILIATION_EXCEPTION_CREATED",
+    "event_version": 1,
+    "producer": "OPERATIONS",
+    "aggregate_type": "operations.recon_break",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "break_id",
+    "recon_run_id",
+    "recon_definition_id",
+    "break_type",
+    "severity"
+  ],
+  "properties": {
+    "break_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "recon_run_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "recon_definition_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "break_type": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "severity": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/code"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}

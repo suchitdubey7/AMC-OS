@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:DISTRIBUTOR_FLOW_UPDATED.v1.schema.json",
+  "title": "DISTRIBUTOR_FLOW_UPDATED.v1",
+  "description": "Payload of event DISTRIBUTOR_FLOW_UPDATED.v1. Producer: DISTRIBUTION module. Flows and AUM by distributor and scheme for a date are updated (master prompt \u00a75 L4 example). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "DISTRIBUTOR_FLOW_UPDATED",
+    "event_version": 1,
+    "producer": "DISTRIBUTION",
+    "aggregate_type": "distribution.distributor_flow",
+    "event_class": "FINANCIAL",
+    "data_classification": "CONFIDENTIAL",
+    "figure_source": "MODULE_AGGREGATION"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "distributor_id",
+    "scheme_id",
+    "flow_date",
+    "gross_inflow",
+    "gross_outflow",
+    "net_flow"
+  ],
+  "properties": {
+    "distributor_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "scheme_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    },
+    "flow_date": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/business_date"
+    },
+    "gross_inflow": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "gross_outflow": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "net_flow": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    },
+    "aum": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/money"
+    }
+  }
+}

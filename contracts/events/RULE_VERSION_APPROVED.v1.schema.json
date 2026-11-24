@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:amc-os:contracts:events:RULE_VERSION_APPROVED.v1.schema.json",
+  "title": "RULE_VERSION_APPROVED.v1",
+  "description": "Payload of event RULE_VERSION_APPROVED.v1. Producer: COMPLIANCE module. A compliance rule version is approved by the CCO (WF-034, D-32). Status: Draft (EA-007).",
+  "x-amc-os": {
+    "event_type": "RULE_VERSION_APPROVED",
+    "event_version": 1,
+    "producer": "COMPLIANCE",
+    "aggregate_type": "compliance.rule_version",
+    "event_class": "CONTROL",
+    "data_classification": "CONFIDENTIAL"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "rule_version",
+    "effective_from",
+    "approval_request_id"
+  ],
+  "properties": {
+    "rule_version": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/rule_version_ref"
+    },
+    "effective_from": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/timestamp"
+    },
+    "approval_request_id": {
+      "$ref": "urn:amc-os:contracts:events:common.v1.schema.json#/$defs/uuid"
+    }
+  }
+}
