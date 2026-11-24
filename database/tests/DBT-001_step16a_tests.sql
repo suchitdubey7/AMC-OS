@@ -101,6 +101,20 @@ BEGIN
   PERFORM pg_temp.ok('C3 cross-schema FKs only to reference tables (2 DDL-000 exceptions wait for ADR-0020); tenant FKs are composite');
 END $$;
 
+DO $$
+DECLARE n int; v text;
+BEGIN
+  -- BT-5 and the history-table rule rely on application roles having no temporary objects and no
+  -- CREATE on any schema (they could otherwise run their own triggers).
+  SELECT count(*), string_agg(r, ', ') INTO n, v
+    FROM unnest(ARRAY['amc_app','amc_readonly','amc_auditor','amc_ai_agent']) AS r
+   WHERE has_database_privilege(r, current_database(), 'TEMPORARY')
+      OR EXISTS (SELECT 1 FROM pg_namespace ns WHERE ns.nspname NOT LIKE 'pg\_%' AND ns.nspname <> 'information_schema'
+                   AND has_schema_privilege(r, ns.oid, 'CREATE'));
+  IF n <> 0 THEN RAISE EXCEPTION 'C4 FAIL: roles with TEMPORARY or CREATE: %', v; END IF;
+  PERFORM pg_temp.ok('C4 application roles cannot create temporary objects or objects in any schema');
+END $$;
+
 -- =====================================================================
 -- Fixtures for tenant A (as the application role)
 -- =====================================================================
@@ -161,8 +175,8 @@ BEGIN
   END;
   BEGIN
     UPDATE master.security_version SET superseded_at = now()
-     WHERE security_id = '40000000-0000-0000-0000-000000000002' AND superseded_at IS NULL;
-    RAISE EXCEPTION 'T8b FAIL: current version superseded without a correction';
+     WHERE security_id = '40000000-0000-0000-0000-000000000002' AND superseded_at IS NOT NULL;
+    RAISE EXCEPTION 'T8b FAIL: superseded_at set twice';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   BEGIN
@@ -170,7 +184,7 @@ BEGIN
     RAISE EXCEPTION 'T8b FAIL: anchor changed';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T8b versions are insert-only: no edit, no supersede without a correction; anchors never change');
+  PERFORM pg_temp.ok('T8b versions are insert-only: no edit, superseded_at set only once; anchors never change');
 END $$;
 
 -- The same guards hold for a role that has every grant (the migration owner): the triggers, not
@@ -186,13 +200,13 @@ BEGIN
     IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T8b2 FAIL: wrong refusal: %', e; END IF;
   END;
   BEGIN
-    UPDATE master.security_version SET superseded_at = now()
+    UPDATE master.security_version SET short_name = 'EDITED'
      WHERE security_id = '40000000-0000-0000-0000-000000000002' AND superseded_at IS NULL;
-    RAISE EXCEPTION 'T8b2 FAIL: superseded without a correction';
+    RAISE EXCEPTION 'T8b2 FAIL: version edited';
   EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
-    IF e NOT LIKE 'SUPERSEDE_WITHOUT_CORRECTION%' THEN RAISE EXCEPTION 'T8b2 FAIL: wrong refusal: %', e; END IF;
+    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T8b2 FAIL: wrong refusal: %', e; END IF;
   END;
-  PERFORM pg_temp.ok('T8b2 the bi-temporal guard trigger itself refuses delete and supersede-without-correction');
+  PERFORM pg_temp.ok('T8b2 the bi-temporal guard trigger itself refuses delete and edit (not only missing grants)');
 END $$;
 SET ROLE amc_app;
 
@@ -274,8 +288,8 @@ BEGIN
    WHERE calendar_code = 'NSE_EQ' AND cal_date = '2026-12-25' AND superseded_at IS NULL;
   IF n <> 1 OR NOT v THEN RAISE EXCEPTION 'T8f FAIL: calendar correction (% current)', n; END IF;
 END $$;
--- (A new block: the correction relies on the default deferred check, which SET CONSTRAINTS
--- ALL IMMEDIATE above switched off for the rest of that transaction.)
+-- (Each DO block is its own transaction; the schedule correction is kept separate so it runs
+-- with the default deferred check.)
 DO $$
 DECLARE n int;
 BEGIN
@@ -291,6 +305,109 @@ BEGIN
    WHERE security_id = '40000000-0000-0000-0000-000000000003' AND superseded_at IS NULL AND coupon_rate = 8.300000;
   IF n <> 1 THEN RAISE EXCEPTION 'T8f FAIL: schedule correction'; END IF;
   PERFORM pg_temp.ok('T8f date-keyed tables (calendar, debt schedule) take corrections; one current row per key');
+END $$;
+
+-- BT-3: a version with an end date ends the key from that date (revoke a grant, remove a right,
+-- retire a code and give it to another entity); BT-4: a retraction removes a version.
+DO $$
+DECLARE n int; v_ok boolean;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO identity.role (tenant_id, role_code, description) VALUES ('00000000-0000-0000-0000-00000000000a','DEALER','Dealer');
+  INSERT INTO identity.user_role (tenant_id, grant_id, user_id, role_code)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000001','DEALER');
+  INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','[2026-11-01,)',
+          '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003');
+  -- Revoke from 1 Dec: restate the grant with an end date.
+  INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','[2026-11-01,2026-12-01)',
+          '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003');
+  SELECT count(*) INTO n FROM identity.user_role_version
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND superseded_at IS NULL AND valid_period @> date '2026-12-15';
+  IF n <> 0 THEN RAISE EXCEPTION 'T8g FAIL: grant still current after its end date'; END IF;
+  SELECT count(*) INTO n FROM identity.user_role_version
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND superseded_at IS NULL AND valid_period @> date '2026-11-15';
+  IF n <> 1 THEN RAISE EXCEPTION 'T8g FAIL: grant lost before its end date'; END IF;
+  -- Narrow a scope: retract the scope row (BT-4); the database stamps the time.
+  INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','[2026-11-01,)');
+  UPDATE identity.scope_attribute SET superseded_at = '2000-01-01'
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
+  SELECT superseded_at > now() - interval '1 hour' INTO v_ok FROM identity.scope_attribute
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ';
+  IF NOT v_ok THEN RAISE EXCEPTION 'T8g FAIL: retraction time not stamped by the database'; END IF;
+  -- Retire a code from 1 Jan 2027 and give it to another security from that date.
+  INSERT INTO master.external_identifier (tenant_id, external_identifier_id, valid_period, entity_type, entity_id, scheme_code, value, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c7000000-0000-0000-0000-000000000001','[2026-01-01,)','SECURITY',
+          '40000000-0000-0000-0000-000000000001','NSE_SYMBOL','ALPHAX','f0000000-0000-0000-0000-000000000016');
+  INSERT INTO master.external_identifier (tenant_id, external_identifier_id, valid_period, entity_type, entity_id, scheme_code, value, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c7000000-0000-0000-0000-000000000001','[2026-01-01,2027-01-01)','SECURITY',
+          '40000000-0000-0000-0000-000000000001','NSE_SYMBOL','ALPHAX','f0000000-0000-0000-0000-000000000016');
+  INSERT INTO master.external_identifier (tenant_id, valid_period, entity_type, entity_id, scheme_code, value, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','[2027-01-01,)','SECURITY','40000000-0000-0000-0000-000000000002','NSE_SYMBOL','ALPHAX',
+          'f0000000-0000-0000-0000-000000000016');
+  SET CONSTRAINTS ALL IMMEDIATE;
+  PERFORM pg_temp.ok('T8g an end-dated version revokes a grant from that date; a scope row can be retracted (time stamped by the database); a retired code can be reused');
+END $$;
+
+-- Remove a right from a role from a date (identity.role_permission, rule-2 table).
+RESET ROLE;
+INSERT INTO identity.permission (permission_code, description) VALUES ('oms.order.release','Release orders');
+SET ROLE amc_app;
+DO $$
+DECLARE n int;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO identity.role_permission (tenant_id, role_code, permission_code, valid_period)
+  VALUES ('00000000-0000-0000-0000-00000000000a','DEALER','oms.order.release','[2026-11-01,)');
+  INSERT INTO identity.role_permission (tenant_id, role_code, permission_code, valid_period)
+  VALUES ('00000000-0000-0000-0000-00000000000a','DEALER','oms.order.release','[2026-11-01,2026-12-01)');
+  SELECT count(*) INTO n FROM identity.role_permission
+   WHERE role_code = 'DEALER' AND superseded_at IS NULL AND valid_period @> date '2026-12-15';
+  IF n <> 0 THEN RAISE EXCEPTION 'T8h FAIL: right still on the role after its end date'; END IF;
+  PERFORM pg_temp.ok('T8h a right can be removed from a role from a date');
+END $$;
+
+-- BT-5: a continuation is not re-checked against today's signing rules (the approver has left).
+RESET ROLE;
+INSERT INTO identity.user_role (tenant_id, grant_id, user_id, role_code)
+VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','10000000-0000-0000-0000-000000000001','DEALER');
+INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','[2026-11-01,)',
+        '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003');
+UPDATE identity.app_user SET status = 'DISABLED' WHERE user_id = '10000000-0000-0000-0000-000000000003';
+INSERT INTO identity.app_user (user_id, tenant_id, external_subject, email, display_name) VALUES
+ ('10000000-0000-0000-0000-000000000004','00000000-0000-0000-0000-00000000000a','sub-co','co@alpha.in','Compliance Officer A');
+SET ROLE amc_app;
+DO $$
+DECLARE n int; v_rec timestamptz; v_sup timestamptz;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  -- c2...b1 was approved by ...03, now DISABLED.  A forward-dated change signed by two active humans:
+  INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','[2027-01-01,)',
+          '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004');
+  SET CONSTRAINTS ALL IMMEDIATE;
+  SELECT count(*) INTO n FROM identity.user_role_version
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000b1' AND superseded_at IS NULL;
+  IF n <> 2 THEN RAISE EXCEPTION 'T8i FAIL: % current versions after a forward-dated change', n; END IF;
+  -- One instant per correction: the closed row's superseded_at = the new and continued rows' recorded_at.
+  SELECT recorded_at INTO v_rec FROM identity.user_role_version
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000b1' AND valid_period = '[2027-01-01,)';
+  SELECT max(superseded_at) INTO v_sup FROM identity.user_role_version WHERE grant_id = 'c2000000-0000-0000-0000-0000000000b1';
+  SELECT count(*) INTO n FROM identity.user_role_version
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000b1' AND superseded_at IS NULL AND recorded_at = v_rec;
+  IF v_sup <> v_rec OR n <> 2 THEN RAISE EXCEPTION 'T8i FAIL: correction not recorded at one instant'; END IF;
+  -- A new version still needs active approvers.
+  BEGIN
+    INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','[2028-01-01,)',
+            '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003');
+    RAISE EXCEPTION 'T8i FAIL: a disabled user approved a new version';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  PERFORM pg_temp.ok('T8i continuations keep old signatures; new versions need active approvers; one correction = one instant');
 END $$;
 
 -- =====================================================================
@@ -506,7 +623,7 @@ BEGIN
   END;
   INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
   VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-000000000001','[2026-11-01,)',
-          '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003');
+          '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004');
   INSERT INTO identity.recertification_campaign (tenant_id, campaign_id, title, due_date, created_by)
   VALUES ('00000000-0000-0000-0000-00000000000a','c3000000-0000-0000-0000-000000000001','Q4 review','2026-12-31','10000000-0000-0000-0000-000000000002');
   BEGIN
@@ -564,19 +681,54 @@ BEGIN
 EXCEPTION WHEN SQLSTATE 'P0099' THEN NULL;
 END $$;
 
--- =====================================================================
--- T13  Configuration versions (EA-008 §5, M11)
--- =====================================================================
 DO $$
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO platform.organisation_unit (tenant_id, org_unit_id) VALUES
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000011'),
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000012');
+  -- U12 under U11 in 2026; U11 under U12 from 2027: a restructure, not a cycle.
+  INSERT INTO platform.organisation_unit_version (tenant_id, org_unit_id, valid_period, unit_code, unit_name, unit_type, parent_org_unit_id, approval_request_id) VALUES
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000012','[2026-01-01,2027-01-01)','U12','Unit 12','DEPARTMENT','c6000000-0000-0000-0000-000000000011','f0000000-0000-0000-0000-000000000015'),
+   ('00000000-0000-0000-0000-00000000000a','c6000000-0000-0000-0000-000000000011','[2027-01-01,)','U11','Unit 11','DEPARTMENT','c6000000-0000-0000-0000-000000000012','f0000000-0000-0000-0000-000000000015');
+  SET CONSTRAINTS ALL IMMEDIATE;
+  PERFORM pg_temp.ok('T12d a restructure across dates is not mistaken for a cycle');
+END $$;
+
+-- =====================================================================
+-- T13  Configuration versions (EA-008 §5, M11).  Dates are relative to today, so the test does
+--      not depend on the day it runs.
+-- =====================================================================
+DO $$
+DECLARE v_start date := current_date + 7; v_hash text; v_on date;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
   INSERT INTO platform.config_version (tenant_id, config_version_id, release, valid_period, maker_user_id)
-  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001','REL-TEST','[2026-12-01,)',
+  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001','REL-TEST', daterange(v_start, NULL),
           '10000000-0000-0000-0000-000000000001');
   INSERT INTO platform.config_value (tenant_id, config_version_id, item_key, scope_type, scope_id, value)
   VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001','d11.price.tolerance_day_move','TENANT',
           '00000000-0000-0000-0000-00000000000a','5'::jsonb);
-  UPDATE platform.config_version SET status = 'VALIDATED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+  -- The validator hashes what it checked; a value added afterwards makes the move fail.
+  v_hash := platform.config_values_hash('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001');
+  INSERT INTO platform.config_value (tenant_id, config_version_id, item_key, scope_type, scope_id, value)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001','d11.price.stale_days','TENANT',
+          '00000000-0000-0000-0000-00000000000a','999'::jsonb);
+  BEGIN
+    UPDATE platform.config_version SET status = 'VALIDATED', values_hash = v_hash
+     WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T13a FAIL: a version was validated with a value the validator never saw';
+  EXCEPTION WHEN serialization_failure THEN NULL;
+  END;
+  v_hash := platform.config_values_hash('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001');
+  UPDATE platform.config_version SET status = 'VALIDATED', values_hash = v_hash WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+  BEGIN
+    INSERT INTO platform.config_value (tenant_id, config_version_id, item_key, scope_type, scope_id, value)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000001','d11.price.other','TENANT',
+            '00000000-0000-0000-0000-00000000000a','1'::jsonb);
+    RAISE EXCEPTION 'T13a FAIL: value added after validation';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   UPDATE platform.config_version SET status = 'TESTED'    WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
   UPDATE platform.config_version SET status = 'SUBMITTED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
   BEGIN
@@ -584,46 +736,65 @@ BEGIN
     RAISE EXCEPTION 'T13a FAIL: submitted version edited';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  BEGIN
-    UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000007',
-           approved_on = '2026-12-15'
-     WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
-    RAISE EXCEPTION 'T13a FAIL: version approved to apply before its approval date';
-  EXCEPTION WHEN check_violation THEN NULL;
-  END;
+  -- approved_on is the database date, whatever the application sends.
   UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000007',
-         approved_on = '2026-11-24'
+         approved_on = DATE '2000-01-01'
    WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+  SELECT approved_on INTO v_on FROM platform.config_version WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+  IF v_on <> current_date THEN RAISE EXCEPTION 'T13a FAIL: approved_on is %', v_on; END IF;
+  BEGIN
+    UPDATE platform.config_version SET approved_on = DATE '2000-01-01' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T13a FAIL: approval date changed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
   BEGIN
     UPDATE platform.config_value SET value = '7'::jsonb WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
     RAISE EXCEPTION 'T13a FAIL: value of an approved version changed';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
+  PERFORM pg_temp.ok('T13a configuration: values fixed at validation (hash), frozen from SUBMITTED, approval date set by the database');
+END $$;
+
+-- A version that would apply before its approval date is refused (the database sets approved_on).
+DO $$
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO platform.config_version (tenant_id, config_version_id, release, valid_period, maker_user_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000003','REL-TEST', daterange(current_date - 30, NULL),
+          '10000000-0000-0000-0000-000000000001');
+  UPDATE platform.config_version SET status = 'VALIDATED',
+         values_hash = platform.config_values_hash('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000003')
+   WHERE config_version_id = 'c4000000-0000-0000-0000-000000000003';
+  UPDATE platform.config_version SET status = 'TESTED'    WHERE config_version_id = 'c4000000-0000-0000-0000-000000000003';
+  UPDATE platform.config_version SET status = 'SUBMITTED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000003';
   BEGIN
-    UPDATE platform.config_version SET valid_period = '[2026-12-02,)' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
-    RAISE EXCEPTION 'T13a FAIL: approved version edited';
-  EXCEPTION WHEN insufficient_privilege THEN NULL;
+    UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000008',
+           approved_on = current_date - 60
+     WHERE config_version_id = 'c4000000-0000-0000-0000-000000000003';
+    RAISE EXCEPTION 'T13b FAIL: a back-dated version was approved';
+  EXCEPTION WHEN check_violation THEN NULL;
   END;
-  PERFORM pg_temp.ok('T13a configuration follows DRAFT -> ... -> APPROVED, never applies before approval, and is frozen from SUBMITTED on');
+  PERFORM pg_temp.ok('T13b a configuration version can never apply to dates before its approval');
 END $$;
 
 DO $$
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
   INSERT INTO platform.config_version (tenant_id, config_version_id, release, valid_period, maker_user_id)
-  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000002','REL-TEST','[2026-12-01,)',
+  VALUES ('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000002','REL-TEST', daterange(current_date + 7, NULL),
           '10000000-0000-0000-0000-000000000001');
-  UPDATE platform.config_version SET status = 'VALIDATED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
+  UPDATE platform.config_version SET status = 'VALIDATED',
+         values_hash = platform.config_values_hash('00000000-0000-0000-0000-00000000000a','c4000000-0000-0000-0000-000000000002')
+   WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
   UPDATE platform.config_version SET status = 'TESTED'    WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
   UPDATE platform.config_version SET status = 'SUBMITTED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
   BEGIN
-    UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000008',
-           approved_on = '2026-11-24'
+    UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000008'
      WHERE config_version_id = 'c4000000-0000-0000-0000-000000000002';
     SET CONSTRAINTS ALL IMMEDIATE;
-    RAISE EXCEPTION 'T13b FAIL: two approved configuration versions start on the same date';
+    RAISE EXCEPTION 'T13c FAIL: two approved configuration versions start on the same date';
   EXCEPTION WHEN exclusion_violation THEN
-    PERFORM pg_temp.ok('T13b two approved configuration versions cannot start on the same date');
+    PERFORM pg_temp.ok('T13c two approved configuration versions cannot start on the same date');
   END;
 END $$;
 
