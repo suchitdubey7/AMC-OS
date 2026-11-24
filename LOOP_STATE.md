@@ -197,7 +197,7 @@ The owner decisions D-28…D-75 add or narrow rights that BA-005 does not yet ha
 
 | Branch | Why |
 | --- | --- |
-| `wp4-step16a-ddl-foundation-platform-identity-master` | Merge gate run 24 Nov 2026 (CI success): FAIL on G2 (owner-only `database/`, `.github/workflows/ci.yml`) and G4 (STEP-16a_round3 verdict BLOCK; its fixes are on `wp4-step16ab-review-fixes`, itself BLOCKED). Changes `database/` and `.github/workflows/ci.yml` (both owner-only, gate G2). CI must apply every DDL file and run every test file, otherwise DDL-001 is not tested in CI and DBT-000's updated fixtures fail against DDL-000 alone |
+| `wp4-step16a-ddl-foundation-platform-identity-master` | Merge gate run 24 Nov 2026 (CI success): FAIL on G2 (owner-only `database/`, `.github/workflows/ci.yml`) and G4 (STEP-16a_round3 verdict BLOCK; its fixes are on `wp4-step16ab-review-fixes` and `wp4-step16ac-review-fixes`, whose review STEP-16ac_round1 has no Blocker or Major; gate re-run 24 Nov 2026 16:45 IST: same result). Changes `database/` and `.github/workflows/ci.yml` (both owner-only, gate G2). CI must apply every DDL file and run every test file, otherwise DDL-001 is not tested in CI and DBT-000's updated fixtures fail against DDL-000 alone |
 | `wp4-step16ab-review-fixes` | Changes `database/` (owner-only, gate G2). Merge after `wp4-step16a-ddl-foundation-platform-identity-master`; it fixes that branch's round-3 findings |
 | `wp4-step16ac-review-fixes` | Changes `database/` (owner-only, gate G2). Merge after `wp4-step16ab-review-fixes`; it fixes that branch's round-3 findings (reviews/STEP-16ac_round1.md: no Blocker or Major) |
 | — | **Accept ADR-0020** (owner as interim ARB): it is merged as Draft; until it is accepted Step 16 leaves out the ADR-0020 items |
