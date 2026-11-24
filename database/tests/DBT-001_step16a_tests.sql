@@ -615,7 +615,7 @@ BEGIN
   PERFORM pg_temp.ok('T8h2 requests are used once and in full; REVOKE cannot end scope; a "remove" is an END row on the request''s date (a RETRACT alone is refused at commit), recording who and why');
 END $$;
 
--- T8j (round-3 Blockers 1-2, Major 3, Minor 4 of reviews/STEP-16ab_round3.md).  A grant and a scope
+-- T8m (round-3 Blockers 1-2, Major 3, Minor 4 of reviews/STEP-16ab_round3.md).  A grant and a scope
 -- row made through requests can later be ended from a date after their start, and corrected by a new
 -- version: the database's own continuation rows keep the old request_id but are not a new use of it.
 -- Each step below is its own transaction, so the commit check runs at each COMMIT.
@@ -654,7 +654,7 @@ BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
   PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
   SELECT status INTO v FROM identity.role_grant_request WHERE request_id = 'c1000000-0000-0000-0000-0000000000c1';
-  IF v <> 'APPLIED' THEN RAISE EXCEPTION 'T8j FAIL: GRANT request is % after commit', v; END IF;
+  IF v <> 'APPLIED' THEN RAISE EXCEPTION 'T8m FAIL: GRANT request is % after commit', v; END IF;
   -- Blocker 1(c): a plain signed correcting version from 1 Jun 2027 (no request) over the request-made version.
   INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by) VALUES
    ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000c1','[2027-06-01,)',
@@ -663,22 +663,22 @@ BEGIN
   SELECT count(*) INTO n FROM identity.user_role_version
    WHERE grant_id = 'c2000000-0000-0000-0000-0000000000c1' AND superseded_at IS NULL
      AND valid_period = '[2027-01-01,2027-06-01)' AND request_id = 'c1000000-0000-0000-0000-0000000000c1';
-  IF n <> 1 THEN RAISE EXCEPTION 'T8j FAIL: continuation of the request-made version not kept (%)', n; END IF;
+  IF n <> 1 THEN RAISE EXCEPTION 'T8m FAIL: continuation of the request-made version not kept (%)', n; END IF;
   SELECT count(*) INTO n FROM identity.request_use WHERE request_id = 'c1000000-0000-0000-0000-0000000000c1' AND xact_id = pg_current_xact_id();
-  IF n <> 0 THEN RAISE EXCEPTION 'T8j FAIL: a continuation was recorded as a new use of its request'; END IF;
+  IF n <> 0 THEN RAISE EXCEPTION 'T8m FAIL: a continuation was recorded as a new use of its request'; END IF;
   -- Minor 4: nothing the session sets can mark a request as used or applied.
   BEGIN
     INSERT INTO identity.request_use (tenant_id, request_id, xact_id)
     VALUES ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000c3', pg_current_xact_id());
-    RAISE EXCEPTION 'T8j FAIL: the application recorded a request use itself';
+    RAISE EXCEPTION 'T8m FAIL: the application recorded a request use itself';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   -- Major 3(b): APPROVED -> APPLIED is never a plain UPDATE.
   BEGIN
     UPDATE identity.role_grant_request SET status = 'APPLIED' WHERE request_id = 'c1000000-0000-0000-0000-0000000000c3';
-    RAISE EXCEPTION 'T8j FAIL: a request was set to APPLIED by a plain UPDATE';
+    RAISE EXCEPTION 'T8m FAIL: a request was set to APPLIED by a plain UPDATE';
   EXCEPTION WHEN insufficient_privilege THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
-    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T8j FAIL: wrong refusal: %', e; END IF;
+    IF e NOT LIKE 'IMMUTABLE_RECORD%' THEN RAISE EXCEPTION 'T8m FAIL: wrong refusal: %', e; END IF;
   END;
   SET CONSTRAINTS ALL DEFERRED;
 END $$;
@@ -687,7 +687,7 @@ END $$;
 DO $$
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
-  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000003', true);
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);   -- not the grant owner (owner question Q89)
   INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, end_date, request_id, reason)
   VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000c1','SCHEME','S1','END','2027-03-01',
           'c1000000-0000-0000-0000-0000000000c2','scheme S1 no longer covered');
@@ -706,9 +706,9 @@ BEGIN
     VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000c1','RETRACT','[2027-06-01,)', v_rec,
             'c1000000-0000-0000-0000-0000000000c4','retract instead of end');
     SET CONSTRAINTS ALL IMMEDIATE;
-    RAISE EXCEPTION 'T8j FAIL: a REVOKE was applied as a RETRACT only';
+    RAISE EXCEPTION 'T8m FAIL: a REVOKE was applied as a RETRACT only';
   EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
-    IF e NOT LIKE 'REQUEST_PARTLY_APPLIED%' THEN RAISE EXCEPTION 'T8j FAIL: wrong refusal: %', e; END IF;
+    IF e NOT LIKE 'REQUEST_PARTLY_APPLIED%' THEN RAISE EXCEPTION 'T8m FAIL: wrong refusal: %', e; END IF;
   END;
   SET CONSTRAINTS ALL DEFERRED;
 END $$;
@@ -730,28 +730,28 @@ BEGIN
   PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
   SELECT count(*) INTO n FROM identity.role_grant_request
    WHERE request_id IN ('c1000000-0000-0000-0000-0000000000c2','c1000000-0000-0000-0000-0000000000c3') AND status = 'APPLIED';
-  IF n <> 2 THEN RAISE EXCEPTION 'T8j FAIL: % of 2 later requests APPLIED', n; END IF;
+  IF n <> 2 THEN RAISE EXCEPTION 'T8m FAIL: % of 2 later requests APPLIED', n; END IF;
   SELECT count(*) INTO n FROM identity.role_grant_request WHERE request_id = 'c1000000-0000-0000-0000-0000000000c4' AND status = 'APPROVED';
-  IF n <> 1 THEN RAISE EXCEPTION 'T8j FAIL: the refused retract-only REVOKE did not stay APPROVED'; END IF;
+  IF n <> 1 THEN RAISE EXCEPTION 'T8m FAIL: the refused retract-only REVOKE did not stay APPROVED'; END IF;
   SELECT count(*) INTO n FROM identity.scope_attribute
    WHERE grant_id = 'c2000000-0000-0000-0000-0000000000c1' AND superseded_at IS NULL;
   IF n <> 1 OR NOT EXISTS (SELECT 1 FROM identity.scope_attribute WHERE grant_id = 'c2000000-0000-0000-0000-0000000000c1'
                              AND superseded_at IS NULL AND valid_period = '[2027-01-01,2027-03-01)') THEN
-    RAISE EXCEPTION 'T8j FAIL: SCHEME=S1 is not limited to Jan-Feb 2027';
+    RAISE EXCEPTION 'T8m FAIL: SCHEME=S1 is not limited to Jan-Feb 2027';
   END IF;
   SELECT count(*) INTO n FROM identity.user_role_version
    WHERE grant_id = 'c2000000-0000-0000-0000-0000000000c1' AND superseded_at IS NULL AND upper(valid_period) > date '2027-08-01';
   SELECT n + count(*) INTO n FROM identity.user_role_version
    WHERE grant_id = 'c2000000-0000-0000-0000-0000000000c1' AND superseded_at IS NULL AND upper_inf(valid_period);
-  IF n <> 0 THEN RAISE EXCEPTION 'T8j FAIL: the grant is still current after 1 Aug 2027'; END IF;
+  IF n <> 0 THEN RAISE EXCEPTION 'T8m FAIL: the grant is still current after 1 Aug 2027'; END IF;
   -- Blocker 2: a request that names someone else's grant is refused at insert.
   BEGIN
     INSERT INTO identity.role_grant_request (tenant_id, request_type, user_id, role_code, grant_id, reason, effective_from, requested_scope)
     VALUES ('00000000-0000-0000-0000-00000000000a','CHANGE_SCOPE','10000000-0000-0000-0000-000000000001','FUND_ACCOUNTANT',
             'c2000000-0000-0000-0000-0000000000c1','mislabelled','2027-02-01','{"remove":[{"attribute":"SCHEME","value":"S1"}]}');
-    RAISE EXCEPTION 'T8j FAIL: a request naming another user''s grant was accepted';
+    RAISE EXCEPTION 'T8m FAIL: a request naming another user''s grant was accepted';
   EXCEPTION WHEN check_violation OR foreign_key_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
-    IF e NOT LIKE 'WRONG_GRANT%' THEN RAISE EXCEPTION 'T8j FAIL: wrong refusal: %', e; END IF;
+    IF e NOT LIKE 'WRONG_GRANT%' THEN RAISE EXCEPTION 'T8m FAIL: wrong refusal: %', e; END IF;
   END;
   -- ... so the grant owner (...03) can never be the checker of a change to their own grant.
   PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000003', true);
@@ -759,10 +759,10 @@ BEGIN
     INSERT INTO identity.role_grant_request (tenant_id, request_type, user_id, role_code, grant_id, reason, effective_from)
     VALUES ('00000000-0000-0000-0000-00000000000a','REVOKE','10000000-0000-0000-0000-000000000003','DEALER',
             'c2000000-0000-0000-0000-0000000000c1','self','2027-09-01');
-    RAISE EXCEPTION 'T8j FAIL: the grant owner raised a request on their own grant';
+    RAISE EXCEPTION 'T8m FAIL: the grant owner raised a request on their own grant';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
-  PERFORM pg_temp.ok('T8j request-made grants and scope rows can be ended after their start and corrected (continuations are not new uses); a request must name its grant''s own user and role; APPLIED only by the commit check after an END on the request''s date');
+  PERFORM pg_temp.ok('T8m request-made grants and scope rows can be ended after their start and corrected (continuations are not new uses); a request must name its grant''s own user and role; APPLIED only by the commit check after an END on the request''s date');
 END $$;
 
 -- Retire a code from a date and give it to another entity; remove a right from a role from a date,

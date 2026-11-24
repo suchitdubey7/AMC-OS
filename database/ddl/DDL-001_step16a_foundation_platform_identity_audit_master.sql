@@ -1468,8 +1468,15 @@ DECLARE r identity.role_grant_request; e jsonb; v_missing text;
 BEGIN
   SELECT * INTO r FROM identity.role_grant_request
    WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id FOR UPDATE;
+  IF NOT FOUND THEN
+    -- Row-level security hides it: the tenant context was changed before COMMIT.  Not retryable.
+    RAISE EXCEPTION 'REQUEST_NOT_VISIBLE: role grant request % is not visible in this tenant context at commit', NEW.request_id
+      USING ERRCODE = '42501';
+  END IF;
   IF r.status IS DISTINCT FROM 'APPROVED' THEN
     -- Another transaction used and applied the same request first (one row per transaction here).
+    -- Two transactions committing at once may instead end with deadlock_detected (40P01); either way
+    -- the request is applied once and the loser retries and is refused.
     RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % was applied by another transaction', NEW.request_id
       USING ERRCODE = '40001';
   END IF;
