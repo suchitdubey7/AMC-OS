@@ -693,4 +693,5 @@ BEGIN
 END $$;
 
 RESET ROLE;
+\echo 'All tests passed.'
 -- End of DBT-002.
