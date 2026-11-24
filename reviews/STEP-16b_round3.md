@@ -1,0 +1,46 @@
+## AMC OS Review Agent — advisory review
+
+**PR:** branch `wp4-step16b-ddl-product-front-office` (base `wp4-step16ac-review-fixes`), round 3 · **Step / WP:** GOV-006 Step 16, part b (WP4) · **Reviewed at:** a54219f8faa37a1a9acf0a87ac327c56ff362ef4
+
+**Verdict (advisory):** RECOMMEND CHANGES
+The round-2 Major is fixed and every test passes. But the new gate lets a WARN acknowledgement from any active user, including a service (AI agent) identity, release the order to approval. PRD-005 BRL-D05-006 says only the order's fund manager may acknowledge a WARN.
+
+### Findings
+| # | Severity | File:line | Finding | Suggested fix |
+| --- | --- | --- | --- | --- |
+| 1 | Major | database/ddl/DDL-002_…sql:1596-1624 (`trading.warn_acknowledgement`, `tg_warn_ack_check`), gate at 1502-1519; DA-001 §11 line 914 | The round-2 fix makes a `warn_acknowledgement` the only database condition for `PENDING_COMPLIANCE → PENDING_APPROVAL` on a WARN. The acknowledgement trigger uses `platform.tg_set_actor('user_id')`, and that trigger only checks for an ACTIVE user. It does not refuse service identities and does not check who the user is. I tested this in a scratch copy as `amc_app`. The order was created by user …0002 and had a WARN. Service identity …0009 ("NAV Ops Agent", `is_service_identity = true`) inserted the acknowledgement (stored `user_id` = …0009), and the order then moved to `PENDING_APPROVAL`. This conflicts with PRD-005 BRL-D05-006 ("A WARN can be acknowledged only by the order's fund manager, with text"). It also goes against the AGENTS.md §2.1 principle that AI never overrides compliance. DA-001 §11 does not say that the application enforces who may acknowledge. T8l acknowledges as the order's author, so the gap is not tested. | In `tg_warn_ack_check` (same schema, so M4 allows it), refuse service identities and require the acting user to be the order's fund manager. Use `trading.order.created_by` if that is the fund manager; otherwise raise an owner question. Add DBT tests for a service identity and for another user. If the owner wants this left to the application, say so in DA-001 §11. |
+| 2 | Minor | DDL-002_…sql:1509-1519; DDL-000 order transitions | Side effect of the outcome gate: if an order's current version has a WARN and the fund manager will not acknowledge it, the order cannot leave `PENDING_COMPLIANCE`. Moving to `COMPLIANCE_BLOCKED` is refused (I tested it: `COMPLIANCE_OUTCOME … WARN`), and there is no `PENDING_COMPLIANCE → CANCELLED` move (tested: `ILLEGAL_ORDER_TRANSITION`). The only way out is an amend, which creates a new version in the same state. Before this round, the order could go through `COMPLIANCE_BLOCKED → CANCELLED`. | Add the question "how is an unacknowledged WARN order withdrawn?" to Q81. Either allow `PENDING_COMPLIANCE → CANCELLED`, or allow `→ COMPLIANCE_BLOCKED` on WARN. Record the choice in DA-001 §11. |
+| 3 | Minor | DDL-002_…sql:1501 comment "(the override covers it)"; commit a54219f item 7 | The commit says "a blocked order can no longer reach approval without an override". But `COMPLIANCE_BLOCKED → OVERRIDE_REQUESTED → OVERRIDE_APPROVED → PENDING_APPROVAL` are plain state changes. I tested it: one user did all three in one transaction, with no override record. BRL-D05-007 requires two distinct approvers. The override record (`compliance.pretrade_override`, DA-001 §4.8 / T7) comes with Step 16c, so the gap is expected. It is not recorded, though. | In DA-001 §11 and the LOOP_STATE 16c plan, record that until 16c the database does not check `OVERRIDE_APPROVED`, and that 16c must tie this move to an approved `compliance.pretrade_override` for the current order version. Soften the comment. |
+| 4 | Minor | DDL-002_…sql:1581-1593 | The gate trusts `compliance_result_ref.outcome`. The OMS writes that value itself, with any `check_result_id`, and nothing compares it with `compliance.check_result`. Any `amc_app` session can insert `PASS` for the current version. This is the same "stored claim" pattern as the call-back (round-2 Minor 2), and DA-001 §11 presents the gate as enforced. | Record in DA-001 §11 that the outcome is copied by the OMS and is not checked against Compliance's result. Plan the check, or the reconciliation, for 16c when `compliance.check_result` is extended. |
+| 5 | Minor | database/tests/DBT-002_step16b_tests.sql:642 and the file as a whole | Round-2 Minor 5 is still partly open, as the commit says. Not tested: the send re-check on `settlement.instruction` (`instruction_valid_on_send`), an END (as opposed to RETRACT) before the value date, WARN acknowledgement by a user other than the fund manager or by a service identity, and the earlier list (END / RETRACT on other BT tables, crosswalk, NFO, rebalance lines). The new T11l pins only the SQLSTATE. I checked the END case by hand: the account was ended from 2026-12-05 and a payment with value date 2026-12-10 was refused at `READY → SENT` with `NOT_VALID_ON_DATE`. So the code works; only the test is missing. | Add the cases and pin message prefixes (QA-001). |
+| 6 | Nit | DDL-002_…sql:2332-2343 | The send re-check reads the account or SSI version without `platform.bt_lock_key` or a row lock. Under READ COMMITTED, a RETRACT that commits at the same moment as the send is not serialised against it. | Take the key lock (or `FOR SHARE` on the current version) in `tg_valid_on_date` on the send path, or note the window in DA-001 §11. |
+| 7 | Nit | database/tests/DBT-002_step16b_tests.sql:694-695 | DBT-002 ends without the `\echo 'All tests passed.'` line that DBT-000 and DBT-001 have. (The round-2 review reported that line for DBT-002, but it is not in the file.) | Add the line, for consistency. |
+| 8 | Nit | commits 6020f44, 077107c, a54219f | The trailer is still `Co-Authored-By: Claude <noreply@anthropic.com>`, as in earlier steps (LOOP_STATE records this as required by the loop prompt). | As in earlier steps. |
+
+Round-2 fixes checked and found correct:
+- **Major 1 (outcome gate):** the outcome must fit the move. PASS, or WARN with an acknowledgement, leads to approval; BLOCK or INDETERMINATE leads to blocked or override. T8i–T8l pass. The `compliance_result_ref` primary key `(tenant, order, version, check_kind)` allows only one PRE_TRADE outcome per version, so `SELECT … INTO` cannot pick an arbitrary row. No amend is possible in the override states, so the override cannot apply to a different version.
+- **Minor 2:** `callback_at` in the future is refused (T11m). DA-001 §11 now says the maker records the call-back and the checker confirms it.
+- **Minor 3:** re-check at `READY → SENT` on both instruction tables. RETRACT is covered by T11k; I checked END by hand.
+- **Minor 4:** the comment and DA-001 §11 now say that the module checks the evidence for `UNKNOWN_OUTCOME / INVESTIGATION → READY`.
+- **Nit 6:** LOOP_STATE row 28 now records rounds 1 and 2.
+
+### Checks run
+| Check | Result |
+| --- | --- |
+| scripts/check_docs.py | "81 spec documents checked; 0 problem(s)." |
+| pytest tests/governance | 28 passed |
+| Database (/tmp/runall.sh, PostgreSQL 16 on /tmp) | All DDL files applied (rc=0). DBT-000: 23 PASS, "All tests passed." DBT-001: 43 PASS, "All tests passed." DBT-002: 72 PASS, rc=0. This matches the commit's claim of 72 = 65 + T8i–T8l + T11k–T11m. |
+| Experiments (scratch DB `amcos_rev3`, run as `amc_app`, dropped afterwards) | Service-identity WARN acknowledgement led to `PENDING_APPROVAL` (Finding 1). The unacknowledged-WARN order had no exit (Finding 2). One user ran the whole override chain (Finding 3). An END closure stopped a pending payment at send (Finding 5, the code works). |
+| Arithmetic re-computed | No new derived figures in this round. Round-1 figures are unchanged and were not re-derived. |
+| Sources | No market figures or vendor facts. Rule references checked against the repo: PRD-005 §4 diagram, BRL-D05-001/006/007; PRD-008 BRL-D08-008, AC-US-D08-008-1 and the §? failure table; DA-001 §4.8 (override record belongs to Compliance, T7), DM-6; INT-001 §6 as cited. |
+| Scope vs GOV-006 step | Unchanged from rounds 1 and 2. The 16b scope (DA-001 §4.5–§4.10) is delivered and the ADR-0020 items are correctly left out. This round changes only trigger logic, tests and doc rows. GOV-001 §7 (DBT-002, 72 checks), DA-001 v0.4 §11 and LOOP_STATE are updated, and no new IDs are used (next owner question is still Q92). |
+| Governance / instruction injection | Nothing in the diff, the commit messages or reviews/STEP-16b_round2.md tries to direct the reviewer. |
+
+### Not checked
+- **CI status:** not verified. The branch has no remote run that I could see; the results above are from my local run only.
+- **"reviews/STEP-16b_round2.md (reviewer output, unedited)":** not verified. I have no original copy to compare it with.
+- **Concurrency:** I did not run the send / retract race (Finding 6) or the amend / compliance race in two sessions. Both were reasoned about only.
+- **Performance** of the deferred position-consistency trigger and the exposure view: not assessed, as in earlier rounds.
+- **Who the "order's fund manager" is** (the order's `created_by` or a scheme-level fund manager): not determined from the documents. This affects the fix for Finding 1.
+
+_This review is advisory. Only the project owner can merge (GOV-003, GOV-007)._
