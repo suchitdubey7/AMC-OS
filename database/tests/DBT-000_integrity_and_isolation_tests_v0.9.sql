@@ -1,13 +1,18 @@
 -- =====================================================================
 -- AMC OS  -  DDL verification & negative security tests
--- Run after amc_os_ddl.sql:  psql -v ON_ERROR_STOP=1 -f amc_os_tests.sql
+-- Run after every file in database/ddl (DDL-000, DDL-001, ... in name order):
+--   psql -v ON_ERROR_STOP=1 -f DBT-000_integrity_and_isolation_tests_v0.9.sql
+-- Fixtures updated in Step 16a for the DDL-001 shapes (tenant cell, master anchors and versions).
 -- Every test prints PASS or raises an exception (which stops the run).
 -- =====================================================================
 \set QUIET on
 -- Fixture data is created as the migration owner (bypasses RLS by design).
-INSERT INTO platform.tenant (tenant_id, tenant_code, legal_name, kms_key_ref, status) VALUES
- ('00000000-0000-0000-0000-00000000000a','AMC_ALPHA','Alpha AMC Ltd','kms/alpha','ACTIVE'),
- ('00000000-0000-0000-0000-00000000000b','AMC_BETA','Beta AMC Ltd','kms/beta','ACTIVE');
+-- DDL-001 (Step 16a): an ACTIVE tenant must sit in a cell (DA-001 DM-16).
+INSERT INTO platform.cell (cell_id, cell_code, cell_kind, cell_shape, region) VALUES
+ ('0c000000-0000-0000-0000-000000000001','TEST-CELL-1','VENDOR_TEST','SHARED','ap-south-1');
+INSERT INTO platform.tenant (tenant_id, tenant_code, legal_name, kms_key_ref, status, cell_id) VALUES
+ ('00000000-0000-0000-0000-00000000000a','AMC_ALPHA','Alpha AMC Ltd','kms/alpha','ACTIVE','0c000000-0000-0000-0000-000000000001'),
+ ('00000000-0000-0000-0000-00000000000b','AMC_BETA','Beta AMC Ltd','kms/beta','ACTIVE','0c000000-0000-0000-0000-000000000001');
 INSERT INTO master.currency VALUES ('INR',2);
 
 -- Helper to run a block as the application role inside a tenant.
@@ -24,14 +29,21 @@ INSERT INTO identity.app_user (user_id, tenant_id, external_subject, email, disp
  ('10000000-0000-0000-0000-000000000002','00000000-0000-0000-0000-00000000000a','sub-hfa','hfa@alpha.in','Head FA A');
 INSERT INTO identity.app_user (user_id, tenant_id, external_subject, email, display_name, is_service_identity) VALUES
  ('10000000-0000-0000-0000-000000000009','00000000-0000-0000-0000-00000000000a','svc-nav-agent','nav-agent@alpha.in','NAV Ops Agent', true);
-INSERT INTO master.benchmark (tenant_id, benchmark_id, name, variant, provider)
- VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','Nifty 100','TRI','NSE Indices');
+-- DDL-001 (Step 16a, DA-001 DM-1): master entities are an anchor plus bi-temporal versions.
+INSERT INTO master.benchmark (tenant_id, benchmark_id, variant)
+ VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','TRI');
+INSERT INTO master.benchmark_version (tenant_id, benchmark_id, valid_period, name, provider, approval_request_id)
+ VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','[2026-01-01,)','Nifty 100','NSE Indices',
+         'f0000000-0000-0000-0000-000000000001');
 INSERT INTO product.scheme (tenant_id, scheme_id, scheme_code, legal_name, structure, lifecycle_state)
  VALUES ('00000000-0000-0000-0000-00000000000a','30000000-0000-0000-0000-000000000001','ALPHA_LC','Alpha Large Cap Fund','OPEN_ENDED','ACTIVE');
 INSERT INTO product.plan (tenant_id, plan_id, scheme_id, plan_type, option_type, isin)
  VALUES ('00000000-0000-0000-0000-00000000000a','31000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','DIRECT','GROWTH','INF000A01011');
-INSERT INTO master.security (tenant_id, security_id, isin, short_name, instrument_type)
- VALUES ('00000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000001','INE000A01018','ALPHA CORP','EQUITY');
+INSERT INTO master.security (tenant_id, security_id, isin, instrument_type)
+ VALUES ('00000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000001','INE000A01018','EQUITY');
+INSERT INTO master.security_version (tenant_id, security_id, valid_period, short_name, approval_request_id)
+ VALUES ('00000000-0000-0000-0000-00000000000a','40000000-0000-0000-0000-000000000001','[2026-01-01,)','ALPHA CORP',
+         'f0000000-0000-0000-0000-000000000001');
 INSERT INTO accounting.account (tenant_id, account_code, account_name, account_class, normal_balance) VALUES
  ('00000000-0000-0000-0000-00000000000a','1100','Investments - Equity','ASSET','D'),
  ('00000000-0000-0000-0000-00000000000a','1200','Bank','ASSET','D');

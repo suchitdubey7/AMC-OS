@@ -2,11 +2,11 @@
 id: DA-001
 title: Canonical Enterprise Data Model — entities, keys, time model, ownership and ERDs for all 23 schemas
 status: Draft
-version: 0.1
+version: 0.2
 owner: Data Architect
 approver: Project owner (interim ARB)
 work_package: WP4 / Step 15
-last_updated: 2026-11-22
+last_updated: 2026-11-24
 ---
 
 # DA-001 — Canonical Enterprise Data Model
@@ -17,7 +17,7 @@ This document is the one agreed list of the things AMC OS stores, which module o
 
 **Status of every decision in this document:** **[DES]** — a design proposal for the owner (interim ARB) to accept or change, unless another label is shown. No regulatory fact is stated here; retention periods, statutory record lists and the like stay **[VAL]** for REG-001 (Step 25). No business rule (rate, threshold, cut-off, formula) is set here: where the data model needs one, the rule is an owner question and the model is built so the rule is **data**, not code.
 
-**Depends on ADR-0020 (not yet drafted; owner-only folder).** Three parts of this model move tables between schemas or change who may write a table: the trade record and allocation results move to `execution` (EA-003 T1), corporate actions move to `operations` (EA-003 T3), and every schema gets its own outbox, delivery, inbox, dead-letter and idempotency tables written only by its own database role (EA-003 T15, EA-007 D1–D6). GOV-002 §2 requires an ADR before such changes are built. This document shows the **target** model so the owner can see the whole picture; Step 16 must not build the moved tables or the per-module roles until ADR-0020 is accepted. Every such entity is marked **(ADR-0020)** in §4.
+**Depends on ADR-0020 (drafted and merged as Draft on 24 Nov 2026, not yet accepted by the owner; owner-only folder).** Three parts of this model move tables between schemas or change who may write a table: the trade record and allocation results move to `execution` (EA-003 T1), corporate actions move to `operations` (EA-003 T3), and every schema gets its own outbox, delivery, inbox, dead-letter and idempotency tables written only by its own database role (EA-003 T15, EA-007 D1–D6). GOV-002 §2 requires an ADR before such changes are built. This document shows the **target** model so the owner can see the whole picture; Step 16 must not build the moved tables or the per-module roles until ADR-0020 is accepted. Every such entity is marked **(ADR-0020)** in §4.
 
 **Plain-language terms**
 
@@ -855,7 +855,7 @@ No new NFR is proposed. The provenance rule (M9, §3.3) is already required by N
 
 | # | Gap | Closed by |
 | --- | --- | --- |
-| G1 | ADR-0020 is not drafted; DM-4, DM-7, DM-8, DM-17, DM-18, DM-20 wait for it | Owner (owner-only folder) |
+| G1 | ADR-0020 is drafted (Draft) but not accepted; DM-4, DM-7, DM-8, DM-17, DM-18, DM-20 wait for it | Owner (owner-only folder) |
 | G2 | Which order states may be amended, and where a re-route re-enters | Owner question Q81 |
 | G3 | Postings to a SOFT_CLOSED period | Owner question Q82; FE-02 (Step 21) |
 | G4 | Retention periods for every retention class | REG-001 (Step 25) **[VAL]** |
@@ -867,6 +867,21 @@ No new NFR is proposed. The provenance rule (M9, §3.3) is already required by N
 | G10 | Which module owns the IDCW declaration (the record `investor.idcw_expected` points at): Product (scheme event) or Accounting (distributable surplus) | FE-02 (Step 21) and the next PRD-002 / PRD-010 revision |
 | G11 | Whether the D-60 approvals of a new assistant version are given once by the vendor or by each AMC | Owner question Q83 |
 | G12 | The RTA record sequence or version field used in the de-duplication key (DM-9) | Confirm with CAMS / KFin (INT-006, INT-007) |
+
+## 11. Implementation notes from Step 16
+
+Step 16 builds this model as SQL in parts (16a–16e, one per schema group). Where the DDL differs from a row in §4, the difference and the reason are listed here, so the next revision of §4 can take them in.
+
+| Part | Entity | Difference from §4 | Reason |
+| --- | --- | --- | --- |
+| 16a ([DDL-001](../../database/ddl/DDL-001_step16a_foundation_platform_identity_audit_master.sql)) | `master.security` | The anchor keeps `isin` and `instrument_type` as well as the ID | A new ISIN is a new security (§3.1 rule 3 allows a never-changing code on the anchor); the instrument type decides which checks apply to every version |
+| 16a | `master.benchmark`, `master.credit_rating` | The anchor keeps `variant` (benchmark) and subject, agency and scale (rating) | These never change for one benchmark or one rating line; the rating itself and the outlook are versioned |
+| 16a | `master.benchmark_level`, `master.benchmark_constituent` | `version_no` added to the key | Insert-only facts need a correction path (M12); a vendor correction is a new version |
+| 16a | `identity.recertification_item` | Key `(campaign_id, grant_id)` instead of `(campaign_id, user_id, role_code)` | With grant anchors one user can hold one role under two grants with different scopes; each grant is reviewed |
+| 16a | All state-machine entities | The first state is the transition `(NEW) → <first state>` with cause `CREATE`; other moves use the cause in `app.transition_cause` (default `STATE_CHANGE`) | Makes M14's `cause` column checkable without one trigger per table |
+| 16a | All bi-temporal version tables | `recorded_at` defaults to `clock_timestamp()`; the "no overlap among current versions" constraint is checked at commit | Two versions recorded in one transaction get different times; a correction can be inserted before or after the row it replaces |
+| 16a | History tables (`<entity>_history`) | The application role can insert into them directly, not only through the trigger | A trigger that alone may write needs a `SECURITY DEFINER` function, which ADR-0020 part 7 governs; revisit when ADR-0020 is accepted |
+| 16a | States of `identity.role_grant_request`, `identity.recertification_campaign`, `identity.recertification_item`, `master.steward_request`, `master.match_candidate` | State lists are **[ASSUMPTION]** | No source document fixes them; they are rows in transition tables and can be changed by migration |
 
 ## Sources
 
