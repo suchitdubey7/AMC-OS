@@ -353,14 +353,36 @@ BEGIN
   INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason) VALUES
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a1','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
     'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','leaver'),
+   ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a5','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','second revoke, kept unused for T8h');
+  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason, requested_scope) VALUES
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a2','CHANGE_SCOPE','10000000-0000-0000-0000-000000000001','DEALER',
-    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','desk move'),
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','desk move',
+    '{"add":[{"attribute":"DESK","value":"EQ"}],"remove":[{"attribute":"DESK","value":"EQ"}]}');
+  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason) VALUES
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a3','GRANT','10000000-0000-0000-0000-000000000001','DEALER',
     'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','joiner'),
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a4','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
     'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','not yet approved');
-  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018'
-   WHERE request_id IN ('c1000000-0000-0000-0000-0000000000a1','c1000000-0000-0000-0000-0000000000a2','c1000000-0000-0000-0000-0000000000a3');
+  -- The checker is an active human other than the requester and the user.
+  BEGIN
+    UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018',
+           approved_by = '10000000-0000-0000-0000-000000000002'
+     WHERE request_id = 'c1000000-0000-0000-0000-0000000000a1';
+    RAISE EXCEPTION 'T8g FAIL: the requester approved their own request';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018',
+           approved_by = '10000000-0000-0000-0000-000000000009'
+     WHERE request_id = 'c1000000-0000-0000-0000-0000000000a1';
+    RAISE EXCEPTION 'T8g FAIL: a service identity approved a request';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018',
+         approved_by = '10000000-0000-0000-0000-000000000004'
+   WHERE request_id IN ('c1000000-0000-0000-0000-0000000000a1','c1000000-0000-0000-0000-0000000000a2','c1000000-0000-0000-0000-0000000000a3',
+                        'c1000000-0000-0000-0000-0000000000a5');
   -- Refused: an END under a request that is not approved, or of the wrong type, or with no reason.
   BEGIN
     INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
@@ -440,7 +462,15 @@ BEGIN
   BEGIN
     INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
     VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','SCHEME','any-scheme','[2026-11-01,)',
-            'c1000000-0000-0000-0000-0000000000a1');
+            'c1000000-0000-0000-0000-0000000000a2');
+    RAISE EXCEPTION 'T8h FAIL: scope row added that the request does not list';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'NOT_REQUESTED%' THEN RAISE EXCEPTION 'T8h FAIL: wrong refusal: %', e; END IF;
+  END;
+  BEGIN
+    INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','SCHEME','any-scheme','[2026-11-01,)',
+            'c1000000-0000-0000-0000-0000000000a5');
     RAISE EXCEPTION 'T8h FAIL: scope row added under a REVOKE request';
   EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
     IF e NOT LIKE 'WRONG_REQUEST_TYPE%' THEN RAISE EXCEPTION 'T8h FAIL: wrong refusal: %', e; END IF;
@@ -470,6 +500,15 @@ BEGIN
    WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
   SELECT closed_by INTO v_by FROM identity.scope_attribute_closure WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1';
   IF n <> 0 OR v_by <> '10000000-0000-0000-0000-000000000002' THEN RAISE EXCEPTION 'T8h FAIL: retraction (% current, by %)', n, v_by; END IF;
+  -- A REVOKE request cannot end a scope row (that would widen the grant, Q87).
+  BEGIN
+    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, end_date, request_id, reason)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','END','2026-11-25',
+            'c1000000-0000-0000-0000-0000000000a5','x');
+    RAISE EXCEPTION 'T8h FAIL: a REVOKE request ended a scope row';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'WRONG_REQUEST_TYPE%' THEN RAISE EXCEPTION 'T8h FAIL: wrong refusal: %', e; END IF;
+  END;
   -- Retracting again finds nothing to retract.
   BEGIN
     INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
@@ -486,7 +525,34 @@ BEGIN
     RAISE EXCEPTION 'T8h FAIL: a version was ended with no acting user';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T8h scope rows need an approved GRANT/CHANGE_SCOPE request for the grant; a retraction is a RETRACT row recording who, why and the request; no actor, no closure');
+  -- An acting user that does not exist is refused too.
+  PERFORM set_config('app.user_id','99999999-0000-0000-0000-000000000099', true);
+  BEGIN
+    INSERT INTO master.external_identifier_closure (tenant_id, external_identifier_id, closure_kind, end_date, request_id, reason)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c7000000-0000-0000-0000-000000000001','END','2027-01-01','f0000000-0000-0000-0000-000000000016','x');
+    RAISE EXCEPTION 'T8h FAIL: a version was ended by an unknown user';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  PERFORM pg_temp.ok('T8h scope rows follow an approved request that lists them (add / remove); REVOKE cannot end scope; a retraction is a RETRACT row recording who, why and the request; no active actor, no closure');
+END $$;
+
+-- A request is used once: at commit it became APPLIED, so it cannot change scope again.
+DO $$
+DECLARE e text; v text;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
+  SELECT status INTO v FROM identity.role_grant_request WHERE request_id = 'c1000000-0000-0000-0000-0000000000a2';
+  IF v <> 'APPLIED' THEN RAISE EXCEPTION 'T8h2 FAIL: used request is %', v; END IF;
+  BEGIN
+    INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','[2026-11-01,)',
+            'c1000000-0000-0000-0000-0000000000a2');
+    RAISE EXCEPTION 'T8h2 FAIL: an APPLIED request was used again';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'REQUEST_NOT_APPROVED%' THEN RAISE EXCEPTION 'T8h2 FAIL: wrong refusal: %', e; END IF;
+  END;
+  PERFORM pg_temp.ok('T8h2 a role grant request is used once: the database marks it APPLIED at commit');
 END $$;
 
 -- Retire a code from a date and give it to another entity; remove a right from a role from a date,
@@ -566,7 +632,8 @@ BEGIN
   INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason)
   VALUES ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000b1','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
           'c2000000-0000-0000-0000-0000000000b1','10000000-0000-0000-0000-000000000002','role no longer needed');
-  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000021'
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000021',
+         approved_by = '10000000-0000-0000-0000-000000000004'
    WHERE request_id = 'c1000000-0000-0000-0000-0000000000b1';
   INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
   VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','END','2026-12-01',
@@ -715,7 +782,8 @@ BEGIN
     RAISE EXCEPTION 'T11b FAIL: SUBMITTED -> APPLIED skipped approval';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
-  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000006'
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000006',
+         approved_by = '10000000-0000-0000-0000-000000000004'
    WHERE request_id = 'c1000000-0000-0000-0000-000000000001';
   SELECT count(*) INTO n FROM identity.role_grant_request_history WHERE request_id = 'c1000000-0000-0000-0000-000000000001';
   IF n <> 2 THEN RAISE EXCEPTION 'T11b FAIL: % history rows (expected 2)', n; END IF;
@@ -982,7 +1050,8 @@ END $$;
 
 -- D-77: the version in force on a date is the latest APPROVED / EFFECTIVE / SUPERSEDED version that
 -- started on or before it; superseded versions still answer for past dates; WITHDRAWN never counts
--- and is allowed only before the start date; EFFECTIVE -> SUPERSEDED needs a later approved version.
+-- and is allowed only before the start date; EFFECTIVE only from the start date; EFFECTIVE ->
+-- SUPERSEDED only when a later version is in force.
 RESET ROLE;
 CREATE FUNCTION pg_temp.cfg_to_submitted(p_id uuid, p_start date) RETURNS void LANGUAGE plpgsql AS $f$
 BEGIN
@@ -994,12 +1063,42 @@ BEGIN
   UPDATE platform.config_version SET status = 'TESTED'    WHERE config_version_id = p_id;
   UPDATE platform.config_version SET status = 'SUBMITTED' WHERE config_version_id = p_id;
 END $f$;
+-- History for tenant B, as it would stand after earlier days (versions approved 10 and 3 days ago
+-- and now in force).  Loaded by the migration owner with triggers off, because the test cannot
+-- wait for real days to pass; constraints still apply.
+SET session_replication_role = replica;
+INSERT INTO platform.config_version (tenant_id, config_version_id, release, status, valid_period, maker_user_id,
+                                     approval_request_id, approved_on, values_hash) VALUES
+ ('00000000-0000-0000-0000-00000000000b','c4000000-0000-0000-0000-0000000000b1','REL-TEST','EFFECTIVE',
+  daterange(platform.today_ist() - 10, NULL),'10000000-0000-0000-0000-0000000000b1','f0000000-0000-0000-0000-000000000026',
+  platform.today_ist() - 10,'h'),
+ ('00000000-0000-0000-0000-00000000000b','c4000000-0000-0000-0000-0000000000b2','REL-TEST','EFFECTIVE',
+  daterange(platform.today_ist() - 3, NULL),'10000000-0000-0000-0000-0000000000b1','f0000000-0000-0000-0000-000000000027',
+  platform.today_ist() - 3,'h');
+SET session_replication_role = origin;
 SET ROLE amc_app;
 DO $$
 DECLARE d date := platform.today_ist(); e text; v uuid;
 BEGIN
+  -- Tenant B: the older version is superseded by the newer one, which is in force.
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000b', true);
+  UPDATE platform.config_version SET status = 'SUPERSEDED' WHERE config_version_id = 'c4000000-0000-0000-0000-0000000000b1';
+  BEGIN
+    UPDATE platform.config_version SET status = 'SUPERSEDED' WHERE config_version_id = 'c4000000-0000-0000-0000-0000000000b2';
+    RAISE EXCEPTION 'T13d FAIL: the newest version was superseded with no later version';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'NO_LATER_VERSION%' THEN RAISE EXCEPTION 'T13d FAIL: wrong refusal: %', e; END IF;
+  END;
+  -- A re-run for a past date finds the superseded version.
+  v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000b', d - 5);
+  IF v IS DISTINCT FROM 'c4000000-0000-0000-0000-0000000000b1' THEN RAISE EXCEPTION 'T13d FAIL: in force on d-5: %', v; END IF;
+  v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000b', d);
+  IF v IS DISTINCT FROM 'c4000000-0000-0000-0000-0000000000b2' THEN RAISE EXCEPTION 'T13d FAIL: in force today: %', v; END IF;
+  v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000b', d - 11);
+  IF v IS NOT NULL THEN RAISE EXCEPTION 'T13d FAIL: a version is in force before any started: %', v; END IF;
+
+  -- Tenant A: c4..01 (start d+7) is APPROVED from T13a.  c4..11 starts today, c4..12 in 14 days.
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
-  -- c4..01 (start d+7) is APPROVED from T13a.  c4..11 starts today, c4..12 in 14 days.
   PERFORM pg_temp.cfg_to_submitted('c4000000-0000-0000-0000-000000000011', d);
   PERFORM pg_temp.cfg_to_submitted('c4000000-0000-0000-0000-000000000012', d + 14);
   UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000022'
@@ -1013,16 +1112,23 @@ BEGIN
     IF e NOT LIKE 'VERSION_IN_FORCE%' THEN RAISE EXCEPTION 'T13d FAIL: wrong refusal: %', e; END IF;
   END;
   UPDATE platform.config_version SET status = 'EFFECTIVE' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000011';
-  UPDATE platform.config_version SET status = 'SUPERSEDED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000011';
-  -- A re-run for a past (here: today's) date still finds the superseded version.
-  v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000a', d);
-  IF v IS DISTINCT FROM 'c4000000-0000-0000-0000-000000000011' THEN RAISE EXCEPTION 'T13d FAIL: in force today: %', v; END IF;
+  -- A version cannot be marked EFFECTIVE before its start date ...
+  BEGIN
+    UPDATE platform.config_version SET status = 'EFFECTIVE' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
+    RAISE EXCEPTION 'T13d FAIL: a future version was marked EFFECTIVE';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'NOT_YET_IN_FORCE%' THEN RAISE EXCEPTION 'T13d FAIL: wrong refusal: %', e; END IF;
+  END;
+  -- ... and nothing is superseded by versions that have not started yet.
+  BEGIN
+    UPDATE platform.config_version SET status = 'SUPERSEDED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000011';
+    RAISE EXCEPTION 'T13d FAIL: superseded by a version not yet in force';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
   v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000a', d + 8);
   IF v IS DISTINCT FROM 'c4000000-0000-0000-0000-000000000001' THEN RAISE EXCEPTION 'T13d FAIL: in force on d+8: %', v; END IF;
   v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000a', d + 20);
   IF v IS DISTINCT FROM 'c4000000-0000-0000-0000-000000000012' THEN RAISE EXCEPTION 'T13d FAIL: in force on d+20: %', v; END IF;
-  v := platform.config_version_in_force('00000000-0000-0000-0000-00000000000a', d - 1);
-  IF v IS NOT NULL THEN RAISE EXCEPTION 'T13d FAIL: a version is in force before any started: %', v; END IF;
   -- Withdrawal needs its request; before the start date it works and the version never counts.
   BEGIN
     UPDATE platform.config_version SET status = 'WITHDRAWN' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000012';
@@ -1038,32 +1144,26 @@ BEGIN
     RAISE EXCEPTION 'T13d FAIL: a withdrawn version came back';
   EXCEPTION WHEN check_violation OR insufficient_privilege THEN NULL;
   END;
-  -- c4..01 is now the newest: it cannot be superseded.
-  UPDATE platform.config_version SET status = 'EFFECTIVE' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
-  BEGIN
-    UPDATE platform.config_version SET status = 'SUPERSEDED' WHERE config_version_id = 'c4000000-0000-0000-0000-000000000001';
-    RAISE EXCEPTION 'T13d FAIL: the newest version was superseded with no later version';
-  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
-    IF e NOT LIKE 'NO_LATER_VERSION%' THEN RAISE EXCEPTION 'T13d FAIL: wrong refusal: %', e; END IF;
-  END;
-  PERFORM pg_temp.ok('T13d D-77: superseded versions answer for past dates; withdrawal only before the start date and never counts; supersede only with a later version');
+  PERFORM pg_temp.ok('T13d D-77: superseded versions answer for past dates; EFFECTIVE only from the start date; supersede only by a version in force; withdrawal only before the start date and never counts');
 END $$;
 
--- A superseded version still blocks another version with the same start date (D-77).
+-- A superseded version still blocks another version with the same start date (D-77).  Checked on
+-- the constraint itself: a SUPERSEDED version starts in the past, and no version can be approved for
+-- a past date, so the clash cannot be produced through the lifecycle in one test run (T13c shows the
+-- constraint acting on APPROVED versions).
+RESET ROLE;
 DO $$
-DECLARE d date := platform.today_ist();
+DECLARE v text;
 BEGIN
-  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
-  PERFORM pg_temp.cfg_to_submitted('c4000000-0000-0000-0000-000000000013', d);
-  BEGIN
-    UPDATE platform.config_version SET status = 'APPROVED', approval_request_id = 'f0000000-0000-0000-0000-000000000024'
-     WHERE config_version_id = 'c4000000-0000-0000-0000-000000000013';
-    SET CONSTRAINTS ALL IMMEDIATE;
-    RAISE EXCEPTION 'T13e FAIL: approved with the same start date as a superseded version';
-  EXCEPTION WHEN exclusion_violation THEN NULL;
-  END;
-  PERFORM pg_temp.ok('T13e a superseded version still blocks another version with the same start date');
+  SELECT pg_get_constraintdef(oid) INTO v FROM pg_constraint
+   WHERE conrelid = 'platform.config_version'::regclass AND contype = 'x';
+  IF v NOT LIKE '%lower(valid_period) WITH =%' OR v NOT LIKE '%''APPROVED''%' OR v NOT LIKE '%''EFFECTIVE''%'
+     OR v NOT LIKE '%''SUPERSEDED''%' OR v LIKE '%''WITHDRAWN''%' THEN
+    RAISE EXCEPTION 'T13e FAIL: same-start rule is %', v;
+  END IF;
+  PERFORM pg_temp.ok('T13e no two APPROVED / EFFECTIVE / SUPERSEDED versions may start on the same date; WITHDRAWN does not count');
 END $$;
+SET ROLE amc_app;
 
 -- "Today" cannot be moved back by the session time zone (round-3 Major 4).
 DO $$
