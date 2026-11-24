@@ -186,6 +186,31 @@ def test_no_findings_heading_scans_whole_file(repo: Path) -> None:
     assert gate(repo).returncode == 1
 
 
+@pytest.mark.parametrize("layout", [
+    "### Findings\nNone new.\n\n### Findings (continued)\n| # | Severity |\n| --- | --- |\n| 2 | Major | x | y | z |\n",
+    "### Findings\nSee below.\n\n### Majors\n| 2 | Major | x | y | z |\n",
+    "```\n### Findings\n```\n\n### Findings\n| 2 | Major | x | y | z |\n",
+    "### Findings (round 2)\n| 2 | Major | x | y | z |",
+    "### Findings\n#### Carried over\n| 2 | Major | x | y | z |\n",
+    "### Findings\n| 2 | **Major** | x | y | z |\n",
+    "### Findings\n  | 2 | Blocker | x | y | z |\n",
+])
+def test_findings_layouts_fail_closed(repo: Path, layout: str) -> None:
+    add_doc(repo)
+    head = GOOD_REVIEW.split("### Findings")[0]
+    add_review(repo, head + STATUS_TABLE + layout + "\n### Checks run\n| Check | Result |\n")
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 1 and "Blocker/Major" in r.stdout, r.stdout
+
+
+def test_rows_in_checks_run_are_ignored(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW + "\n### Checks run\n| Check | Result |\n")
+    commit(repo)
+    assert gate(repo).returncode == 0
+
+
 def test_missing_review_fails(repo: Path) -> None:
     add_doc(repo); commit(repo)
     r = gate(repo)

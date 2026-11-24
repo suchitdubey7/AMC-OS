@@ -16,7 +16,8 @@ Rules:
   G3  every changed spec document under docs/ still has status Draft
   G4  the branch adds or changes a review file reviews/STEP-*_round*.md; the highest round
       has verdict RECOMMEND MERGE or RECOMMEND MERGE AFTER FIXES and no Blocker/Major rows
-      in its "### Findings" table (the whole file if that heading is missing)
+      from its first "### Findings" heading to the end of the file (the whole file
+      if that heading is missing)
   G5  scripts/check_docs.py passes on the head
   G6  GitHub CI for the head is not failed or pending (unknown is allowed only because
       G5 re-runs the same documentation checks locally; database/ is protected by G2)
@@ -98,12 +99,14 @@ def check_review(head: str, changed: list[str]) -> tuple[bool, str]:
     verdict = m.group(1).strip()
     if verdict not in OK_VERDICTS:
         return False, f"{latest}: verdict is {verdict}"
-    # Count only the current "### Findings" table (reviewer output format, GOV-007).
-    # Earlier tables, such as a "Round 1 findings: status" table listing fixed Majors,
-    # are not new findings. Fail closed: without a Findings heading, scan the whole file.
-    findings = re.search(r"^### Findings[^\n]*\n(.*?)(?=^#{1,3} |\Z)", text, re.M | re.S)
-    scope = findings.group(1) if findings else text
-    serious = re.findall(r"^\|\s*\d+\s*\|\s*(Blocker|Major)\s*\|", scope, re.M | re.I)
+    # Ignore only what comes before the first "### Findings" heading (for example a
+    # "Round 1 findings: status" table listing fixed Majors). Everything from that
+    # heading to the end of the file is scanned, so a second Findings section, a
+    # sub-heading or a fenced template cannot hide a row.
+    # Fail closed: without a Findings heading, scan the whole file.
+    start = re.search(r"^### Findings", text, re.M)
+    scope = text[start.start():] if start else text
+    serious = re.findall(r"^\s*\|\s*\d+\s*\|\s*[*_]*\s*(Blocker|Major)\b", scope, re.M | re.I)
     if serious:
         return False, f"{latest}: {len(serious)} Blocker/Major finding(s) listed"
     return True, f"{latest}: {verdict}, no Blocker/Major"
