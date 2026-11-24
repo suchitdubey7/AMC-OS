@@ -1266,7 +1266,25 @@ BEGIN
     IF NEW.approved_by IS NOT NULL OR NEW.approval_request_id IS NOT NULL THEN
       RAISE EXCEPTION 'IMMUTABLE_RECORD: a role grant request is born unapproved' USING ERRCODE = '42501';
     END IF;
+    -- A request that names a grant names that grant's user and role, so the "not the user receiving
+    -- the role" checks (requested_by, approved_by <> user_id) are checks against the grant owner.
+    IF NEW.grant_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM identity.user_role g
+                                                 WHERE g.tenant_id = NEW.tenant_id AND g.grant_id = NEW.grant_id
+                                                   AND g.user_id = NEW.user_id AND g.role_code = NEW.role_code) THEN
+      RAISE EXCEPTION 'WRONG_GRANT: request names grant % but not its user and role', NEW.grant_id USING ERRCODE = '23514';
+    END IF;
     RETURN NEW;
+  END IF;
+  -- APPROVED -> APPLIED is made only by the commit check identity.tg_mark_request_applied, after it
+  -- has found the approved change in full: inside a trigger (depth >= 2: the deferred trigger's own
+  -- UPDATE) and for a request this transaction used (identity.request_use).  A plain UPDATE is refused.
+  IF NEW.status = 'APPLIED' AND OLD.status IS DISTINCT FROM 'APPLIED'
+     AND (pg_trigger_depth() < 2
+          OR NOT EXISTS (SELECT 1 FROM identity.request_use u
+                          WHERE u.tenant_id = NEW.tenant_id AND u.request_id = NEW.request_id
+                            AND u.xact_id = pg_current_xact_id())) THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: role grant request % becomes APPLIED only when the database finds the approved change made',
+      OLD.request_id USING ERRCODE = '42501';
   END IF;
   IF (to_jsonb(NEW) - 'status' - 'sod_result' - 'approval_request_id' - 'approved_by' - 'updated_at' - 'row_version')
      IS DISTINCT FROM
@@ -1381,25 +1399,78 @@ CREATE TRIGGER user_role_version_closure_request BEFORE INSERT ON identity.user_
 CREATE TRIGGER scope_attribute_closure_request BEFORE INSERT ON identity.scope_attribute_closure
   FOR EACH ROW EXECUTE FUNCTION identity.tg_grant_closure_request();
 
--- At commit, a request used in this transaction must have been applied in full, and it then moves
--- APPROVED -> APPLIED (single use):
---   GRANT         a grant version naming the request, and every "add" entry as a scope row
---   CHANGE_SCOPE  every "add" entry as a scope row and every "remove" entry as a scope closure row
---   REVOKE        a grant closure row
+-- At commit, every request used in this transaction must have been applied in full, and it then
+-- moves APPROVED -> APPLIED (single use).  "Used" is decided at insert time, not at commit: the
+-- rows that passed the BEFORE request checks above (tg_user_role_no_self_grant,
+-- tg_scope_attribute_request, tg_grant_closure_request; never a continuation, BT-5) record their
+-- request in identity.request_use with this transaction's ID (tg_record_request_use).  One row per request and transaction; its deferred
+-- trigger runs the check once.  The database's own continuation rows, which keep the request_id of
+-- the row they continue, are therefore never taken as a new use of an old request.
+-- What "in full" means:
+--   GRANT         a grant version naming the request, and every "add" entry as a current scope row
+--   CHANGE_SCOPE  every "add" entry as a current scope row, and every "remove" entry as an END row of
+--                 that scope row on the request's date (a RETRACT alone does not remove it)
+--   REVOKE        an END row of the grant on the request's date (RETRACT rows of later versions may
+--                 come in addition, never instead)
+CREATE TABLE identity.request_use (
+  tenant_id   uuid NOT NULL,
+  request_id  uuid NOT NULL,
+  xact_id     xid8 NOT NULL,              -- set by the database: pg_current_xact_id()
+  used_at     timestamptz NOT NULL DEFAULT clock_timestamp(),
+  used_by     uuid,                       -- set by the database: the acting user
+  PRIMARY KEY (tenant_id, request_id, xact_id),
+  FOREIGN KEY (tenant_id, request_id) REFERENCES identity.role_grant_request (tenant_id, request_id)
+);
+-- Written only from inside the request checks (trigger depth >= 2), never typed in; insert-only.
+-- A row the application could add by itself would only add a check, never skip one.
+CREATE OR REPLACE FUNCTION identity.tg_request_use_guard() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF TG_OP <> 'INSERT' OR pg_trigger_depth() < 2 THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: identity.request_use is written only by the request checks' USING ERRCODE = '42501';
+  END IF;
+  NEW.xact_id := pg_current_xact_id();
+  NEW.used_at := clock_timestamp();
+  NEW.used_by := platform.current_user_id();
+  RETURN NEW;
+END $$;
+CREATE TRIGGER request_use_guard BEFORE INSERT OR UPDATE OR DELETE ON identity.request_use
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_request_use_guard();
+
+-- AFTER INSERT (not deferred) on the four tables: a row that names a request and is not a
+-- continuation passed the BEFORE request check above, so its request is recorded as used.  This
+-- runs in the inserting statement, where a continuation is still recognised (trigger depth >= 2 and
+-- the closed row it continues, platform.bt_is_continuation); closure rows are never continuations.
+CREATE OR REPLACE FUNCTION identity.tg_record_request_use() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  IF NEW.request_id IS NULL THEN RETURN NULL; END IF;
+  IF TG_TABLE_NAME IN ('scope_attribute','user_role_version') AND platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN
+    RETURN NULL;                                  -- continuation: keeps the old request_id, not a new use
+  END IF;
+  INSERT INTO identity.request_use (tenant_id, request_id, xact_id)
+  VALUES (NEW.tenant_id, NEW.request_id, pg_current_xact_id())
+  ON CONFLICT (tenant_id, request_id, xact_id) DO NOTHING;
+  RETURN NULL;
+END $$;
+CREATE TRIGGER user_role_version_request_use AFTER INSERT ON identity.user_role_version
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_record_request_use();
+CREATE TRIGGER scope_attribute_request_use AFTER INSERT ON identity.scope_attribute
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_record_request_use();
+CREATE TRIGGER user_role_version_closure_request_use AFTER INSERT ON identity.user_role_version_closure
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_record_request_use();
+CREATE TRIGGER scope_attribute_closure_request_use AFTER INSERT ON identity.scope_attribute_closure
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_record_request_use();
+
 CREATE OR REPLACE FUNCTION identity.tg_mark_request_applied() RETURNS trigger
 LANGUAGE plpgsql AS $$
 DECLARE r identity.role_grant_request; e jsonb; v_missing text;
 BEGIN
-  IF TG_TABLE_NAME IN ('scope_attribute','user_role_version') AND platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN
-    RETURN NULL;
-  END IF;
-  IF NEW.request_id IS NULL THEN RETURN NULL; END IF;
   SELECT * INTO r FROM identity.role_grant_request
    WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id FOR UPDATE;
-  IF r.status <> 'APPROVED' THEN
-    -- Already applied: by this transaction (an earlier row of it) is fine; by another one is not.
-    IF current_setting('identity.applied_' || replace(r.request_id::text, '-', ''), true) = 'yes' THEN RETURN NULL; END IF;
-    RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % was applied by another transaction', r.request_id
+  IF r.status IS DISTINCT FROM 'APPROVED' THEN
+    -- Another transaction used and applied the same request first (one row per transaction here).
+    RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % was applied by another transaction', NEW.request_id
       USING ERRCODE = '40001';
   END IF;
   IF r.request_type = 'GRANT' AND NOT EXISTS (SELECT 1 FROM identity.user_role_version v
@@ -1407,8 +1478,10 @@ BEGIN
     v_missing := 'the grant version';
   END IF;
   IF r.request_type = 'REVOKE' AND NOT EXISTS (SELECT 1 FROM identity.user_role_version_closure c
-                                               WHERE c.tenant_id = r.tenant_id AND c.request_id = r.request_id) THEN
-    v_missing := 'the revocation';
+                                               WHERE c.tenant_id = r.tenant_id AND c.request_id = r.request_id
+                                                 AND c.grant_id = r.grant_id
+                                                 AND c.closure_kind = 'END' AND c.end_date = r.effective_from) THEN
+    v_missing := 'the END of the grant on ' || r.effective_from;
   END IF;
   FOR e IN SELECT * FROM jsonb_array_elements(coalesce(r.requested_scope -> 'add', '[]'::jsonb)) LOOP
     IF NOT EXISTS (SELECT 1 FROM identity.scope_attribute a
@@ -1419,9 +1492,10 @@ BEGIN
   END LOOP;
   FOR e IN SELECT * FROM jsonb_array_elements(coalesce(r.requested_scope -> 'remove', '[]'::jsonb)) LOOP
     IF NOT EXISTS (SELECT 1 FROM identity.scope_attribute_closure c
-                    WHERE c.tenant_id = r.tenant_id AND c.request_id = r.request_id
+                    WHERE c.tenant_id = r.tenant_id AND c.request_id = r.request_id AND c.grant_id = r.grant_id
+                      AND c.closure_kind = 'END' AND c.end_date = r.effective_from
                       AND c.attribute = e ->> 'attribute' AND c.value = e ->> 'value') THEN
-      v_missing := coalesce(v_missing || ', ', '') || 'remove ' || (e ->> 'attribute') || '=' || (e ->> 'value');
+      v_missing := coalesce(v_missing || ', ', '') || 'remove (END) ' || (e ->> 'attribute') || '=' || (e ->> 'value');
     END IF;
   END LOOP;
   IF v_missing IS NOT NULL THEN
@@ -1431,16 +1505,9 @@ BEGIN
   PERFORM set_config('app.transition_cause', 'STATE_CHANGE', true);
   UPDATE identity.role_grant_request SET status = 'APPLIED'
    WHERE tenant_id = r.tenant_id AND request_id = r.request_id;
-  PERFORM set_config('identity.applied_' || replace(r.request_id::text, '-', ''), 'yes', true);
   RETURN NULL;
 END $$;
-CREATE CONSTRAINT TRIGGER user_role_version_request_applied AFTER INSERT ON identity.user_role_version
-  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION identity.tg_mark_request_applied();
-CREATE CONSTRAINT TRIGGER scope_attribute_request_applied AFTER INSERT ON identity.scope_attribute
-  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION identity.tg_mark_request_applied();
-CREATE CONSTRAINT TRIGGER user_role_version_closure_request_applied AFTER INSERT ON identity.user_role_version_closure
-  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION identity.tg_mark_request_applied();
-CREATE CONSTRAINT TRIGGER scope_attribute_closure_request_applied AFTER INSERT ON identity.scope_attribute_closure
+CREATE CONSTRAINT TRIGGER request_use_applied AFTER INSERT ON identity.request_use
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION identity.tg_mark_request_applied();
 CREATE TRIGGER role_grant_request_version BEFORE UPDATE ON identity.role_grant_request
   FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
@@ -2167,7 +2234,8 @@ REVOKE UPDATE ON platform.tenant_status_history, platform.usage_meter, platform.
                  master.benchmark_level, master.benchmark_constituent,
                  master.steward_request_history, master.match_candidate_history,
                  master.source_precedence_rule_history,
-                 audit.access_log_2026_11, audit.access_log_2026_12, audit.access_log_default
+                 audit.access_log_2026_11, audit.access_log_2026_12, audit.access_log_default,
+                 identity.request_use
   FROM amc_app;
 -- The tenant status history is written by the trigger on platform.tenant, never by the app.
 REVOKE INSERT ON platform.tenant_status_history FROM amc_app;
