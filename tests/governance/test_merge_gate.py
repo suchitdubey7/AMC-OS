@@ -154,6 +154,38 @@ def test_latest_round_is_used(repo: Path) -> None:
     assert gate(repo).returncode == 0
 
 
+STATUS_TABLE = """### Round 1 findings: status
+| R1 # | Severity | Status |
+| --- | --- | --- |
+| 1 | Major | Fixed. |
+
+"""
+
+
+def test_fixed_major_in_status_table_passes(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW.replace("### Findings", STATUS_TABLE + "### Findings"))
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 0, r.stdout
+
+
+def test_new_major_after_status_table_fails(repo: Path) -> None:
+    add_doc(repo)
+    text = GOOD_REVIEW.replace("### Findings", STATUS_TABLE + "### Findings")
+    add_review(repo, text.replace("| 1 | Minor |", "| 1 | Major |"))
+    commit(repo)
+    r = gate(repo)
+    assert r.returncode == 1 and "1 Blocker/Major" in r.stdout
+
+
+def test_no_findings_heading_scans_whole_file(repo: Path) -> None:
+    add_doc(repo)
+    add_review(repo, GOOD_REVIEW.replace("### Findings\n", "").replace("| 1 | Minor |", "| 1 | Blocker |"))
+    commit(repo)
+    assert gate(repo).returncode == 1
+
+
 def test_missing_review_fails(repo: Path) -> None:
     add_doc(repo); commit(repo)
     r = gate(repo)
