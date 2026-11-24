@@ -17,7 +17,7 @@ Rules:
   G4  the branch adds or changes a review file reviews/STEP-*_round*.md; the highest round
       has verdict RECOMMEND MERGE or RECOMMEND MERGE AFTER FIXES and no Blocker/Major rows
       from its first "### Findings" heading to the end of the file (the whole file
-      if that heading is missing)
+      if that heading is missing); before that heading only rows marked "Fixed" are ignored
   G5  scripts/check_docs.py passes on the head
   G6  GitHub CI for the head is not failed or pending (unknown is allowed only because
       G5 re-runs the same documentation checks locally; database/ is protected by G2)
@@ -104,9 +104,17 @@ def check_review(head: str, changed: list[str]) -> tuple[bool, str]:
     # heading to the end of the file is scanned, so a second Findings section, a
     # sub-heading or a fenced template cannot hide a row.
     # Fail closed: without a Findings heading, scan the whole file.
+    # Before that heading, a Blocker/Major row still counts unless its last cell starts
+    # with "Fixed" (an open item in a status table must not slip through).
+    row = re.compile(r"^\s*\|\s*\d+\s*\|\s*[*_]*\s*(Blocker|Major)\b.*$", re.M | re.I)
     start = re.search(r"^### Findings", text, re.M)
     scope = text[start.start():] if start else text
-    serious = re.findall(r"^\s*\|\s*\d+\s*\|\s*[*_]*\s*(Blocker|Major)\b", scope, re.M | re.I)
+    serious = [m.group(1) for m in row.finditer(scope)]
+    if start:
+        for m in row.finditer(text[:start.start()]):
+            cells = [c.strip() for c in m.group(0).strip().strip("|").split("|")]
+            if not re.match(r"[*_\s]*Fixed\b", cells[-1], re.I):
+                serious.append(m.group(1))
     if serious:
         return False, f"{latest}: {len(serious)} Blocker/Major finding(s) listed"
     return True, f"{latest}: {verdict}, no Blocker/Major"
