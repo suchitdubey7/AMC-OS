@@ -58,7 +58,8 @@ BEGIN
      AND NOT EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid = k.oid AND a.attname = 'tenant_id' AND NOT a.attisdropped)
      AND NOT (s.nspname || '.' || k.relname IN ('platform.tenant','platform.cell','platform.config_item',
                  'platform.code_list','platform.code_value','platform.environment_release',
-                 'master.currency','identity.permission','trading.order_state_transition')
+                 'master.currency','identity.permission','trading.order_state_transition',
+                 'settlement.instruction_effect')                       -- DM-10 map, added by DDL-002
               OR k.relname LIKE '%\_transition');
   IF n <> 0 THEN RAISE EXCEPTION 'C2 FAIL: tables without tenant_id outside the M3 list: %', v; END IF;
   -- M3: product-level lists are read-only for the application role.

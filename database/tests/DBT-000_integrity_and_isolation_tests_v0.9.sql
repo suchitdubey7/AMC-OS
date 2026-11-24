@@ -35,8 +35,9 @@ INSERT INTO master.benchmark (tenant_id, benchmark_id, variant)
 INSERT INTO master.benchmark_version (tenant_id, benchmark_id, valid_period, name, provider, approval_request_id)
  VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','[2026-01-01,)','Nifty 100','NSE Indices',
          'f0000000-0000-0000-0000-000000000001');
-INSERT INTO product.scheme (tenant_id, scheme_id, scheme_code, legal_name, structure, lifecycle_state)
- VALUES ('00000000-0000-0000-0000-00000000000a','30000000-0000-0000-0000-000000000001','ALPHA_LC','Alpha Large Cap Fund','OPEN_ENDED','ACTIVE');
+-- DDL-002 (Step 16b, M14): a scheme is born in DRAFT, its first lifecycle state.
+INSERT INTO product.scheme (tenant_id, scheme_id, scheme_code, legal_name, structure)
+ VALUES ('00000000-0000-0000-0000-00000000000a','30000000-0000-0000-0000-000000000001','ALPHA_LC','Alpha Large Cap Fund','OPEN_ENDED');
 INSERT INTO product.plan (tenant_id, plan_id, scheme_id, plan_type, option_type, isin)
  VALUES ('00000000-0000-0000-0000-00000000000a','31000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','DIRECT','GROWTH','INF000A01011');
 INSERT INTO master.security (tenant_id, security_id, isin, instrument_type)
