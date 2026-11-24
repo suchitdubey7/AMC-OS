@@ -84,7 +84,11 @@ $$;
 --         part before end_date as a continuation.
 --         A new version and an END / RETRACT of the same key never interleave (platform.bt_lock_key:
 --         a busy key is refused with 40001, retry), and a version is refused if another
---         transaction ended or retracted the key after this transaction began.  closed_by must be an
+--         transaction ended or retracted the key after this transaction began.  Both rules need
+--         READ COMMITTED: versions and closure rows are refused under other isolation levels.  Not
+--         caught: an END inserted before the writing transaction began that commits after it began
+--         and before its write (no lock contention then); modules keep END transactions short.
+--         closed_by must be an
 --         active user of the tenant; request_id is checked on the identity grant closure tables and
 --         is an ID reference (M4) elsewhere.
 --   BT-4  Retracting one current version (no version at all for its period) is a RETRACT row in
@@ -153,6 +157,12 @@ DECLARE
   v_part daterange;
   v_stale boolean;
 BEGIN
+  -- BT-3 concurrency rules rely on READ COMMITTED (each statement sees what committed before it);
+  -- under REPEATABLE READ or SERIALIZABLE a closure committed meanwhile would stay invisible.
+  IF current_setting('transaction_isolation') <> 'read committed' THEN
+    RAISE EXCEPTION 'ISOLATION_NOT_SUPPORTED: versions of %.% are written only under READ COMMITTED', TG_TABLE_SCHEMA, TG_TABLE_NAME
+      USING ERRCODE = '0A000';
+  END IF;
   -- One writer per key at a time (with tg_bt_close): an END and a new version of the same key
   -- never interleave (BT-3).
   PERFORM platform.bt_lock_key(format('%I.%I', TG_TABLE_SCHEMA, TG_TABLE_NAME), TG_ARGV, to_jsonb(NEW));
@@ -237,6 +247,12 @@ DECLARE
   v_left  daterange;
   n       int := 0;
 BEGIN
+  -- BT-3 concurrency rules rely on READ COMMITTED (each statement sees what committed before it);
+  -- under REPEATABLE READ or SERIALIZABLE a closure committed meanwhile would stay invisible.
+  IF current_setting('transaction_isolation') <> 'read committed' THEN
+    RAISE EXCEPTION 'ISOLATION_NOT_SUPPORTED: versions of %.% are written only under READ COMMITTED', TG_TABLE_SCHEMA, TG_TABLE_NAME
+      USING ERRCODE = '0A000';
+  END IF;
   PERFORM platform.bt_lock_key(v_table, v_keys, to_jsonb(NEW));
   IF NEW.closure_kind = 'RETRACT' THEN
     EXECUTE format('UPDATE %s t SET superseded_at = ($1).recorded_at WHERE %s AND t.superseded_at IS NULL
@@ -461,6 +477,8 @@ BEGIN
     CASE WHEN v_period
          THEN '(closure_kind = ''RETRACT'') = (target_valid_period IS NOT NULL)'
          ELSE 'closure_kind = ''RETRACT'' AND target_valid_period IS NULL' END);
+  EXECUTE format('CREATE INDEX ON %I.%I (%s, recorded_at)', v_schema, v_name || '_closure',
+                 (SELECT string_agg(format('%I', k), ', ') FROM unnest(p_keys) AS k));
   EXECUTE format('COMMENT ON TABLE %I.%I IS %L', v_schema, v_name || '_closure',
     format('Ends (END) or retracts (RETRACT) versions of %s.%s, with who, when, why and under which request (DA-001 §11, BT-3, BT-4, D-76). Insert-only.', v_schema, v_name));
   EXECUTE format('CREATE TRIGGER bt_closure_stamp BEFORE INSERT ON %I.%I FOR EACH ROW EXECUTE FUNCTION platform.tg_bt_closure_stamp()',
@@ -1158,11 +1176,14 @@ BEGIN
   IF NOT v_ok THEN
     RAISE EXCEPTION 'SOD_VIOLATION: granter and approver must be two active human users' USING ERRCODE = '42501';
   END IF;
+  -- A version that names a request follows an APPROVED GRANT request for this grant (or this user
+  -- and role), starting on the request's date (identity.check_grant_request, defined below).
   IF NEW.request_id IS NOT NULL THEN
-    SELECT status INTO v_req FROM identity.role_grant_request WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id;
-    IF v_req IS DISTINCT FROM 'APPROVED' AND v_req IS DISTINCT FROM 'APPLIED' THEN
-      RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % is %', NEW.request_id, coalesce(v_req, 'unknown')
-        USING ERRCODE = '23514';
+    PERFORM identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['GRANT']);
+    IF lower(NEW.valid_period) IS DISTINCT FROM (SELECT effective_from FROM identity.role_grant_request
+                                                  WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id)
+       OR NOT upper_inf(NEW.valid_period) THEN
+      RAISE EXCEPTION 'NOT_REQUESTED: the grant version must start on the request''s date and be open-ended' USING ERRCODE = '23514';
     END IF;
   END IF;
   RETURN NEW;
@@ -1200,8 +1221,11 @@ CREATE TABLE identity.role_grant_request (
   user_id       uuid NOT NULL,
   role_code     text NOT NULL,
   grant_id      uuid,                       -- the grant changed or revoked
-  requested_by  uuid NOT NULL,
+  requested_by  uuid NOT NULL,              -- set by the database: the acting user (app.user_id)
   reason        text NOT NULL,
+  -- The date the approved change takes effect [DES]: start of the grant version and of every added
+  -- scope row (open-ended); end date of every removed scope row and of a revoked grant.
+  effective_from date NOT NULL,
   -- Scope change asked for (M20) [DES]: {"add":[{"attribute":"SCHEME","value":"..."}],
   -- "remove":[{"attribute":...,"value":...}]}.  Scope rows are added / ended only as listed here.
   requested_scope jsonb CHECK (requested_scope IS NULL OR (jsonb_typeof(requested_scope) = 'object'
@@ -1209,7 +1233,7 @@ CREATE TABLE identity.role_grant_request (
   sod_result    text CHECK (sod_result IN ('PASS','CONFLICT')),
   status        text NOT NULL DEFAULT 'SUBMITTED',
   approval_request_id uuid,
-  approved_by   uuid,                       -- the checker: an active human, not the requester or the user
+  approved_by   uuid,                       -- set by the database at APPROVED: the acting user, an active human
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
   row_version   integer NOT NULL DEFAULT 1,
@@ -1225,28 +1249,50 @@ CREATE TABLE identity.role_grant_request (
   CHECK (approved_by <> requested_by AND approved_by <> user_id),         -- maker <> checker; no self-approval
   FOREIGN KEY (tenant_id, approved_by) REFERENCES identity.app_user (tenant_id, user_id)
 );
--- The checker is recorded with the move to APPROVED and is an active human user (AI never
--- approves); after that it never changes.
-CREATE OR REPLACE FUNCTION identity.tg_role_grant_request_checker() RETURNS trigger
+-- Maker and checker come from the identity context, never from typed-in values: requested_by is
+-- the acting user at insert; approved_by is the acting user at the move to APPROVED, who must be an
+-- active human other than the requester and the user (AI never approves).  From creation on, the
+-- content of a request is frozen: only status, sod_result (while SUBMITTED), approval_request_id
+-- and approved_by (with the move to APPROVED) change.  A changed request is a new request.
+CREATE OR REPLACE FUNCTION identity.tg_role_grant_request_guard() RETURNS trigger
 LANGUAGE plpgsql AS $$
+DECLARE v_me uuid := platform.current_user_id();
 BEGIN
-  IF NEW.approved_by IS DISTINCT FROM OLD.approved_by THEN
-    IF NOT (OLD.status = 'SUBMITTED' AND NEW.status = 'APPROVED') THEN
-      RAISE EXCEPTION 'IMMUTABLE_RECORD: the checker of role grant request % is recorded only when it is approved',
-        OLD.request_id USING ERRCODE = '42501';
+  IF TG_OP = 'INSERT' THEN
+    IF v_me IS NULL THEN
+      RAISE EXCEPTION 'NO_ACTOR: a role grant request needs the acting user (app.user_id)' USING ERRCODE = '42501';
     END IF;
-    IF NOT EXISTS (SELECT 1 FROM identity.app_user WHERE tenant_id = NEW.tenant_id AND user_id = NEW.approved_by
-                      AND status = 'ACTIVE' AND NOT is_service_identity) THEN
+    NEW.requested_by := v_me;
+    IF NEW.approved_by IS NOT NULL OR NEW.approval_request_id IS NOT NULL THEN
+      RAISE EXCEPTION 'IMMUTABLE_RECORD: a role grant request is born unapproved' USING ERRCODE = '42501';
+    END IF;
+    RETURN NEW;
+  END IF;
+  IF (to_jsonb(NEW) - 'status' - 'sod_result' - 'approval_request_id' - 'approved_by' - 'updated_at' - 'row_version')
+     IS DISTINCT FROM
+     (to_jsonb(OLD) - 'status' - 'sod_result' - 'approval_request_id' - 'approved_by' - 'updated_at' - 'row_version') THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: role grant request % cannot be edited; raise a new request', OLD.request_id
+      USING ERRCODE = '42501';
+  END IF;
+  IF NEW.sod_result IS DISTINCT FROM OLD.sod_result AND OLD.status <> 'SUBMITTED' THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: the SoD result of role grant request % is fixed once it is decided', OLD.request_id
+      USING ERRCODE = '42501';
+  END IF;
+  IF OLD.status = 'SUBMITTED' AND NEW.status = 'APPROVED' THEN
+    NEW.approved_by := v_me;
+    IF v_me IS NULL OR NOT EXISTS (SELECT 1 FROM identity.app_user WHERE tenant_id = NEW.tenant_id AND user_id = v_me
+                                      AND status = 'ACTIVE' AND NOT is_service_identity) THEN
       RAISE EXCEPTION 'SOD_VIOLATION: role grant request % must be approved by an active human user', NEW.request_id
         USING ERRCODE = '42501';
     END IF;
+  ELSIF NEW.approved_by IS DISTINCT FROM OLD.approved_by OR NEW.approval_request_id IS DISTINCT FROM OLD.approval_request_id THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: the approval of role grant request % is recorded only when it is approved',
+      OLD.request_id USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
 END $$;
-CREATE TRIGGER role_grant_request_checker BEFORE UPDATE ON identity.role_grant_request
-  FOR EACH ROW EXECUTE FUNCTION identity.tg_role_grant_request_checker();
-CREATE TRIGGER role_grant_request_born_unchecked BEFORE INSERT ON identity.role_grant_request
-  FOR EACH ROW WHEN (NEW.approved_by IS NOT NULL) EXECUTE FUNCTION platform.tg_immutable();
+CREATE TRIGGER role_grant_request_guard BEFORE INSERT OR UPDATE ON identity.role_grant_request
+  FOR EACH ROW EXECUTE FUNCTION identity.tg_role_grant_request_guard();
 ALTER TABLE identity.user_role_version
   ADD FOREIGN KEY (tenant_id, request_id) REFERENCES identity.role_grant_request (tenant_id, request_id);
 ALTER TABLE identity.scope_attribute
@@ -1269,7 +1315,7 @@ ALTER TABLE identity.scope_attribute_closure
 CREATE OR REPLACE FUNCTION identity.check_grant_request(p_tenant uuid, p_grant uuid, p_request uuid, p_types text[],
                                                         p_scope_op text DEFAULT NULL, p_attribute text DEFAULT NULL,
                                                         p_value text DEFAULT NULL)
-RETURNS void LANGUAGE plpgsql STABLE AS $$
+RETURNS date LANGUAGE plpgsql STABLE AS $$
 DECLARE r identity.role_grant_request; g identity.user_role;
 BEGIN
   SELECT * INTO r FROM identity.role_grant_request WHERE tenant_id = p_tenant AND request_id = p_request;
@@ -1291,27 +1337,42 @@ BEGIN
     RAISE EXCEPTION 'NOT_REQUESTED: request % does not ask to % scope % = %', p_request, p_scope_op, p_attribute, p_value
       USING ERRCODE = '23514';
   END IF;
+  RETURN r.effective_from;
 END $$;
 
+-- An added scope row starts on the request's date and is open-ended.
 CREATE OR REPLACE FUNCTION identity.tg_scope_attribute_request() RETURNS trigger
 LANGUAGE plpgsql AS $$
+DECLARE v_from date;
 BEGIN
   IF platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NEW; END IF;  -- already checked (BT-5)
-  PERFORM identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['GRANT','CHANGE_SCOPE'],
-                                       'add', NEW.attribute, NEW.value);
+  v_from := identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['GRANT','CHANGE_SCOPE'],
+                                         'add', NEW.attribute, NEW.value);
+  IF lower(NEW.valid_period) <> v_from OR NOT upper_inf(NEW.valid_period) THEN
+    RAISE EXCEPTION 'NOT_REQUESTED: scope row % = % must run from the request''s date % with no end', NEW.attribute, NEW.value, v_from
+      USING ERRCODE = '23514';
+  END IF;
   RETURN NEW;
 END $$;
 CREATE TRIGGER scope_attribute_request BEFORE INSERT ON identity.scope_attribute
   FOR EACH ROW EXECUTE FUNCTION identity.tg_scope_attribute_request();
 
+-- An END uses the request's date as its end date; a RETRACT may remove only a version that starts on
+-- or after the request's date (one that never applied before the approved change).
 CREATE OR REPLACE FUNCTION identity.tg_grant_closure_request() RETURNS trigger
 LANGUAGE plpgsql AS $$
+DECLARE v_from date;
 BEGIN
   IF TG_TABLE_NAME = 'scope_attribute_closure' THEN
-    PERFORM identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['CHANGE_SCOPE'],
-                                         'remove', to_jsonb(NEW) ->> 'attribute', to_jsonb(NEW) ->> 'value');
+    v_from := identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['CHANGE_SCOPE'],
+                                           'remove', to_jsonb(NEW) ->> 'attribute', to_jsonb(NEW) ->> 'value');
   ELSE
-    PERFORM identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['REVOKE']);
+    v_from := identity.check_grant_request(NEW.tenant_id, NEW.grant_id, NEW.request_id, ARRAY['REVOKE']);
+  END IF;
+  IF (NEW.closure_kind = 'END' AND NEW.end_date <> v_from)
+     OR (NEW.closure_kind = 'RETRACT' AND lower(NEW.target_valid_period) < v_from) THEN
+    RAISE EXCEPTION 'NOT_REQUESTED: % on %.% does not match the request''s date %', NEW.closure_kind, TG_TABLE_SCHEMA, TG_TABLE_NAME, v_from
+      USING ERRCODE = '23514';
   END IF;
   RETURN NEW;
 END $$;
@@ -1320,16 +1381,61 @@ CREATE TRIGGER user_role_version_closure_request BEFORE INSERT ON identity.user_
 CREATE TRIGGER scope_attribute_closure_request BEFORE INSERT ON identity.scope_attribute_closure
   FOR EACH ROW EXECUTE FUNCTION identity.tg_grant_closure_request();
 
--- At commit, a request used by a scope row or a closure row moves APPROVED -> APPLIED (single use).
+-- At commit, a request used in this transaction must have been applied in full, and it then moves
+-- APPROVED -> APPLIED (single use):
+--   GRANT         a grant version naming the request, and every "add" entry as a scope row
+--   CHANGE_SCOPE  every "add" entry as a scope row and every "remove" entry as a scope closure row
+--   REVOKE        a grant closure row
 CREATE OR REPLACE FUNCTION identity.tg_mark_request_applied() RETURNS trigger
 LANGUAGE plpgsql AS $$
+DECLARE r identity.role_grant_request; e jsonb; v_missing text;
 BEGIN
-  IF TG_TABLE_NAME = 'scope_attribute' AND platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NULL; END IF;
+  IF TG_TABLE_NAME IN ('scope_attribute','user_role_version') AND platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN
+    RETURN NULL;
+  END IF;
+  IF NEW.request_id IS NULL THEN RETURN NULL; END IF;
+  SELECT * INTO r FROM identity.role_grant_request
+   WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id FOR UPDATE;
+  IF r.status <> 'APPROVED' THEN
+    -- Already applied: by this transaction (an earlier row of it) is fine; by another one is not.
+    IF current_setting('identity.applied_' || replace(r.request_id::text, '-', ''), true) = 'yes' THEN RETURN NULL; END IF;
+    RAISE EXCEPTION 'REQUEST_NOT_APPROVED: role grant request % was applied by another transaction', r.request_id
+      USING ERRCODE = '40001';
+  END IF;
+  IF r.request_type = 'GRANT' AND NOT EXISTS (SELECT 1 FROM identity.user_role_version v
+                                              WHERE v.tenant_id = r.tenant_id AND v.request_id = r.request_id) THEN
+    v_missing := 'the grant version';
+  END IF;
+  IF r.request_type = 'REVOKE' AND NOT EXISTS (SELECT 1 FROM identity.user_role_version_closure c
+                                               WHERE c.tenant_id = r.tenant_id AND c.request_id = r.request_id) THEN
+    v_missing := 'the revocation';
+  END IF;
+  FOR e IN SELECT * FROM jsonb_array_elements(coalesce(r.requested_scope -> 'add', '[]'::jsonb)) LOOP
+    IF NOT EXISTS (SELECT 1 FROM identity.scope_attribute a
+                    WHERE a.tenant_id = r.tenant_id AND a.request_id = r.request_id AND a.superseded_at IS NULL
+                      AND a.attribute = e ->> 'attribute' AND a.value = e ->> 'value') THEN
+      v_missing := coalesce(v_missing || ', ', '') || 'add ' || (e ->> 'attribute') || '=' || (e ->> 'value');
+    END IF;
+  END LOOP;
+  FOR e IN SELECT * FROM jsonb_array_elements(coalesce(r.requested_scope -> 'remove', '[]'::jsonb)) LOOP
+    IF NOT EXISTS (SELECT 1 FROM identity.scope_attribute_closure c
+                    WHERE c.tenant_id = r.tenant_id AND c.request_id = r.request_id
+                      AND c.attribute = e ->> 'attribute' AND c.value = e ->> 'value') THEN
+      v_missing := coalesce(v_missing || ', ', '') || 'remove ' || (e ->> 'attribute') || '=' || (e ->> 'value');
+    END IF;
+  END LOOP;
+  IF v_missing IS NOT NULL THEN
+    RAISE EXCEPTION 'REQUEST_PARTLY_APPLIED: role grant request % was not applied in full (missing: %)', r.request_id, v_missing
+      USING ERRCODE = '23514';
+  END IF;
   PERFORM set_config('app.transition_cause', 'STATE_CHANGE', true);
   UPDATE identity.role_grant_request SET status = 'APPLIED'
-   WHERE tenant_id = NEW.tenant_id AND request_id = NEW.request_id AND status = 'APPROVED';
+   WHERE tenant_id = r.tenant_id AND request_id = r.request_id;
+  PERFORM set_config('identity.applied_' || replace(r.request_id::text, '-', ''), 'yes', true);
   RETURN NULL;
 END $$;
+CREATE CONSTRAINT TRIGGER user_role_version_request_applied AFTER INSERT ON identity.user_role_version
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION identity.tg_mark_request_applied();
 CREATE CONSTRAINT TRIGGER scope_attribute_request_applied AFTER INSERT ON identity.scope_attribute
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION identity.tg_mark_request_applied();
 CREATE CONSTRAINT TRIGGER user_role_version_closure_request_applied AFTER INSERT ON identity.user_role_version_closure

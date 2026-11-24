@@ -330,10 +330,11 @@ BEGIN
   PERFORM pg_temp.ok('T8e2 a version with an end date changes only its own period; earlier and later content stays current');
 END $$;
 
--- BT-3 (D-76): ending a grant is a separate END row that follows an approved request.  It closes
--- every current version from its date on, including a version that starts later, and keeps the
--- signed content before that date unchanged.  BT-4: a retraction is a RETRACT row; the
--- application can never set superseded_at itself.
+-- BT-3 (D-76): ending a grant is a separate END row that follows an approved REVOKE request, on the
+-- request's date.  It closes every current version from that date on, including a version that
+-- starts later, and keeps the signed content before that date unchanged.  The application can
+-- never set superseded_at itself.  Requests: maker and checker come from the identity context; the
+-- content of a request never changes after it is raised.
 DO $$
 DECLARE n int; e text; v_close timestamptz; v_by uuid; v_appr uuid;
 BEGIN
@@ -349,41 +350,63 @@ BEGIN
   INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by) VALUES
    ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','[2027-01-01,)',
     '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000003');
-  -- Requests for this grant: a REVOKE and a CHANGE_SCOPE (approved), a GRANT (approved), a REVOKE (only submitted).
-  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason) VALUES
+  -- Requests for this grant, raised by ...02 (requested_by is set by the database from app.user_id).
+  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason, effective_from, requested_scope) VALUES
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a1','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
-    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','leaver'),
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000004','leaver','2026-12-01',NULL),
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a5','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
-    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','second revoke, kept unused for T8h');
-  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason, requested_scope) VALUES
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','second revoke, kept unused for T8h','2026-12-01',NULL),
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a2','CHANGE_SCOPE','10000000-0000-0000-0000-000000000001','DEALER',
-    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','desk move',
-    '{"add":[{"attribute":"DESK","value":"EQ"}],"remove":[{"attribute":"DESK","value":"EQ"}]}');
-  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason) VALUES
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','desk EQ','2026-11-01',
+    '{"add":[{"attribute":"DESK","value":"EQ"}]}'),
+   ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a6','CHANGE_SCOPE','10000000-0000-0000-0000-000000000001','DEALER',
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','desk EQ typed in error','2026-11-01',
+    '{"remove":[{"attribute":"DESK","value":"EQ"}]}'),
+   ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a7','CHANGE_SCOPE','10000000-0000-0000-0000-000000000001','DEALER',
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','desks FX and MM','2026-11-01',
+    '{"add":[{"attribute":"DESK","value":"FX"},{"attribute":"DESK","value":"MM"}]}'),
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a3','GRANT','10000000-0000-0000-0000-000000000001','DEALER',
-    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','joiner'),
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','joiner','2026-11-01',NULL),
    ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000a4','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
-    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','not yet approved');
-  -- The checker is an active human other than the requester and the user.
+    'c2000000-0000-0000-0000-0000000000a1','10000000-0000-0000-0000-000000000002','not yet approved','2026-12-01',NULL);
+  SELECT count(*) INTO n FROM identity.role_grant_request
+   WHERE request_id::text LIKE 'c1000000-0000-0000-0000-0000000000a%' AND requested_by = '10000000-0000-0000-0000-000000000002';
+  IF n <> 7 THEN RAISE EXCEPTION 'T8g FAIL: requested_by not taken from the acting user (% of 7)', n; END IF;
+  -- The checker is the acting user at approval: the requester cannot approve, nor a service identity.
   BEGIN
     UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018',
-           approved_by = '10000000-0000-0000-0000-000000000002'
+           approved_by = '10000000-0000-0000-0000-000000000004'
      WHERE request_id = 'c1000000-0000-0000-0000-0000000000a1';
-    RAISE EXCEPTION 'T8g FAIL: the requester approved their own request';
+    RAISE EXCEPTION 'T8g FAIL: the requester approved their own request (typing another approver)';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000009', true);
   BEGIN
-    UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018',
-           approved_by = '10000000-0000-0000-0000-000000000009'
+    UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018'
      WHERE request_id = 'c1000000-0000-0000-0000-0000000000a1';
     RAISE EXCEPTION 'T8g FAIL: a service identity approved a request';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018',
-         approved_by = '10000000-0000-0000-0000-000000000004'
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000004', true);
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000018'
    WHERE request_id IN ('c1000000-0000-0000-0000-0000000000a1','c1000000-0000-0000-0000-0000000000a2','c1000000-0000-0000-0000-0000000000a3',
-                        'c1000000-0000-0000-0000-0000000000a5');
-  -- Refused: an END under a request that is not approved, or of the wrong type, or with no reason.
+                        'c1000000-0000-0000-0000-0000000000a5','c1000000-0000-0000-0000-0000000000a6','c1000000-0000-0000-0000-0000000000a7');
+  SELECT count(*) INTO n FROM identity.role_grant_request
+   WHERE status = 'APPROVED' AND approved_by = '10000000-0000-0000-0000-000000000004' AND request_id::text LIKE 'c1000000-0000-0000-0000-0000000000a%';
+  IF n <> 6 THEN RAISE EXCEPTION 'T8g FAIL: approved_by not taken from the acting user (% of 6)', n; END IF;
+  -- An approved request cannot be rewritten (round-2 Major 1).
+  BEGIN
+    UPDATE identity.role_grant_request SET requested_scope = '{"remove":[{"attribute":"DESK","value":"EQ"}]}'
+     WHERE request_id = 'c1000000-0000-0000-0000-0000000000a2';
+    RAISE EXCEPTION 'T8g FAIL: an approved request was edited';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  BEGIN
+    UPDATE identity.role_grant_request SET request_type = 'REVOKE' WHERE request_id = 'c1000000-0000-0000-0000-0000000000a2';
+    RAISE EXCEPTION 'T8g FAIL: an approved request changed type';
+  EXCEPTION WHEN insufficient_privilege THEN NULL;
+  END;
+  -- Refused: an END under a request that is not approved, of the wrong type, on another date, with no reason.
   BEGIN
     INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
     VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','END','2026-12-01','c1000000-0000-0000-0000-0000000000a4','leaver');
@@ -393,10 +416,17 @@ BEGIN
   END;
   BEGIN
     INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
-    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','END','2026-12-01','c1000000-0000-0000-0000-0000000000a3','leaver');
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','END','2026-11-01','c1000000-0000-0000-0000-0000000000a3','leaver');
     RAISE EXCEPTION 'T8g FAIL: grant ended under a GRANT request';
   EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
     IF e NOT LIKE 'WRONG_REQUEST_TYPE%' THEN RAISE EXCEPTION 'T8g FAIL: wrong refusal: %', e; END IF;
+  END;
+  BEGIN
+    INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','END','2020-01-01','c1000000-0000-0000-0000-0000000000a1','leaver');
+    RAISE EXCEPTION 'T8g FAIL: grant ended on a date the request does not give';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'NOT_REQUESTED%' THEN RAISE EXCEPTION 'T8g FAIL: wrong refusal: %', e; END IF;
   END;
   BEGIN
     INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
@@ -411,8 +441,8 @@ BEGIN
     RAISE EXCEPTION 'T8g FAIL: the application set superseded_at directly';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  -- Revoke from 1 Dec 2026 under the approved REVOKE request (acting user ...04 is not a signer).
-  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000004', true);
+  -- Revoke from 1 Dec 2026 under the approved REVOKE request; the acting user ...04 is recorded,
+  -- whatever closed_by the application sends.
   INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason, closed_by)
   VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','END','2026-12-01',
           'c1000000-0000-0000-0000-0000000000a1','leaver','10000000-0000-0000-0000-000000000009');
@@ -437,12 +467,13 @@ BEGIN
     RAISE EXCEPTION 'T8g FAIL: closure row edited';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T8g an END row (approved REVOKE request, acting user recorded) revokes a grant from its date, also a forward-dated version; earlier content keeps its original signers');
+  PERFORM pg_temp.ok('T8g an END row (approved REVOKE request, its date, acting user recorded) revokes a grant, also a forward-dated version; requests are frozen and their maker / checker come from the identity context');
 END $$;
 
--- Scope rows follow an approved request; a retraction is a RETRACT row with who, why and request.
+-- Scope rows follow an approved request that lists them and run from its date; a REVOKE request
+-- cannot touch scope; no active acting user, no closure.
 DO $$
-DECLARE n int; e text; v_rec timestamptz; v_by uuid;
+DECLARE n int; e text;
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
   PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
@@ -469,6 +500,14 @@ BEGIN
   END;
   BEGIN
     INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','[2026-11-01,2026-11-02)',
+            'c1000000-0000-0000-0000-0000000000a2');
+    RAISE EXCEPTION 'T8h FAIL: scope row shorter than requested';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'NOT_REQUESTED%' THEN RAISE EXCEPTION 'T8h FAIL: wrong refusal: %', e; END IF;
+  END;
+  BEGIN
+    INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
     VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','SCHEME','any-scheme','[2026-11-01,)',
             'c1000000-0000-0000-0000-0000000000a5');
     RAISE EXCEPTION 'T8h FAIL: scope row added under a REVOKE request';
@@ -478,46 +517,13 @@ BEGIN
   INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
   VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','[2026-11-01,)',
           'c1000000-0000-0000-0000-0000000000a2');
-  SELECT recorded_at INTO v_rec FROM identity.scope_attribute
-   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
   BEGIN
     UPDATE identity.scope_attribute SET superseded_at = now()
      WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
     RAISE EXCEPTION 'T8h FAIL: scope row retracted without a closure row';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  BEGIN
-    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
-    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','RETRACT','[2026-11-01,)', v_rec,
-            'c1000000-0000-0000-0000-0000000000a3','typed in error');
-    RAISE EXCEPTION 'T8h FAIL: scope row retracted under a GRANT request';
-  EXCEPTION WHEN check_violation THEN NULL;
-  END;
-  INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
-  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','RETRACT','[2026-11-01,)', v_rec,
-          'c1000000-0000-0000-0000-0000000000a2','typed in error');
-  SELECT count(*) INTO n FROM identity.scope_attribute
-   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
-  SELECT closed_by INTO v_by FROM identity.scope_attribute_closure WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1';
-  IF n <> 0 OR v_by <> '10000000-0000-0000-0000-000000000002' THEN RAISE EXCEPTION 'T8h FAIL: retraction (% current, by %)', n, v_by; END IF;
-  -- A REVOKE request cannot end a scope row (that would widen the grant, Q87).
-  BEGIN
-    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, end_date, request_id, reason)
-    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','END','2026-11-25',
-            'c1000000-0000-0000-0000-0000000000a5','x');
-    RAISE EXCEPTION 'T8h FAIL: a REVOKE request ended a scope row';
-  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
-    IF e NOT LIKE 'WRONG_REQUEST_TYPE%' THEN RAISE EXCEPTION 'T8h FAIL: wrong refusal: %', e; END IF;
-  END;
-  -- Retracting again finds nothing to retract.
-  BEGIN
-    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
-    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','RETRACT','[2026-11-01,)', v_rec,
-            'c1000000-0000-0000-0000-0000000000a2','again');
-    RAISE EXCEPTION 'T8h FAIL: a closed row was retracted twice';
-  EXCEPTION WHEN check_violation THEN NULL;
-  END;
-  -- Without an acting user, nothing can be ended or retracted.
+  -- Without an active acting user, nothing can be ended or retracted.
   PERFORM set_config('app.user_id','', true);
   BEGIN
     INSERT INTO master.external_identifier_closure (tenant_id, external_identifier_id, closure_kind, end_date, request_id, reason)
@@ -525,7 +531,6 @@ BEGIN
     RAISE EXCEPTION 'T8h FAIL: a version was ended with no acting user';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  -- An acting user that does not exist is refused too.
   PERFORM set_config('app.user_id','99999999-0000-0000-0000-000000000099', true);
   BEGIN
     INSERT INTO master.external_identifier_closure (tenant_id, external_identifier_id, closure_kind, end_date, request_id, reason)
@@ -533,12 +538,14 @@ BEGIN
     RAISE EXCEPTION 'T8h FAIL: a version was ended by an unknown user';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
-  PERFORM pg_temp.ok('T8h scope rows follow an approved request that lists them (add / remove); REVOKE cannot end scope; a retraction is a RETRACT row recording who, why and the request; no active actor, no closure');
+  PERFORM pg_temp.ok('T8h scope rows need an approved GRANT/CHANGE_SCOPE request that lists them, from its date with no end; REVOKE cannot add scope; no active actor, no closure');
 END $$;
 
--- A request is used once: at commit it became APPLIED, so it cannot change scope again.
+-- A request is used once (APPLIED at commit); a REVOKE request cannot end scope; a retraction is a
+-- RETRACT row under a CHANGE_SCOPE request that lists the removal; a request applied only in part
+-- is refused at commit.
 DO $$
-DECLARE e text; v text;
+DECLARE n int; e text; v text; v_rec timestamptz; v_by uuid;
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
   PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
@@ -552,7 +559,49 @@ BEGIN
   EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
     IF e NOT LIKE 'REQUEST_NOT_APPROVED%' THEN RAISE EXCEPTION 'T8h2 FAIL: wrong refusal: %', e; END IF;
   END;
-  PERFORM pg_temp.ok('T8h2 a role grant request is used once: the database marks it APPLIED at commit');
+  SELECT recorded_at INTO v_rec FROM identity.scope_attribute
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
+  BEGIN
+    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, end_date, request_id, reason)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','END','2026-12-01',
+            'c1000000-0000-0000-0000-0000000000a5','x');
+    RAISE EXCEPTION 'T8h2 FAIL: a REVOKE request ended a scope row';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'WRONG_REQUEST_TYPE%' THEN RAISE EXCEPTION 'T8h2 FAIL: wrong refusal: %', e; END IF;
+  END;
+  BEGIN
+    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','RETRACT','[2026-11-01,)', v_rec,
+            'c1000000-0000-0000-0000-0000000000a7','typed in error');
+    RAISE EXCEPTION 'T8h2 FAIL: a scope row was retracted under a request that does not list the removal';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','RETRACT','[2026-11-01,)', v_rec,
+          'c1000000-0000-0000-0000-0000000000a6','typed in error');
+  SELECT count(*) INTO n FROM identity.scope_attribute
+   WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1' AND value = 'EQ' AND superseded_at IS NULL;
+  SELECT closed_by INTO v_by FROM identity.scope_attribute_closure WHERE grant_id = 'c2000000-0000-0000-0000-0000000000a1';
+  IF n <> 0 OR v_by <> '10000000-0000-0000-0000-000000000002' THEN RAISE EXCEPTION 'T8h2 FAIL: retraction (% current, by %)', n, v_by; END IF;
+  BEGIN
+    INSERT INTO identity.scope_attribute_closure (tenant_id, grant_id, attribute, value, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','EQ','RETRACT','[2026-11-01,)', v_rec,
+            'c1000000-0000-0000-0000-0000000000a6','again');
+    RAISE EXCEPTION 'T8h2 FAIL: a closed row was retracted twice';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  -- a7 asks for desks FX and MM; applying only FX is refused when the deferred check runs.
+  BEGIN
+    INSERT INTO identity.scope_attribute (tenant_id, grant_id, attribute, value, valid_period, request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','DESK','FX','[2026-11-01,)',
+            'c1000000-0000-0000-0000-0000000000a7');
+    SET CONSTRAINTS ALL IMMEDIATE;
+    RAISE EXCEPTION 'T8h2 FAIL: a request applied in part was accepted';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'REQUEST_PARTLY_APPLIED%' THEN RAISE EXCEPTION 'T8h2 FAIL: wrong refusal: %', e; END IF;
+  END;
+  SET CONSTRAINTS ALL DEFERRED;
+  PERFORM pg_temp.ok('T8h2 requests are used once and in full; REVOKE cannot end scope; a retraction is a RETRACT row under a request that lists the removal, recording who and why');
 END $$;
 
 -- Retire a code from a date and give it to another entity; remove a right from a role from a date,
@@ -629,11 +678,12 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
   -- Revoke from 1 Dec 2026 although the original approver is disabled (round-3 Major 2).
-  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason)
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
+  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason, effective_from)
   VALUES ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000b1','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
-          'c2000000-0000-0000-0000-0000000000b1','10000000-0000-0000-0000-000000000002','role no longer needed');
-  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000021',
-         approved_by = '10000000-0000-0000-0000-000000000004'
+          'c2000000-0000-0000-0000-0000000000b1','10000000-0000-0000-0000-000000000002','role no longer needed','2026-12-01');
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000004', true);
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000021'
    WHERE request_id = 'c1000000-0000-0000-0000-0000000000b1';
   INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
   VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','END','2026-12-01',
@@ -657,6 +707,124 @@ BEGIN
     IF e NOT LIKE 'SOD_VIOLATION%' THEN RAISE EXCEPTION 'T8j FAIL: wrong refusal: %', e; END IF;
   END;
   PERFORM pg_temp.ok('T8j continuations keep old signatures (recognised from data); a grant whose approver left can be revoked; a forged continuation is checked like a new version');
+END $$;
+
+-- Grant versions that name a request follow an APPROVED GRANT request for that grant, from its date.
+DO $$
+DECLARE e text;
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  BEGIN
+    INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by, request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000b1','[2027-03-01,)',
+            '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004','c1000000-0000-0000-0000-0000000000b1');
+    RAISE EXCEPTION 'T8k FAIL: a grant version cited a REVOKE request';
+  EXCEPTION WHEN check_violation THEN NULL;
+  END;
+  BEGIN
+    INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by, request_id)
+    VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000a1','[2027-03-01,)',
+            '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004','c1000000-0000-0000-0000-0000000000a3');
+    RAISE EXCEPTION 'T8k FAIL: a grant version started on another date than its GRANT request';
+  EXCEPTION WHEN check_violation THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e NOT LIKE 'NOT_REQUESTED%' THEN RAISE EXCEPTION 'T8k FAIL: wrong refusal: %', e; END IF;
+  END;
+  -- Versions are written only under READ COMMITTED (the concurrency rules of BT-3 rely on it).
+  PERFORM pg_temp.ok('T8k a grant version names only a matching GRANT request and starts on its date');
+END $$;
+BEGIN ISOLATION LEVEL REPEATABLE READ;
+DO $$
+BEGIN
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  INSERT INTO master.benchmark_version (tenant_id, benchmark_id, valid_period, name, provider, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','20000000-0000-0000-0000-000000000001','[2028-01-01,)','X','Y','f0000000-0000-0000-0000-000000000029');
+  RAISE EXCEPTION 'T8l FAIL: a version was written under REPEATABLE READ';
+EXCEPTION WHEN feature_not_supported THEN
+  PERFORM pg_temp.ok('T8l versions and closure rows are refused outside READ COMMITTED');
+END $$;
+ROLLBACK;
+
+-- Two sessions (dblink): a version and an END of the same key never interleave, and a version
+-- written by a transaction that began before an END committed is refused.
+RESET ROLE;
+CREATE EXTENSION IF NOT EXISTS dblink;
+DO $$
+DECLARE v_conn text; e text; v_ok boolean := false;
+BEGIN
+  v_conn := format('host=%s port=%s dbname=%s user=postgres',
+                   split_part(current_setting('unix_socket_directories'), ',', 1), current_setting('port'), current_database());
+  BEGIN
+    PERFORM dblink_connect('t16', v_conn);
+    v_ok := true;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE NOTICE 'SKIP  T16 two-session checks: no second connection (%)', SQLERRM;
+  END;
+  IF v_ok THEN
+    PERFORM dblink_exec('t16', $q$SET ROLE amc_app$q$);
+    PERFORM dblink_exec('t16', $q$SET app.tenant_id = '00000000-0000-0000-0000-00000000000a'$q$);
+  END IF;
+END $$;
+-- The test needs the grant and an approved REVOKE request; set up as the migration owner.
+INSERT INTO identity.user_role (tenant_id, grant_id, user_id, role_code)
+VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000e1','10000000-0000-0000-0000-000000000001','DEALER');
+INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000e1','[2026-11-01,)',
+        '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004');
+SET ROLE amc_app;
+DO $$
+DECLARE e text;
+BEGIN
+  IF NOT ('t16' = ANY (coalesce(dblink_get_connections(), '{}'))) THEN RETURN; END IF;
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', false);
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', false);
+  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, grant_id, requested_by, reason, effective_from)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-0000000000e1','REVOKE','10000000-0000-0000-0000-000000000001','DEALER',
+          'c2000000-0000-0000-0000-0000000000e1','10000000-0000-0000-0000-000000000002','leaver','2026-12-01');
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000004', false);
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000030'
+   WHERE request_id = 'c1000000-0000-0000-0000-0000000000e1';
+  COMMIT;
+  -- (a) This session ends the grant from 1 Dec and keeps its transaction open.
+  INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000e1','END','2026-12-01',
+          'c1000000-0000-0000-0000-0000000000e1','leaver');
+  -- (b) Session 2 writes a forward-dated version meanwhile: the key is busy.
+  PERFORM dblink_exec('t16', 'BEGIN');
+  BEGIN
+    PERFORM dblink_exec('t16', $q$INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+      VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000e1','[2027-02-01,)',
+              '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004')$q$);
+    RAISE EXCEPTION 'T16 FAIL: a version was written while the key was being ended';
+  EXCEPTION WHEN OTHERS THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e LIKE 'T16 FAIL%' OR e NOT LIKE '%KEY_BUSY%' THEN RAISE EXCEPTION 'T16 FAIL: wrong outcome: %', e; END IF;
+  END;
+  PERFORM dblink_exec('t16', 'ROLLBACK');
+  ROLLBACK;                                      -- undo this END; the next one is made after session 2 begins
+  PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', false);
+  PERFORM dblink_exec('t16', 'BEGIN');
+  PERFORM dblink_exec('t16', $q$SET LOCAL app.noop = '1'$q$);
+  PERFORM pg_sleep(0.01);
+  INSERT INTO identity.user_role_version_closure (tenant_id, grant_id, closure_kind, end_date, request_id, reason)
+  VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000e1','END','2026-12-01',
+          'c1000000-0000-0000-0000-0000000000e1','leaver');
+  COMMIT;                                        -- the END is made and committed after session 2's transaction began
+  -- (c) Session 2's version is now stale: refused.
+  BEGIN
+    PERFORM dblink_exec('t16', $q$INSERT INTO identity.user_role_version (tenant_id, grant_id, valid_period, granted_by, approved_by)
+      VALUES ('00000000-0000-0000-0000-00000000000a','c2000000-0000-0000-0000-0000000000e1','[2027-02-01,)',
+              '10000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000004')$q$);
+    RAISE EXCEPTION 'T16 FAIL: a stale version undid the revocation';
+  EXCEPTION WHEN OTHERS THEN GET STACKED DIAGNOSTICS e = MESSAGE_TEXT;
+    IF e LIKE 'T16 FAIL%' OR e NOT LIKE '%KEY_CLOSED_MEANWHILE%' THEN RAISE EXCEPTION 'T16 FAIL: wrong outcome: %', e; END IF;
+  END;
+  PERFORM dblink_exec('t16', 'ROLLBACK');
+  PERFORM dblink_disconnect('t16');
+  IF EXISTS (SELECT 1 FROM identity.user_role_version WHERE grant_id = 'c2000000-0000-0000-0000-0000000000e1'
+              AND superseded_at IS NULL AND valid_period @> date '2027-06-30') THEN
+    RAISE EXCEPTION 'T16 FAIL: the revoked grant is current again';
+  END IF;
+  PERFORM set_config('app.user_id','', false);
+  PERFORM pg_temp.ok('T16 two sessions: a version cannot be written while its key is being ended, nor after an END that committed during its transaction');
 END $$;
 
 -- =====================================================================
@@ -750,19 +918,20 @@ DO $$
 DECLARE n int;
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
   INSERT INTO identity.role (tenant_id, role_code, description)
   VALUES ('00000000-0000-0000-0000-00000000000a','FUND_ACCOUNTANT','Fund accountant');
   BEGIN
-    INSERT INTO identity.role_grant_request (tenant_id, request_type, user_id, role_code, requested_by, reason, status, sod_result, approval_request_id)
+    INSERT INTO identity.role_grant_request (tenant_id, request_type, user_id, role_code, requested_by, reason, effective_from, status, sod_result)
     VALUES ('00000000-0000-0000-0000-00000000000a','GRANT','10000000-0000-0000-0000-000000000001','FUND_ACCOUNTANT',
-            '10000000-0000-0000-0000-000000000002','x','APPROVED','PASS','f0000000-0000-0000-0000-000000000006');
+            '10000000-0000-0000-0000-000000000002','x','2026-12-01','APPROVED','PASS');
     RAISE EXCEPTION 'T11a FAIL: a request was born APPROVED';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
   BEGIN
-    INSERT INTO identity.role_grant_request (tenant_id, request_type, user_id, role_code, requested_by, reason, status)
+    INSERT INTO identity.role_grant_request (tenant_id, request_type, user_id, role_code, requested_by, reason, effective_from, status)
     VALUES ('00000000-0000-0000-0000-00000000000a','GRANT','10000000-0000-0000-0000-000000000001','FUND_ACCOUNTANT',
-            '10000000-0000-0000-0000-000000000002','x','MADE_UP_STATE');
+            '10000000-0000-0000-0000-000000000002','x','2026-12-01','MADE_UP_STATE');
     RAISE EXCEPTION 'T11a FAIL: a state not in the transition table was accepted';
   EXCEPTION WHEN check_violation THEN NULL;
   END;
@@ -773,17 +942,18 @@ DO $$
 DECLARE n int;
 BEGIN
   PERFORM set_config('app.tenant_id','00000000-0000-0000-0000-00000000000a', true);
-  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, requested_by, reason)
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000002', true);
+  INSERT INTO identity.role_grant_request (tenant_id, request_id, request_type, user_id, role_code, requested_by, reason, effective_from)
   VALUES ('00000000-0000-0000-0000-00000000000a','c1000000-0000-0000-0000-000000000001','GRANT','10000000-0000-0000-0000-000000000001',
-          'FUND_ACCOUNTANT','10000000-0000-0000-0000-000000000002','joiner');
+          'FUND_ACCOUNTANT','10000000-0000-0000-0000-000000000002','joiner','2026-12-01');
+  PERFORM set_config('app.user_id','10000000-0000-0000-0000-000000000004', true);
   BEGIN
     UPDATE identity.role_grant_request SET status = 'APPLIED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000006'
      WHERE request_id = 'c1000000-0000-0000-0000-000000000001';
     RAISE EXCEPTION 'T11b FAIL: SUBMITTED -> APPLIED skipped approval';
-  EXCEPTION WHEN check_violation THEN NULL;
+  EXCEPTION WHEN check_violation OR insufficient_privilege THEN NULL;
   END;
-  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000006',
-         approved_by = '10000000-0000-0000-0000-000000000004'
+  UPDATE identity.role_grant_request SET status = 'APPROVED', sod_result = 'PASS', approval_request_id = 'f0000000-0000-0000-0000-000000000006'
    WHERE request_id = 'c1000000-0000-0000-0000-000000000001';
   SELECT count(*) INTO n FROM identity.role_grant_request_history WHERE request_id = 'c1000000-0000-0000-0000-000000000001';
   IF n <> 2 THEN RAISE EXCEPTION 'T11b FAIL: % history rows (expected 2)', n; END IF;
