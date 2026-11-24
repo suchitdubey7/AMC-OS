@@ -203,8 +203,8 @@ BEGIN
     $q$INSERT INTO product.scheme_mandate (tenant_id, scheme_id, version_no, line_no, line_kind, asset_class)
        VALUES ('00000000-0000-0000-0000-00000000000a','30000000-0000-0000-0000-000000000001',1,2,'PERMITTED_INSTRUMENT','DERIVATIVES')$q$,
     '23514', 'PARENT_FROZEN');
-  PERFORM pg_temp.expect_fail('T2e mandate lines of an approved version cannot be deleted',
-    $q$DELETE FROM product.scheme_mandate WHERE scheme_id = '30000000-0000-0000-0000-000000000001'$q$, '42501');
+  PERFORM pg_temp.expect_fail('T2e mandate lines of an approved version cannot be changed (draft-only guard)',
+    $q$UPDATE product.scheme_mandate SET max_pct = 90 WHERE scheme_id = '30000000-0000-0000-0000-000000000001'$q$, '23514', 'PARENT_FROZEN');
   PERFORM pg_temp.expect_fail('T2f a version cannot be born APPROVED (VR lifecycle starts in DRAFT)',
     $q$INSERT INTO product.category (tenant_id, category_code, version_no, name, category_group, valid_period, status, approval_request_id)
        VALUES ('00000000-0000-0000-0000-00000000000a','LARGE_CAP',2,'Large Cap','EQUITY','[2026-06-01,)','APPROVED','f0000000-0000-0000-0000-000000000002')$q$,
@@ -407,6 +407,8 @@ VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-00000000
 -- A DRAFT order may be edited with a new version and no state move.
 UPDATE trading.order SET quantity = 600, order_version = 2 WHERE order_id = '70000000-0000-0000-0000-000000000002';
 UPDATE trading.order SET state = 'PENDING_COMPLIANCE' WHERE order_id = '70000000-0000-0000-0000-000000000002';
+INSERT INTO trading.compliance_result_ref (tenant_id, order_id, order_version, check_kind, check_result_id, checked_on, outcome)
+VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000002',2,'PRE_TRADE',gen_random_uuid(),'2026-11-24','PASS');
 UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000002';
 COMMIT;
 DO $$
@@ -440,6 +442,19 @@ BEGIN
        INSERT INTO trading.warn_acknowledgement (tenant_id, order_id, order_version, check_kind, user_id, reason)
          VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000002',3,'PRE_TRADE','10000000-0000-0000-0000-000000000002','seen')$q$,
     '23514', 'NOT_A_WARNING');
+  -- Version 3 has no result yet: the order cannot leave PENDING_COMPLIANCE on version 2's result.
+  PERFORM pg_temp.expect_fail('T8g leaving PENDING_COMPLIANCE needs a pre-trade result for the current version (DM-6)',
+    $q$UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000002'$q$,
+    '23514', 'NO_COMPLIANCE_RESULT');
+  -- An amend while PENDING_COMPLIANCE (no state move) leaves a version-3 result behind as well.
+  PERFORM set_config('app.transition_cause', 'AMEND', true);
+  INSERT INTO trading.compliance_result_ref (tenant_id, order_id, order_version, check_kind, check_result_id, checked_on, outcome)
+  VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000002',3,'PRE_TRADE',gen_random_uuid(),'2026-11-24','PASS');
+  UPDATE trading.order SET quantity = 50000, order_version = 4 WHERE order_id = '70000000-0000-0000-0000-000000000002';
+  PERFORM set_config('app.transition_cause', '', true);
+  PERFORM pg_temp.expect_fail('T8h after an amend in PENDING_COMPLIANCE the old version''s result does not let the order through',
+    $q$UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000002'$q$,
+    '23514', 'NO_COMPLIANCE_RESULT');
 END $$;
 
 -- =====================================================================
@@ -487,6 +502,16 @@ BEGIN
   PERFORM pg_temp.expect_fail('T10d the client reference never changes (a resend uses the same key)',
     $q$UPDATE execution.broker_order SET client_reference = 'CL-2' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001'$q$,
     '42501', 'IMMUTABLE_RECORD');
+  UPDATE execution.broker_order SET delivery_state = 'SENT' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001';
+  UPDATE execution.broker_order SET delivery_state = 'UNKNOWN_OUTCOME' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001';
+  PERFORM pg_temp.expect_fail('T10f a leg of unknown outcome cannot be cancelled',
+    $q$UPDATE execution.broker_order SET business_status = 'CANCELLED' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001'$q$,
+    '23514', 'new row for relation "broker_order" violates check constraint');
+  UPDATE execution.broker_order SET delivery_state = 'READY' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001';
+  UPDATE execution.broker_order SET business_status = 'CANCELLED' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001';
+  PERFORM pg_temp.expect_fail('T10g a cancelled leg can never be sent',
+    $q$UPDATE execution.broker_order SET delivery_state = 'SENT' WHERE broker_order_id = '4a000000-0000-0000-0000-000000000001'$q$,
+    '23514', 'new row for relation "broker_order" violates check constraint');
   PERFORM pg_temp.expect_fail('T10e attempts are insert-only',
     $q$INSERT INTO execution.broker_order_attempt (tenant_id, broker_order_id, action, outcome, idempotency_key, client_reference)
          VALUES ('00000000-0000-0000-0000-00000000000a','4a000000-0000-0000-0000-000000000001','SEND','SENT','wf-1:send:1','CL-1');
@@ -515,13 +540,51 @@ BEGIN
        INSERT INTO settlement.ssi_version (tenant_id, ssi_id, valid_period, market, instrument_class, settlement_details,
                                            callback_by, callback_at, approval_request_id)
          VALUES ('00000000-0000-0000-0000-00000000000a','4c000000-0000-0000-0000-000000000001','[2026-11-01,)','NSE','EQUITY','CM pool a/c',
-                 '10000000-0000-0000-0000-000000000002',now(),'f0000000-0000-0000-0000-00000000000c')$q$, '23514');
+                 '10000000-0000-0000-0000-000000000002',now(),'f0000000-0000-0000-0000-00000000000c')$q$, '23514', 'BAD_CALLBACK');
+  PERFORM pg_temp.expect_fail('T11f a call-back must name an active human user of the tenant',
+    $q$INSERT INTO settlement.ssi (tenant_id, ssi_id, counterparty_id)
+         VALUES ('00000000-0000-0000-0000-00000000000a','4c000000-0000-0000-0000-000000000002','42000000-0000-0000-0000-000000000001');
+       INSERT INTO settlement.ssi_version (tenant_id, ssi_id, valid_period, market, instrument_class, settlement_details,
+                                           callback_by, callback_at, approval_request_id)
+         VALUES ('00000000-0000-0000-0000-00000000000a','4c000000-0000-0000-0000-000000000002','[2026-11-01,)','NSE','EQUITY','CM pool a/c',
+                 gen_random_uuid(),now(),'f0000000-0000-0000-0000-00000000000c')$q$, '23514', 'BAD_CALLBACK');
+  PERFORM pg_temp.expect_fail('T11g a call-back by a service identity is refused',
+    $q$INSERT INTO settlement.ssi (tenant_id, ssi_id, counterparty_id)
+         VALUES ('00000000-0000-0000-0000-00000000000a','4c000000-0000-0000-0000-000000000003','42000000-0000-0000-0000-000000000001');
+       INSERT INTO settlement.ssi_version (tenant_id, ssi_id, valid_period, market, instrument_class, settlement_details,
+                                           callback_by, callback_at, approval_request_id)
+         VALUES ('00000000-0000-0000-0000-00000000000a','4c000000-0000-0000-0000-000000000003','[2026-11-01,)','NSE','EQUITY','CM pool a/c',
+                 '10000000-0000-0000-0000-000000000009',now(),'f0000000-0000-0000-0000-00000000000c')$q$, '23514', 'BAD_CALLBACK');
   PERFORM pg_temp.expect_fail('T11e a holding statement is loaded data, never typed in',
     $q$INSERT INTO settlement.scheme_bank_account (tenant_id, account_id, scheme_id, account_type)
          VALUES ('00000000-0000-0000-0000-00000000000a','4d000000-0000-0000-0000-000000000001','30000000-0000-0000-0000-000000000001','BANK');
        INSERT INTO settlement.holding_statement (tenant_id, statement_date, account_id, statement_kind, amount, approval_request_id)
          VALUES ('00000000-0000-0000-0000-00000000000a','2026-11-20','4d000000-0000-0000-0000-000000000001','BANK_CASH',1000,gen_random_uuid())$q$,
     '23514');
+END $$;
+
+DO $$
+BEGIN
+  PERFORM pg_temp.as_a();
+  INSERT INTO settlement.scheme_bank_account (tenant_id, account_id, scheme_id, account_type)
+  VALUES ('00000000-0000-0000-0000-00000000000a','4d000000-0000-0000-0000-000000000002','30000000-0000-0000-0000-000000000001','BANK');
+  PERFORM pg_temp.expect_fail('T11h a payment cannot use an account with no version valid on its value date',
+    $q$INSERT INTO settlement.payment_instruction (tenant_id, account_id, amount, value_date, connection_id, idempotency_key,
+                                                   client_reference, approval_request_id)
+       VALUES ('00000000-0000-0000-0000-00000000000a','4d000000-0000-0000-0000-000000000002',1000,'2026-11-25',gen_random_uuid(),
+               'wf-p:send:1','PAY-1',gen_random_uuid())$q$, '23514', 'NOT_VALID_ON_DATE');
+  INSERT INTO settlement.instruction (tenant_id, instruction_id, trade_id, custodian_code, message_type, client_reference,
+                                      connection_id, idempotency_key, approval_request_id)
+  VALUES ('00000000-0000-0000-0000-00000000000a','4f000000-0000-0000-0000-000000000001','44000000-0000-0000-0000-000000000001',
+          'CUST1','MT541','SI-1',gen_random_uuid(),'wf-s:send:1','f0000000-0000-0000-0000-00000000000d');
+  UPDATE settlement.instruction SET business_status = 'CANCELLED' WHERE instruction_id = '4f000000-0000-0000-0000-000000000001';
+  PERFORM pg_temp.expect_fail('T11i a cancelled settlement instruction can never be sent',
+    $q$UPDATE settlement.instruction SET delivery_state = 'SENT' WHERE instruction_id = '4f000000-0000-0000-0000-000000000001'$q$,
+    '23514', 'new row for relation "instruction" violates check constraint');
+  PERFORM pg_temp.expect_fail('T11j a settlement instruction needs its approval reference (D-31)',
+    $q$INSERT INTO settlement.instruction (tenant_id, trade_id, custodian_code, message_type, client_reference, connection_id, idempotency_key)
+       VALUES ('00000000-0000-0000-0000-00000000000a','44000000-0000-0000-0000-000000000001','CUST1','MT541','SI-2',gen_random_uuid(),'wf-s:send:2')$q$,
+    '23502');
 END $$;
 
 -- =====================================================================

@@ -201,4 +201,4 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | DDL-001 | Step 16a DDL additions: shared building blocks (bi-temporal, closure (end / retract, D-76), state-machine, provenance triggers), numeric widening, `platform`, `identity`, `audit`, `master` (tested on PostgreSQL 16) | Draft | WP4 / Step 16a |
 | DBT-001 | Step 16a database tests (43 checks, passing) | Draft | WP4 / Step 16a |
 | DDL-002 | Step 16b DDL additions: `product`, `investment`, `portfolio`, and the parts of `trading`, `execution`, `settlement` that do not depend on ADR-0020 (tested on PostgreSQL 16) | Draft | WP4 / Step 16b |
-| DBT-002 | Step 16b database tests (56 checks, passing) | Draft | WP4 / Step 16b |
+| DBT-002 | Step 16b database tests (65 checks, passing) | Draft | WP4 / Step 16b |

@@ -3,7 +3,7 @@
 -- Target: PostgreSQL 16+.  Applied after DDL-000 v0.9 and DDL-001.  Tested on PostgreSQL 16.15.
 -- Run as a superuser / migration owner:  psql -v ON_ERROR_STOP=1 -f <this file>
 --
--- What this file builds (DA-001 v0.3, Draft):
+-- What this file builds (DA-001 v0.4, Draft):
 --   00  helpers: copies of DDL-001's session-local helpers (make_bitemporal, make_state_machine,
 --       add_provenance), a helper for approved versions (make_vr) and four small generic triggers
 --   01  product     (DA-001 §4.5)
@@ -1315,7 +1315,7 @@ CREATE TABLE portfolio.performance_result (
   engine_version text NOT NULL CHECK (engine_version ~ '^FE-10@'),
   recorded_at    timestamptz NOT NULL DEFAULT clock_timestamp(),
   PRIMARY KEY (tenant_id, result_id),
-  UNIQUE (tenant_id, performance_run_id, scheme_id, plan_id, period, return_kind),
+  UNIQUE NULLS NOT DISTINCT (tenant_id, performance_run_id, scheme_id, plan_id, period, return_kind),
   FOREIGN KEY (tenant_id, performance_run_id) REFERENCES portfolio.performance_run (tenant_id, performance_run_id),
   FOREIGN KEY (tenant_id, scheme_id)    REFERENCES product.scheme (tenant_id, scheme_id),
   FOREIGN KEY (tenant_id, plan_id)      REFERENCES product.plan (tenant_id, plan_id),
@@ -1489,6 +1489,16 @@ BEGIN
   END IF;
   IF v_new_ver AND v_cause NOT IN ('AMEND','REROUTE') THEN
     RAISE EXCEPTION 'ILLEGAL_ORDER_CHANGE: a new version with a state move needs cause AMEND or REROUTE' USING ERRCODE = '23514';
+  END IF;
+  -- DM-6: leaving the compliance check (PENDING_COMPLIANCE -> PENDING_APPROVAL / COMPLIANCE_BLOCKED,
+  -- OVERRIDE_APPROVED -> PENDING_APPROVAL) needs a pre-trade result for the CURRENT version, so the
+  -- result of an older version never covers a newer one (also when an amend raced a running check).
+  IF OLD.state IN ('PENDING_COMPLIANCE','OVERRIDE_APPROVED') AND NEW.state IN ('PENDING_APPROVAL','COMPLIANCE_BLOCKED')
+     AND NOT EXISTS (SELECT 1 FROM trading.compliance_result_ref r
+                      WHERE r.tenant_id = NEW.tenant_id AND r.order_id = NEW.order_id
+                        AND r.order_version = NEW.order_version AND r.check_kind = 'PRE_TRADE') THEN
+    RAISE EXCEPTION 'NO_COMPLIANCE_RESULT: order % version % has no pre-trade result', NEW.order_id, NEW.order_version
+      USING ERRCODE = '23514';
   END IF;
   -- Every state change is recorded as an order event (same transaction), now with its cause.
   INSERT INTO trading.order_event (tenant_id, order_id, order_version, from_state, to_state, actor_user_id, cause)
@@ -1743,7 +1753,11 @@ END $$;
 
 -- The broker leg of an order (EA-007 §10.6).  order_id and block_id are ID references to trading
 -- (M4).  Business status [ASSUMPTION — Q90].  A business status other than PENDING needs the
--- delivery to be acknowledged, except CANCELLED of a leg that was never sent.
+-- delivery to be acknowledged, except CANCELLED of a leg that is READY (never sent, or confirmed
+-- not received).  Delivery has no move back from ACKNOWLEDGED, and the CHECK refuses any move out of
+-- READY once the leg is CANCELLED, so a cancelled leg is never sent and a leg of unknown outcome
+-- cannot be cancelled until its outcome is known (INT-001 §6, OUT2).  Same rule on the
+-- settlement instruction and payment instruction tables.
 CREATE TABLE execution.broker_order (
   tenant_id        uuid NOT NULL,
   broker_order_id  uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -1771,7 +1785,8 @@ CREATE TABLE execution.broker_order (
   FOREIGN KEY (tenant_id, broker_id) REFERENCES execution.broker (tenant_id, broker_id),
   CHECK ((order_id IS NULL) <> (block_id IS NULL)),
   CHECK ((order_id IS NULL) = (order_version IS NULL)),
-  CHECK (business_status IN ('PENDING','CANCELLED') OR delivery_state = 'ACKNOWLEDGED')
+  CHECK (business_status = 'PENDING' OR delivery_state = 'ACKNOWLEDGED'
+         OR (business_status = 'CANCELLED' AND delivery_state = 'READY'))
 );
 CREATE TRIGGER broker_order_version BEFORE UPDATE ON execution.broker_order FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
 SELECT pg_temp.make_state_machine('execution', 'broker_order', 'delivery_state', ARRAY['broker_order_id'], ARRAY['uuid'], 'broker_order_delivery');
@@ -1798,6 +1813,9 @@ BEGIN
      (to_jsonb(OLD) - ARRAY['delivery_state','business_status','updated_at','row_version','status_reason','sent_at']) THEN
     RAISE EXCEPTION 'IMMUTABLE_RECORD: only the delivery state and business status of %.% change; keys and terms are fixed',
       TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
+  END IF;
+  IF (to_jsonb(OLD) ->> 'sent_at') IS NOT NULL AND (to_jsonb(NEW) ->> 'sent_at') IS DISTINCT FROM (to_jsonb(OLD) ->> 'sent_at') THEN
+    RAISE EXCEPTION 'IMMUTABLE_RECORD: sent_at of %.% is set once', TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
   END IF;
   RETURN NEW;
 END $$;
@@ -2088,14 +2106,27 @@ CREATE TABLE settlement.ssi_version (
     WHERE (superseded_at IS NULL) DEFERRABLE INITIALLY DEFERRED
 );
 SELECT pg_temp.make_bitemporal('settlement.ssi_version', ARRAY['tenant_id','ssi_id']);
--- The maker of a new version (not a continuation) is the acting user.
+-- The maker of a new version (not a continuation) is the acting user, an active user of the
+-- tenant; the call-back was made by another active human user of the tenant (not a service
+-- identity; PRD-007 BRL-D07-001, WF-028).
 CREATE OR REPLACE FUNCTION settlement.tg_version_maker() RETURNS trigger
 LANGUAGE plpgsql AS $$
 BEGIN
   IF platform.bt_is_continuation(TG_RELID, to_jsonb(NEW)) THEN RETURN NEW; END IF;
   NEW.maker_user_id := platform.current_user_id();
-  IF NEW.maker_user_id IS NULL THEN
-    RAISE EXCEPTION 'NO_ACTOR: %.% needs the acting user (app.user_id)', TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
+  IF NEW.maker_user_id IS NULL OR NOT EXISTS (SELECT 1 FROM identity.app_user u WHERE u.tenant_id = NEW.tenant_id
+                                                 AND u.user_id = NEW.maker_user_id AND u.status = 'ACTIVE') THEN
+    RAISE EXCEPTION 'NO_ACTOR: %.% needs an active user of the tenant as the acting user (app.user_id)',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '42501';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM identity.app_user u WHERE u.tenant_id = NEW.tenant_id AND u.user_id = NEW.callback_by
+                    AND u.status = 'ACTIVE' AND NOT u.is_service_identity) THEN
+    RAISE EXCEPTION 'BAD_CALLBACK: the call-back on %.% must be made by an active human user of the tenant',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '23514';
+  END IF;
+  IF NEW.callback_by = NEW.maker_user_id THEN
+    RAISE EXCEPTION 'BAD_CALLBACK: the call-back on %.% must be made by someone other than the maker',
+      TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '23514';
   END IF;
   RETURN NEW;
 END $$;
@@ -2124,7 +2155,8 @@ ALTER TABLE settlement.instruction
   ADD COLUMN row_version      integer NOT NULL DEFAULT 1,
   ADD CONSTRAINT instruction_ssi_fk FOREIGN KEY (tenant_id, ssi_id) REFERENCES settlement.ssi (tenant_id, ssi_id),
   ADD CONSTRAINT instruction_idempotency_uk UNIQUE (tenant_id, idempotency_key),
-  ADD CONSTRAINT instruction_business_ck CHECK (business_status IN ('PENDING','CANCELLED') OR delivery_state = 'ACKNOWLEDGED');
+  ADD CONSTRAINT instruction_business_ck CHECK (business_status = 'PENDING' OR delivery_state = 'ACKNOWLEDGED'
+         OR (business_status = 'CANCELLED' AND delivery_state = 'READY'));
 CREATE TRIGGER instruction_version BEFORE UPDATE ON settlement.instruction FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
 CREATE TRIGGER instruction_keys_fixed BEFORE UPDATE ON settlement.instruction
   FOR EACH ROW EXECUTE FUNCTION platform.tg_instruction_keys_fixed();
@@ -2230,7 +2262,8 @@ CREATE TABLE settlement.payment_instruction (
   FOREIGN KEY (tenant_id, obligation_id)      REFERENCES settlement.obligation (tenant_id, obligation_id),
   FOREIGN KEY (tenant_id, account_id)         REFERENCES settlement.scheme_bank_account (tenant_id, account_id),
   FOREIGN KEY (tenant_id, beneficiary_ssi_id) REFERENCES settlement.ssi (tenant_id, ssi_id),
-  CHECK (business_status IN ('PENDING','CANCELLED') OR delivery_state = 'ACKNOWLEDGED')
+  CHECK (business_status = 'PENDING' OR delivery_state = 'ACKNOWLEDGED'
+         OR (business_status = 'CANCELLED' AND delivery_state = 'READY'))
 );
 CREATE TRIGGER payment_instruction_version BEFORE UPDATE ON settlement.payment_instruction FOR EACH ROW EXECUTE FUNCTION platform.tg_bump_version();
 CREATE TRIGGER payment_instruction_keys_fixed BEFORE UPDATE ON settlement.payment_instruction
@@ -2245,6 +2278,37 @@ INSERT INTO settlement.payment_instruction_business_transition (from_state, to_s
   ('PENDING','CANCELLED','STATE_CHANGE'),
   ('EXECUTED','RETURNED','STATE_CHANGE');
 SELECT pg_temp.make_attempt_table('settlement', 'payment_instruction', 'payment_instruction_id');
+
+-- DA-001 §3.1 rule 1: a foreign key to an anchor is not enough; the paying account and the
+-- beneficiary SSI must have a current version valid on the value date, and an instruction's SSI one
+-- valid on the trade's settlement date.
+CREATE OR REPLACE FUNCTION settlement.tg_valid_on_date() RETURNS trigger
+LANGUAGE plpgsql AS $$
+DECLARE v_date date;
+BEGIN
+  IF TG_TABLE_NAME = 'payment_instruction' THEN
+    v_date := NEW.value_date;
+    IF NOT EXISTS (SELECT 1 FROM settlement.scheme_bank_account_version v WHERE v.tenant_id = NEW.tenant_id
+                      AND v.account_id = NEW.account_id AND v.superseded_at IS NULL AND v.valid_period @> v_date) THEN
+      RAISE EXCEPTION 'NOT_VALID_ON_DATE: account % has no current version on %', NEW.account_id, v_date USING ERRCODE = '23514';
+    END IF;
+    IF NEW.beneficiary_ssi_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM settlement.ssi_version v WHERE v.tenant_id = NEW.tenant_id
+                      AND v.ssi_id = NEW.beneficiary_ssi_id AND v.superseded_at IS NULL AND v.valid_period @> v_date) THEN
+      RAISE EXCEPTION 'NOT_VALID_ON_DATE: SSI % has no current version on %', NEW.beneficiary_ssi_id, v_date USING ERRCODE = '23514';
+    END IF;
+  ELSIF NEW.ssi_id IS NOT NULL THEN
+    SELECT settlement_date INTO v_date FROM settlement.trade WHERE tenant_id = NEW.tenant_id AND trade_id = NEW.trade_id;
+    IF NOT EXISTS (SELECT 1 FROM settlement.ssi_version v WHERE v.tenant_id = NEW.tenant_id
+                      AND v.ssi_id = NEW.ssi_id AND v.superseded_at IS NULL AND v.valid_period @> v_date) THEN
+      RAISE EXCEPTION 'NOT_VALID_ON_DATE: SSI % has no current version on %', NEW.ssi_id, v_date USING ERRCODE = '23514';
+    END IF;
+  END IF;
+  RETURN NEW;
+END $$;
+CREATE TRIGGER payment_instruction_valid_on_date BEFORE INSERT ON settlement.payment_instruction
+  FOR EACH ROW EXECUTE FUNCTION settlement.tg_valid_on_date();
+CREATE TRIGGER instruction_valid_on_date BEFORE INSERT ON settlement.instruction
+  FOR EACH ROW EXECUTE FUNCTION settlement.tg_valid_on_date();
 
 -- Failed settlement: reason, owner, ageing (from failed_on), penalty, close-out (PRD-007 §10, WF-027).
 -- States [ASSUMPTION — Q90]; the outcome is required when the fail is closed.
@@ -2297,6 +2361,7 @@ CREATE TABLE settlement.holding_statement (
 ) PARTITION BY RANGE (statement_date);
 CREATE TABLE settlement.holding_statement_2026 PARTITION OF settlement.holding_statement FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
 CREATE TABLE settlement.holding_statement_2027 PARTITION OF settlement.holding_statement FOR VALUES FROM ('2027-01-01') TO ('2028-01-01');
+CREATE TABLE settlement.holding_statement_default PARTITION OF settlement.holding_statement DEFAULT;
 SELECT pg_temp.add_provenance('settlement.holding_statement', 'settlement.load_run');
 ALTER TABLE settlement.holding_statement ADD CONSTRAINT holding_statement_loaded_ck CHECK (source_system <> 'AMC_OS_MANUAL');
 SELECT pg_temp.make_insert_only('settlement.holding_statement');
