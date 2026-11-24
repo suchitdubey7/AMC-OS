@@ -1446,6 +1446,7 @@ DECLARE
   v_cause   text := coalesce(NULLIF(current_setting('app.transition_cause', true), ''), 'STATE_CHANGE');
   v_terms   boolean;
   v_new_ver boolean;
+  v_outcome text;
 BEGIN
   IF TG_OP = 'INSERT' THEN
     IF NOT EXISTS (SELECT 1 FROM trading.order_state_transition
@@ -1492,13 +1493,30 @@ BEGIN
   END IF;
   -- DM-6: leaving the compliance check (PENDING_COMPLIANCE -> PENDING_APPROVAL / COMPLIANCE_BLOCKED,
   -- OVERRIDE_APPROVED -> PENDING_APPROVAL) needs a pre-trade result for the CURRENT version, so the
-  -- result of an older version never covers a newer one (also when an amend raced a running check).
-  IF OLD.state IN ('PENDING_COMPLIANCE','OVERRIDE_APPROVED') AND NEW.state IN ('PENDING_APPROVAL','COMPLIANCE_BLOCKED')
-     AND NOT EXISTS (SELECT 1 FROM trading.compliance_result_ref r
-                      WHERE r.tenant_id = NEW.tenant_id AND r.order_id = NEW.order_id
-                        AND r.order_version = NEW.order_version AND r.check_kind = 'PRE_TRADE') THEN
-    RAISE EXCEPTION 'NO_COMPLIANCE_RESULT: order % version % has no pre-trade result', NEW.order_id, NEW.order_version
-      USING ERRCODE = '23514';
+  -- result of an older version never covers a newer one (also when an amend raced a running check),
+  -- and the move must fit the outcome (PRD-008 BRL-D08-008: INDETERMINATE counts as BLOCK pre-trade;
+  -- PRD-005 §10: a WARN needs a person's acknowledgement):
+  --   PENDING_COMPLIANCE -> PENDING_APPROVAL  : PASS, or WARN with a warn_acknowledgement
+  --   PENDING_COMPLIANCE -> COMPLIANCE_BLOCKED: BLOCK or INDETERMINATE
+  --   OVERRIDE_APPROVED  -> PENDING_APPROVAL  : BLOCK or INDETERMINATE (the override covers it)
+  IF OLD.state IN ('PENDING_COMPLIANCE','OVERRIDE_APPROVED') AND NEW.state IN ('PENDING_APPROVAL','COMPLIANCE_BLOCKED') THEN
+    SELECT r.outcome INTO v_outcome FROM trading.compliance_result_ref r
+     WHERE r.tenant_id = NEW.tenant_id AND r.order_id = NEW.order_id
+       AND r.order_version = NEW.order_version AND r.check_kind = 'PRE_TRADE';
+    IF v_outcome IS NULL THEN
+      RAISE EXCEPTION 'NO_COMPLIANCE_RESULT: order % version % has no pre-trade result', NEW.order_id, NEW.order_version
+        USING ERRCODE = '23514';
+    END IF;
+    IF NOT (CASE
+         WHEN OLD.state = 'PENDING_COMPLIANCE' AND NEW.state = 'PENDING_APPROVAL' THEN
+              v_outcome = 'PASS'
+              OR (v_outcome = 'WARN' AND EXISTS (SELECT 1 FROM trading.warn_acknowledgement a
+                                                  WHERE a.tenant_id = NEW.tenant_id AND a.order_id = NEW.order_id
+                                                    AND a.order_version = NEW.order_version AND a.check_kind = 'PRE_TRADE'))
+         ELSE v_outcome IN ('BLOCK','INDETERMINATE') END) THEN
+      RAISE EXCEPTION 'COMPLIANCE_OUTCOME: order % version % has pre-trade outcome %; % -> % is not allowed',
+        NEW.order_id, NEW.order_version, v_outcome, OLD.state, NEW.state USING ERRCODE = '23514';
+    END IF;
   END IF;
   -- Every state change is recorded as an order event (same transaction), now with its cause.
   INSERT INTO trading.order_event (tenant_id, order_id, order_version, from_state, to_state, actor_user_id, cause)
@@ -1756,7 +1774,9 @@ END $$;
 -- delivery to be acknowledged, except CANCELLED of a leg that is READY (never sent, or confirmed
 -- not received).  Delivery has no move back from ACKNOWLEDGED, and the CHECK refuses any move out of
 -- READY once the leg is CANCELLED, so a cancelled leg is never sent and a leg of unknown outcome
--- cannot be cancelled until its outcome is known (INT-001 §6, OUT2).  Same rule on the
+-- cannot be cancelled while it is UNKNOWN_OUTCOME or INVESTIGATION.  The move back to READY
+-- ("provider confirms not received", INT-001 §6) is a person's decision recorded as an attempt row;
+-- the database does not check that evidence: the Execution / Settlement module does (OUT4).  Same rule on the
 -- settlement instruction and payment instruction tables.
 CREATE TABLE execution.broker_order (
   tenant_id        uuid NOT NULL,
@@ -2124,6 +2144,10 @@ BEGIN
     RAISE EXCEPTION 'BAD_CALLBACK: the call-back on %.% must be made by an active human user of the tenant',
       TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '23514';
   END IF;
+  IF NEW.callback_at > clock_timestamp() THEN
+    RAISE EXCEPTION 'BAD_CALLBACK: the call-back on %.% cannot be dated in the future', TG_TABLE_SCHEMA, TG_TABLE_NAME
+      USING ERRCODE = '23514';
+  END IF;
   IF NEW.callback_by = NEW.maker_user_id THEN
     RAISE EXCEPTION 'BAD_CALLBACK: the call-back on %.% must be made by someone other than the maker',
       TG_TABLE_SCHEMA, TG_TABLE_NAME USING ERRCODE = '23514';
@@ -2305,10 +2329,18 @@ BEGIN
   END IF;
   RETURN NEW;
 END $$;
+-- Checked when the instruction is created and again each time it is sent (READY -> SENT), so an
+-- account or SSI version ended or retracted in between stops instructions still waiting to go out.
 CREATE TRIGGER payment_instruction_valid_on_date BEFORE INSERT ON settlement.payment_instruction
   FOR EACH ROW EXECUTE FUNCTION settlement.tg_valid_on_date();
+CREATE TRIGGER payment_instruction_valid_on_send BEFORE UPDATE OF delivery_state ON settlement.payment_instruction
+  FOR EACH ROW WHEN (OLD.delivery_state = 'READY' AND NEW.delivery_state = 'SENT')
+  EXECUTE FUNCTION settlement.tg_valid_on_date();
 CREATE TRIGGER instruction_valid_on_date BEFORE INSERT ON settlement.instruction
   FOR EACH ROW EXECUTE FUNCTION settlement.tg_valid_on_date();
+CREATE TRIGGER instruction_valid_on_send BEFORE UPDATE OF delivery_state ON settlement.instruction
+  FOR EACH ROW WHEN (OLD.delivery_state = 'READY' AND NEW.delivery_state = 'SENT')
+  EXECUTE FUNCTION settlement.tg_valid_on_date();
 
 -- Failed settlement: reason, owner, ageing (from failed_on), penalty, close-out (PRD-007 §10, WF-027).
 -- States [ASSUMPTION — Q90]; the outcome is required when the fail is closed.

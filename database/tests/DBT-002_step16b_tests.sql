@@ -455,6 +455,33 @@ BEGIN
   PERFORM pg_temp.expect_fail('T8h after an amend in PENDING_COMPLIANCE the old version''s result does not let the order through',
     $q$UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000002'$q$,
     '23514', 'NO_COMPLIANCE_RESULT');
+  -- Version 4 is checked: BLOCK.  It cannot go to approval; it must go to COMPLIANCE_BLOCKED.
+  INSERT INTO trading.compliance_result_ref (tenant_id, order_id, order_version, check_kind, check_result_id, checked_on, outcome)
+  VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000002',4,'PRE_TRADE',gen_random_uuid(),'2026-11-24','BLOCK');
+  PERFORM pg_temp.expect_fail('T8i a BLOCK result cannot go straight to approval (override process needed)',
+    $q$UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000002'$q$,
+    '23514', 'COMPLIANCE_OUTCOME');
+  UPDATE trading.order SET state = 'COMPLIANCE_BLOCKED' WHERE order_id = '70000000-0000-0000-0000-000000000002';
+  PERFORM pg_temp.ok('T8j a BLOCK result moves the order to COMPLIANCE_BLOCKED');
+END $$;
+-- A WARN result needs an acknowledgement before approval.
+DO $$
+BEGIN
+  PERFORM pg_temp.as_a();
+  INSERT INTO trading.order (tenant_id, order_id, scheme_id, security_id, side, order_type, quantity, decision_id, created_by, trade_date, idempotency_key)
+  VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000003','30000000-0000-0000-0000-000000000001',
+          '40000000-0000-0000-0000-000000000001','SELL','MARKET',10,'60000000-0000-0000-0000-000000000001',
+          '10000000-0000-0000-0000-000000000002','2026-11-24','idem-t8k');
+  UPDATE trading.order SET state = 'PENDING_COMPLIANCE' WHERE order_id = '70000000-0000-0000-0000-000000000003';
+  INSERT INTO trading.compliance_result_ref (tenant_id, order_id, order_version, check_kind, check_result_id, checked_on, outcome)
+  VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000003',1,'PRE_TRADE',gen_random_uuid(),'2026-11-24','WARN');
+  PERFORM pg_temp.expect_fail('T8k a WARN result needs an acknowledgement before approval',
+    $q$UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000003'$q$,
+    '23514', 'COMPLIANCE_OUTCOME');
+  INSERT INTO trading.warn_acknowledgement (tenant_id, order_id, order_version, check_kind, user_id, reason)
+  VALUES ('00000000-0000-0000-0000-00000000000a','70000000-0000-0000-0000-000000000003',1,'PRE_TRADE','10000000-0000-0000-0000-000000000002','Within house view');
+  UPDATE trading.order SET state = 'PENDING_APPROVAL' WHERE order_id = '70000000-0000-0000-0000-000000000003';
+  PERFORM pg_temp.ok('T8l an acknowledged WARN lets the order go to approval');
 END $$;
 
 -- =====================================================================
@@ -585,6 +612,42 @@ BEGIN
     $q$INSERT INTO settlement.instruction (tenant_id, trade_id, custodian_code, message_type, client_reference, connection_id, idempotency_key)
        VALUES ('00000000-0000-0000-0000-00000000000a','44000000-0000-0000-0000-000000000001','CUST1','MT541','SI-2',gen_random_uuid(),'wf-s:send:2')$q$,
     '23502');
+END $$;
+
+-- A payment instruction waiting to go out is stopped when its account version is retracted.
+BEGIN;
+SELECT pg_temp.as_a();
+INSERT INTO settlement.scheme_bank_account_version (tenant_id, account_id, valid_period, provider_counterparty_id, account_number,
+                                                    account_purpose, callback_by, callback_at, approval_request_id)
+VALUES ('00000000-0000-0000-0000-00000000000a','4d000000-0000-0000-0000-000000000002','[2026-11-01,)','42000000-0000-0000-0000-000000000002',
+        '000123456789','Scheme collections','10000000-0000-0000-0000-000000000004',now() - interval '1 hour','f0000000-0000-0000-0000-00000000000e');
+INSERT INTO settlement.payment_instruction (tenant_id, payment_instruction_id, account_id, amount, value_date, connection_id, idempotency_key,
+                                            client_reference, approval_request_id)
+VALUES ('00000000-0000-0000-0000-00000000000a','4f000000-0000-0000-0000-000000000002','4d000000-0000-0000-0000-000000000002',1000,'2026-11-25',
+        gen_random_uuid(),'wf-p:send:2','PAY-2','f0000000-0000-0000-0000-00000000000f');
+COMMIT;
+BEGIN;
+SELECT pg_temp.as_a();
+INSERT INTO settlement.scheme_bank_account_version_closure (tenant_id, account_id, closure_kind, target_valid_period, target_recorded_at, request_id, reason)
+SELECT tenant_id, account_id, 'RETRACT', valid_period, recorded_at, 'f0000000-0000-0000-0000-000000000010', 'Account details found wrong'
+  FROM settlement.scheme_bank_account_version WHERE account_id = '4d000000-0000-0000-0000-000000000002' AND superseded_at IS NULL;
+COMMIT;
+DO $$
+BEGIN
+  PERFORM pg_temp.as_a();
+  PERFORM pg_temp.expect_fail('T11k a payment is not sent once its account version has been retracted',
+    $q$UPDATE settlement.payment_instruction SET delivery_state = 'SENT' WHERE payment_instruction_id = '4f000000-0000-0000-0000-000000000002'$q$,
+    '23514', 'NOT_VALID_ON_DATE');
+  UPDATE settlement.payment_instruction SET business_status = 'CANCELLED' WHERE payment_instruction_id = '4f000000-0000-0000-0000-000000000002';
+  PERFORM pg_temp.expect_fail('T11l a cancelled payment instruction can never be sent',
+    $q$UPDATE settlement.payment_instruction SET delivery_state = 'SENT' WHERE payment_instruction_id = '4f000000-0000-0000-0000-000000000002'$q$,
+    '23514');
+  PERFORM pg_temp.expect_fail('T11m a call-back cannot be dated in the future',
+    $q$INSERT INTO settlement.scheme_bank_account_version (tenant_id, account_id, valid_period, provider_counterparty_id, account_number,
+                                                          account_purpose, callback_by, callback_at, approval_request_id)
+       VALUES ('00000000-0000-0000-0000-00000000000a','4d000000-0000-0000-0000-000000000002','[2026-12-01,)','42000000-0000-0000-0000-000000000002',
+               '000123456789','Scheme collections','10000000-0000-0000-0000-000000000004',now() + interval '10 days','f0000000-0000-0000-0000-00000000000e')$q$,
+    '23514', 'BAD_CALLBACK');
 END $$;
 
 -- =====================================================================
