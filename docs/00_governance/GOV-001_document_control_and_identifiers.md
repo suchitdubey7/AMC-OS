@@ -188,6 +188,7 @@ Nothing is Approved yet. v0.9 documents written before this standard are kept as
 | EA-008 | Configuration over customisation | Draft | WP3 / Step 11 |
 | INT-001 | Integration architecture (adapters, canonical interface, inbound and outbound rules, certification) | Draft | WP3 / Step 14 |
 | INT-002 – INT-018 | Provider specifications (AMFI, FactSet and data vendors, NSE, BSE, CAMS, KFin Technologies, custodians, brokers, banks, depositories, KRAs and CKYC, SEBI sources, valuation and rating agencies, identity providers, AI model provider, corporate ERP, investor-message providers) | Draft | WP3 / Step 14 |
+| DA-001 | Canonical enterprise data model (23 schemas; ERD annexes D01–D17 in `architecture/erds/`) | Draft | WP4 / Step 15 |
 | STD-001 | Coding standards | Draft | WP1 |
 | QA-001 | Testing strategy | Draft | WP1 |
 | ADR-0001 – ADR-0008 | Foundational architecture decisions | Draft | WP1 |
